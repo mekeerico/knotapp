@@ -64,19 +64,6 @@ export default function ChatScreen() {
         role: m.senderId === user.id ? 'user' : 'match',
         text: m.text
       }));
-      
-      // Simulate a reply from the match for testing
-      setTimeout(async () => {
-        const mockReplies = [
-          "That's so interesting!",
-          "I totally agree.",
-          "Tell me more about that.",
-          "Haha, yeah exactly!",
-          "I've always thought the same thing."
-        ];
-        const randomReply = mockReplies[Math.floor(Math.random() * mockReplies.length)];
-        await db.sendMessage(match.id, match.id, randomReply);
-      }, 2500);
 
       const coachData = await db.getCoachResponse(formattedHistory, user, msg);
       if (coachData && coachData.response) {

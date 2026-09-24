@@ -78,7 +78,9 @@ export default function ProfileDetailScreen() {
   const [photoIdx, setPhotoIdx] = useState(0);
   const photos = match.profileImageUrls?.length
     ? match.profileImageUrls
-    : ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=800'];
+    : (match as any).selfieUrl
+    ? [(match as any).selfieUrl]
+    : [`https://ui-avatars.com/api/?name=${encodeURIComponent((match as any).name || (match as any).firstName || 'User')}&background=1E1E1E&color=FFFFFF&size=800`];
 
   const [metrics, setMetrics] = useState<any>(null);
   const [isCalculating, setIsCalculating] = useState(true);

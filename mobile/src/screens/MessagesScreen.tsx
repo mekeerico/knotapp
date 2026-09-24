@@ -12,7 +12,6 @@ import AppHeader from '../components/AppHeader';
 import { Colors, Spacing, BorderRadius } from '../theme/colors';
 import { RootStackParamList, Match } from '../types';
 import { db } from '../services/apiService';
-import { MATCHES_DATA } from '../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -26,18 +25,22 @@ export default function MessagesScreen() {
 
   useEffect(() => {
     if (!userProfile) return;
-    try {
-      const userGender = (userProfile.gender || '').toLowerCase().trim();
-      console.log('[MessagesScreen] userProfile.gender raw:', JSON.stringify(userProfile.gender), '=> normalized:', userGender);
-      const targetGender = userGender === 'female' ? 'male' : 'female';
-      const filtered = MATCHES_DATA.filter((m) => m.gender?.toLowerCase() === targetGender);
-      console.log('[MessagesScreen] Filtered matches count:', filtered.length);
-      setMatches(filtered);
-    } catch (err) {
-      setMatches([]);
-    } finally {
-      setLoading(false);
-    }
+    (async () => {
+      try {
+        // Real registry members only, so message threads point to actual accounts
+        const allUsers = await db.getAllUsers();
+        const others = allUsers.filter((m) => m.id !== userProfile.id);
+        const userGender = (userProfile.gender || '').toLowerCase().trim();
+        const targetGender = userGender === 'female' ? 'male' : 'female';
+        let filtered = others.filter((m) => (m.gender || '').toLowerCase() === targetGender);
+        if (filtered.length === 0) filtered = others;
+        setMatches(filtered);
+      } catch (err) {
+        setMatches([]);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [userProfile]);
 
   if (loading) {

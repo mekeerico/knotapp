@@ -63,6 +63,13 @@ const MultiSelectDropdown = ({ label, options, values, onChange, placeholder }: 
 
 export default function AdminDashboard() {
   const router = useRouter();
+  // Helper: resolve relative image URLs (like /uploads/...) to absolute using backend base URL
+  const resolveImageUrl = (url: string | undefined | null): string => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    const base = process.env.NEXT_PUBLIC_API_URL || '';
+    return `${base}${url}`;
+  };
   const [users, setUsers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -126,7 +133,7 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     let remoteUsers: any[] = [];
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const token = localStorage.getItem('knot_token');
       if (token) {
         const res = await fetch(`${API_URL}/users`, {
@@ -182,7 +189,7 @@ export default function AdminDashboard() {
     setCreateError("");
     
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -249,7 +256,7 @@ export default function AdminDashboard() {
   const handleDelete = async (id: string) => {
     const token = localStorage.getItem('knot_token');
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
         
       const res = await fetch(`${API_URL}/admin/users/${id}`, {
         method: 'DELETE',
@@ -272,7 +279,7 @@ export default function AdminDashboard() {
   const toggleSuspend = async (id: string, currentStatus: boolean) => {
     const token = localStorage.getItem('knot_token');
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       const res = await fetch(`${API_URL}/admin/users/${id}/suspend`, {
         method: 'PATCH',
         headers: { 
@@ -381,7 +388,9 @@ export default function AdminDashboard() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-white/5 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
-                    <th className="p-4 border-b border-white/5">Name</th>
+                    <th className="p-4 border-b border-white/5">User</th>
+                    <th className="p-4 border-b border-white/5">Email</th>
+                    <th className="p-4 border-b border-white/5">Occupation</th>
                     <th className="p-4 border-b border-white/5">Subscription</th>
                     <th className="p-4 border-b border-white/5">Location</th>
                     <th className="p-4 border-b border-white/5">Marriage Status</th>
@@ -389,15 +398,38 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5">
-                  {users.map(user => (
+                  {users.map(user => {
+                    const displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || 'User';
+                    const avatarInitials = encodeURIComponent(displayName);
+                    const userPhoto = (
+                      user.profileImages?.[0]?.url ||
+                      user.profileImageUrls?.[0] ||
+                      user.selfieUrl ||
+                      user.photoUrl ||
+                      `https://ui-avatars.com/api/?name=${avatarInitials}&background=1A202C&color=D4AF37&size=80`
+                    );
+                    return (
                     <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="p-4">
-                        <div className="font-bold text-white text-sm flex items-center gap-2">
-                          {user.firstName} {user.lastName}
-                          {user.role === 'ADMIN' && <span className="text-[9px] font-black uppercase bg-[#D4AF37]/20 text-[#D4AF37] px-1.5 py-0.5 rounded">Admin</span>}
-                          {user.isSuspended && <span className="text-[9px] font-black uppercase bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">Suspended</span>}
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
+                            <img src={userPhoto} alt={displayName} className="w-full h-full object-cover" />
+                          </div>
+                          <div>
+                            <div className="font-bold text-white text-sm flex items-center gap-2">
+                              {displayName}
+                              {user.role === 'ADMIN' && <span className="text-[9px] font-black uppercase bg-[#D4AF37]/20 text-[#D4AF37] px-1.5 py-0.5 rounded">Admin</span>}
+                              {user.isSuspended && <span className="text-[9px] font-black uppercase bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">Suspended</span>}
+                            </div>
+                            {user.isVerified && <span className="text-[9px] text-emerald-400 font-bold">✓ Verified</span>}
+                          </div>
                         </div>
-                        <div className="text-xs text-gray-500">{user.email}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-xs text-gray-300">{user.email || '—'}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-xs text-gray-400">{user.occupation || '—'}</div>
                       </td>
                       <td className="p-4">
                         {user.isPremium ? (
@@ -449,10 +481,11 @@ export default function AdminDashboard() {
                         )}
                       </td>
                     </tr>
-                  ))}
+                  );
+                  })}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan={5} className="p-8 text-center text-gray-500 text-sm">No users found.</td>
+                      <td colSpan={7} className="p-8 text-center text-gray-500 text-sm">No users found.</td>
                     </tr>
                   )}
                 </tbody>

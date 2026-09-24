@@ -11,10 +11,17 @@ import {
 } from "lucide-react";
 
 export default function Dashboard() {
+  // Helper: resolve relative image URLs (like /uploads/...) to absolute using backend base URL
+  const resolveImageUrl = (url: string | undefined | null): string => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    const base = process.env.NEXT_PUBLIC_API_URL || '';
+    return `${base}${url}`;
+  };
   const [activeTab, setActiveTab] = useState("matches"); // matches, insights, coach, messages, profile
   const [isPremium, setIsPremium] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeChatId, setActiveChatId] = useState<string | null>("m1");
+  const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [matchCompatibility, setMatchCompatibility] = useState<any>(null);
   const [isCalculatingMatch, setIsCalculatingMatch] = useState(false);
@@ -26,6 +33,7 @@ export default function Dashboard() {
   const [isLoadingMatches, setIsLoadingMatches] = useState(true);
   const [matchesViewedToday, setMatchesViewedToday] = useState(0);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,7 +44,7 @@ export default function Dashboard() {
       }
 
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
           
         // Fetch real profile
         const profileRes = await fetch(`${API_URL}/users/profile`, {
@@ -45,10 +53,16 @@ export default function Dashboard() {
         if (profileRes.ok) {
           const profileData = await profileRes.json();
           setUserProfile(profileData);
+          // Support all backend image formats
           if (profileData.profileImages && profileData.profileImages.length > 0) {
-            setUserPhotos(profileData.profileImages.map((img: any) => img.url));
+            const sorted = [...profileData.profileImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+            setUserPhotos(sorted.map((img: any) => resolveImageUrl(img.url)));
+          } else if (profileData.profileImageUrls && profileData.profileImageUrls.length > 0) {
+            setUserPhotos(profileData.profileImageUrls.map((u: string) => resolveImageUrl(u)));
           } else if (profileData.photoUrls && profileData.photoUrls.length > 0) {
-            setUserPhotos(profileData.photoUrls);
+            setUserPhotos(profileData.photoUrls.map((u: string) => resolveImageUrl(u)));
+          } else if (profileData.selfieUrl) {
+            setUserPhotos([resolveImageUrl(profileData.selfieUrl)]);
           }
         }
 
@@ -57,7 +71,51 @@ export default function Dashboard() {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const matchesData = await matchesRes.json();
-        setMatches(Array.isArray(matchesData) ? matchesData : []);
+        // Normalize image fields for each match
+        const normalizedMatches = (Array.isArray(matchesData) ? matchesData : []).map((m: any) => {
+          if (!m.imageUrls || m.imageUrls.length === 0) {
+            if (m.profileImages && m.profileImages.length > 0) {
+              const sorted = [...m.profileImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+              m.imageUrls = sorted.map((img: any) => resolveImageUrl(img.url));
+            } else if (m.profileImageUrls && m.profileImageUrls.length > 0) {
+              m.imageUrls = m.profileImageUrls.map((u: string) => resolveImageUrl(u));
+            } else if (m.selfieUrl) {
+              m.imageUrls = [resolveImageUrl(m.selfieUrl)];
+            }
+          } else {
+            m.imageUrls = m.imageUrls.map((u: string) => resolveImageUrl(u));
+          }
+          if (m.photoUrl) m.photoUrl = resolveImageUrl(m.photoUrl);
+          // Also normalize partner images
+          if (m.partner) {
+            if (!m.partner.photoUrl && !m.partner.imageUrls?.length) {
+              if (m.partner.profileImages?.length > 0) {
+                const sorted = [...m.partner.profileImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+                m.partner.photoUrl = resolveImageUrl(sorted[0]?.url);
+              } else if (m.partner.profileImageUrls?.length > 0) {
+                m.partner.photoUrl = resolveImageUrl(m.partner.profileImageUrls[0]);
+              } else if (m.partner.selfieUrl) {
+                m.partner.photoUrl = resolveImageUrl(m.partner.selfieUrl);
+              }
+            } else if (m.partner.photoUrl) {
+              m.partner.photoUrl = resolveImageUrl(m.partner.photoUrl);
+            }
+          }
+          return m;
+        });
+        setMatches(normalizedMatches);
+
+        // Fetch dynamic exchange rates
+        try {
+          const exchangeRes = await fetch('https://open.er-api.com/v6/latest/USD');
+          if (exchangeRes.ok) {
+            const exchangeData = await exchangeRes.json();
+            setExchangeRates(exchangeData.rates);
+          }
+        } catch (exErr) {
+          console.error("Failed to fetch exchange rates", exErr);
+        }
+
       } catch (err) {
         console.error("Error fetching data", err);
         setMatches([]);
@@ -86,6 +144,39 @@ export default function Dashboard() {
   const [chatMessages, setChatMessages] = useState<{sender: string, text: string}[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [aiChatTip, setAiChatTip] = useState("");
+
+  // Chat currently open in the Messages inbox (independent of the match browsing carousel)
+  const activeChatMatch = matches.find(m => m.partner?.id === activeChatId);
+
+  // Load real message history with the selected chat partner and poll for new ones
+  useEffect(() => {
+    const partnerId = activeChatId;
+    if (!partnerId || activeTab !== "messages") return;
+
+    let active = true;
+    const loadMessages = async () => {
+      const token = localStorage.getItem('knot_token');
+      if (!token) return;
+      try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        const res = await fetch(`${API_URL}/messages/${partnerId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok || !active) return;
+        const data = await res.json();
+        setChatMessages((Array.isArray(data) ? data : []).map((m: any) => ({
+          sender: m.senderId === userProfile?.id ? "me" : "them",
+          text: m.content,
+        })));
+      } catch (err) {
+        console.error("Failed to load messages", err);
+      }
+    };
+
+    loadMessages();
+    const intervalId = setInterval(loadMessages, 3000);
+    return () => { active = false; clearInterval(intervalId); };
+  }, [activeChatId, activeTab, userProfile?.id]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollToBottom = () => {
@@ -140,19 +231,30 @@ export default function Dashboard() {
   const handleSendChatMessage = async () => {
     if (!chatInput.trim()) return;
     const msg = chatInput.trim();
+    const partnerId = activeChatId;
     setChatMessages(prev => [...prev, { sender: "me", text: msg }]);
     setChatInput("");
     setAiChatTip("AI Coach is analyzing...");
 
     try {
+      const token = localStorage.getItem('knot_token');
+      if (partnerId && token) {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        await fetch(`${API_URL}/messages/${partnerId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ text: msg }),
+        });
+      }
+
       const history = chatMessages.map(m => ({ role: m.sender === "me" ? "user" : "match", text: m.text }));
-      const res = await fetch("https://knot-backend-ai.onrender.com/coach/respond", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/coach`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          conversation_history: history,
-          user_profile: { firstName: userProfile?.firstName || "Web", lastName: userProfile?.lastName || "User", dateOfBirth: userProfile?.dateOfBirth || "1990-01-01", bio: "Seeking a serious partner." },
-          current_message: msg,
+          conversationHistory: history,
+          userProfile: { firstName: userProfile?.firstName || "Web", lastName: userProfile?.lastName || "User", dateOfBirth: userProfile?.dateOfBirth || "1990-01-01", bio: "Seeking a serious partner." },
+          currentMessage: msg,
         })
       });
       const data = await res.json();
@@ -162,7 +264,11 @@ export default function Dashboard() {
         setAiChatTip("");
       }
     } catch (e) {
-      setAiChatTip("AI Coach is currently unavailable.");
+      if (e instanceof Error && e.message.includes('FREE_TIER_LIMIT')) {
+        setAiChatTip("Free tier limit reached. Upgrade to message more matches.");
+      } else {
+        setAiChatTip("AI Coach is currently unavailable.");
+      }
     }
   };
 
@@ -201,7 +307,7 @@ export default function Dashboard() {
       setShowMatchModal(true);
       setIsCalculatingMatch(true);
       try {
-        const res = await fetch("https://knot-backend-ai.onrender.com/compatibility", {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/compatibility`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -301,14 +407,30 @@ export default function Dashboard() {
   const getFormattedPrice = (tier: string, country: string | undefined) => {
     const isAfrica = ['Nigeria', 'Ghana', 'Kenya', 'South Africa'].includes(country || '');
     
+    // Helper to dynamically calculate local price based on live exchange rates
+    const calcDynamic = (usd: number, currencyCode: string, symbol: string) => {
+      if (exchangeRates && exchangeRates[currencyCode]) {
+        const rate = exchangeRates[currencyCode];
+        let rawAmount = usd * rate;
+        
+        // Make the numbers look cleaner based on the currency magnitude
+        if (currencyCode === 'NGN') rawAmount = Math.ceil(rawAmount / 100) * 100;
+        else if (currencyCode === 'KES') rawAmount = Math.ceil(rawAmount / 10) * 10;
+        else rawAmount = Math.ceil(rawAmount);
+
+        return { symbol, amount: rawAmount.toLocaleString(), currency: currencyCode, rawAmount, usdAmount: usd };
+      }
+      return null;
+    };
+
     if (tier === 'Premium') {
-      const usdAmount = isAfrica ? 12 : 19.99;
-      if (!isAfrica) return { symbol: '$', amount: '19.99', currency: 'USD', rawAmount: 19.99, usdAmount };
+      const usdAmount = isAfrica ? 12 : 14.99;
+      if (!isAfrica) return { symbol: '$', amount: '14.99', currency: 'USD', rawAmount: 14.99, usdAmount };
       switch (country) {
-        case 'Nigeria': return { symbol: '₦', amount: '18,000', currency: 'NGN', rawAmount: 18000, usdAmount };
-        case 'Ghana': return { symbol: 'GH₵', amount: '168', currency: 'GHS', rawAmount: 168, usdAmount };
-        case 'Kenya': return { symbol: 'KSh', amount: '1,560', currency: 'KES', rawAmount: 1560, usdAmount };
-        case 'South Africa': return { symbol: 'R', amount: '228', currency: 'ZAR', rawAmount: 228, usdAmount };
+        case 'Nigeria': return calcDynamic(usdAmount, 'NGN', '₦') || { symbol: '₦', amount: '18,000', currency: 'NGN', rawAmount: 18000, usdAmount };
+        case 'Ghana': return calcDynamic(usdAmount, 'GHS', 'GH₵') || { symbol: 'GH₵', amount: '168', currency: 'GHS', rawAmount: 168, usdAmount };
+        case 'Kenya': return calcDynamic(usdAmount, 'KES', 'KSh') || { symbol: 'KSh', amount: '1,560', currency: 'KES', rawAmount: 1560, usdAmount };
+        case 'South Africa': return calcDynamic(usdAmount, 'ZAR', 'R') || { symbol: 'R', amount: '228', currency: 'ZAR', rawAmount: 228, usdAmount };
         default: return { symbol: '$', amount: '12.00', currency: 'USD', rawAmount: 12, usdAmount };
       }
     }
@@ -316,10 +438,10 @@ export default function Dashboard() {
       const usdAmount = isAfrica ? 25 : 39.99;
       if (!isAfrica) return { symbol: '$', amount: '39.99', currency: 'USD', rawAmount: 39.99, usdAmount };
       switch (country) {
-        case 'Nigeria': return { symbol: '₦', amount: '37,500', currency: 'NGN', rawAmount: 37500, usdAmount };
-        case 'Ghana': return { symbol: 'GH₵', amount: '350', currency: 'GHS', rawAmount: 350, usdAmount };
-        case 'Kenya': return { symbol: 'KSh', amount: '3,250', currency: 'KES', rawAmount: 3250, usdAmount };
-        case 'South Africa': return { symbol: 'R', amount: '475', currency: 'ZAR', rawAmount: 475, usdAmount };
+        case 'Nigeria': return calcDynamic(usdAmount, 'NGN', '₦') || { symbol: '₦', amount: '37,500', currency: 'NGN', rawAmount: 37500, usdAmount };
+        case 'Ghana': return calcDynamic(usdAmount, 'GHS', 'GH₵') || { symbol: 'GH₵', amount: '350', currency: 'GHS', rawAmount: 350, usdAmount };
+        case 'Kenya': return calcDynamic(usdAmount, 'KES', 'KSh') || { symbol: 'KSh', amount: '3,250', currency: 'KES', rawAmount: 3250, usdAmount };
+        case 'South Africa': return calcDynamic(usdAmount, 'ZAR', 'R') || { symbol: 'R', amount: '475', currency: 'ZAR', rawAmount: 475, usdAmount };
         default: return { symbol: '$', amount: '25.00', currency: 'USD', rawAmount: 25, usdAmount };
       }
     }
@@ -327,10 +449,10 @@ export default function Dashboard() {
       const usdAmount = 199;
       if (!isAfrica) return { symbol: '$', amount: '199', currency: 'USD', rawAmount: 199, usdAmount };
       switch (country) {
-        case 'Nigeria': return { symbol: '₦', amount: '298,500', currency: 'NGN', rawAmount: 298500, usdAmount };
-        case 'Ghana': return { symbol: 'GH₵', amount: '2,786', currency: 'GHS', rawAmount: 2786, usdAmount };
-        case 'Kenya': return { symbol: 'KSh', amount: '25,870', currency: 'KES', rawAmount: 25870, usdAmount };
-        case 'South Africa': return { symbol: 'R', amount: '3,781', currency: 'ZAR', rawAmount: 3781, usdAmount };
+        case 'Nigeria': return calcDynamic(usdAmount, 'NGN', '₦') || { symbol: '₦', amount: '298,500', currency: 'NGN', rawAmount: 298500, usdAmount };
+        case 'Ghana': return calcDynamic(usdAmount, 'GHS', 'GH₵') || { symbol: 'GH₵', amount: '2,786', currency: 'GHS', rawAmount: 2786, usdAmount };
+        case 'Kenya': return calcDynamic(usdAmount, 'KES', 'KSh') || { symbol: 'KSh', amount: '25,870', currency: 'KES', rawAmount: 25870, usdAmount };
+        case 'South Africa': return calcDynamic(usdAmount, 'ZAR', 'R') || { symbol: 'R', amount: '3,781', currency: 'ZAR', rawAmount: 3781, usdAmount };
         default: return { symbol: '$', amount: '199.00', currency: 'USD', rawAmount: 199, usdAmount };
       }
     }
@@ -590,11 +712,19 @@ export default function Dashboard() {
 
         <div className="space-y-4">
           <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5">
-            <div className="w-8 h-8 rounded-full bg-[#10B981]/20 flex items-center justify-center text-[#10B981]">
-              <ShieldCheck className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
+              {userPhotos.length > 0 ? (
+                <img src={userPhotos[0]} alt={userProfile?.firstName || 'Profile'} className="w-full h-full object-cover" />
+              ) : userProfile?.selfieUrl ? (
+                <img src={userProfile.selfieUrl} alt={userProfile?.firstName || 'Profile'} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-[#10B981]/20 flex items-center justify-center text-[#10B981]">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+              )}
             </div>
             <div>
-              <h5 className="text-xs font-bold text-white leading-none">{userProfile?.firstName || "Gabriel"}</h5>
+              <h5 className="text-xs font-bold text-white leading-none">{userProfile?.firstName || userProfile?.name || "User"}</h5>
               <span className="text-[9px] text-[#10B981] font-bold">Base Trust 98%</span>
             </div>
           </div>
@@ -905,7 +1035,7 @@ export default function Dashboard() {
                   <div className="pt-6 border-t border-white/10 flex gap-4">
                     <button 
                       onClick={() => {
-                        setActiveChatId(activeMatch.id);
+                        setActiveChatId(activeMatch.partner?.id || null);
                         setActiveTab("messages");
                       }}
                       className="flex-1 py-4 rounded-xl text-sm font-black rose-glow-btn text-white flex items-center justify-center gap-2"
@@ -1021,22 +1151,25 @@ export default function Dashboard() {
               <div className={`md:col-span-4 glass-card rounded-[28px] border border-white/5 p-4 overflow-y-auto space-y-2 h-full ${activeChatId ? "hidden md:block" : "block"}`}>
                 <h4 className="text-[10px] uppercase tracking-widest text-gray-500 font-black px-2 mb-3">Chats</h4>
                 {matches.length > 0 ? (
-                  <button 
-                    onClick={() => setActiveChatId("m1")}
-                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-[#2D1B4E]/30 border border-[#D4AF37]/20 text-left transition-all hover:bg-[#2D1B4E]/40"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-gray-800 overflow-hidden flex-shrink-0">
-                      {activeMatch?.partner?.photoUrl ? (
-                        <img className="w-full h-full object-cover" src={activeMatch.partner.photoUrl} alt="" />
-                      ) : (
-                        <User className="w-full h-full p-2 text-gray-500" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h5 className="text-xs font-bold text-white truncate">{activeMatch?.partner?.firstName || "Match"}</h5>
-                      <p className="text-[10px] text-gray-400 truncate">Tap to start conversation</p>
-                    </div>
-                  </button>
+                  matches.map((m) => (
+                    <button 
+                      key={m.partner?.id}
+                      onClick={() => setActiveChatId(m.partner?.id || null)}
+                      className={`w-full flex items-center gap-3 p-3 rounded-2xl border text-left transition-all ${activeChatId === m.partner?.id ? "bg-[#2D1B4E]/30 border-[#D4AF37]/20" : "bg-white/[0.02] border-white/5 hover:bg-white/5"}`}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-gray-800 overflow-hidden flex-shrink-0">
+                        {m.partner?.photoUrl ? (
+                          <img className="w-full h-full object-cover" src={m.partner.photoUrl} alt="" />
+                        ) : (
+                          <User className="w-full h-full p-2 text-gray-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h5 className="text-xs font-bold text-white truncate">{m.partner?.firstName || "Match"}</h5>
+                        <p className="text-[10px] text-gray-400 truncate">Tap to start conversation</p>
+                      </div>
+                    </button>
+                  ))
                 ) : (
                   <div className="flex flex-col items-center justify-center h-40 text-center px-4">
                     <MessageSquare className="w-8 h-8 text-gray-600 mb-2" />
@@ -1056,14 +1189,14 @@ export default function Dashboard() {
                     <ArrowLeft className="w-5 h-5" />
                   </button>
                   <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden flex-shrink-0">
-                    {activeMatch?.partner?.photoUrl ? (
-                      <img className="w-full h-full object-cover" src={activeMatch.partner.photoUrl} alt="" />
+                    {activeChatMatch?.partner?.photoUrl ? (
+                      <img className="w-full h-full object-cover" src={activeChatMatch.partner.photoUrl} alt="" />
                     ) : (
                       <User className="w-full h-full p-1.5 text-gray-500" />
                     )}
                   </div>
                   <div>
-                        <h5 className="text-xs font-bold text-white">{activeMatch?.partner?.firstName || "Match"}</h5>
+                        <h5 className="text-xs font-bold text-white">{activeChatMatch?.partner?.firstName || "Match"}</h5>
                     <span className="text-[9px] text-[#10B981] font-bold">Verified Real Human</span>
                   </div>
                 </div>
@@ -1073,7 +1206,7 @@ export default function Dashboard() {
                   {chatMessages.map((msg, idx) => (
                     <div key={idx} className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2`}>
                       {msg.sender !== "me" && (
-                        <img src={activeMatch?.partner?.photoUrl || ""} alt="Match" className="w-8 h-8 rounded-full object-cover mr-2 self-end" />
+                        <img src={activeChatMatch?.partner?.photoUrl || ""} alt="Match" className="w-8 h-8 rounded-full object-cover mr-2 self-end" />
                       )}
                       <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
                         msg.sender === "me" 

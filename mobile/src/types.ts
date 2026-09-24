@@ -142,6 +142,8 @@ export interface User {
   attachmentStyle?: string;
   selfieUrl?: string;
   pushToken?: string;
+  photoUrl?: string;
+  profileImages?: { url: string; isPrimary?: boolean }[];
 }
 
 export interface Match extends User {

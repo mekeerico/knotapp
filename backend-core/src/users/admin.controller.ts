@@ -19,12 +19,16 @@ export class AdminController {
         email: true,
         firstName: true,
         lastName: true,
+        occupation: true,
         role: true,
         residenceCity: true,
         residenceCountry: true,
         isPremium: true,
         maritalStatus: true,
         isSuspended: true,
+        isVerified: true,
+        profileImages: { select: { url: true, isPrimary: true } },
+        selfieUrl: true,
       },
       orderBy: { email: 'asc' } // No createdAt currently in User, so order by email
     });

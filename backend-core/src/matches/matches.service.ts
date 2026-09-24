@@ -26,6 +26,7 @@ export class MatchesService {
         isVerified: true, // Only match with verified real humans
       },
       take: 5,
+      include: { profileImages: true },
     });
 
     const matchesList: any[] = [];
@@ -74,6 +75,8 @@ export class MatchesService {
           personalityArchetype: partner.personalityArchetype,
           attachmentStyle: partner.attachmentStyle,
           trustScore: partner.trustScore,
+          profileImages: partner.profileImages,
+          selfieUrl: partner.selfieUrl,
         },
         scores: {
           compatibilityScore: match.compatibilityScore,
@@ -128,8 +131,8 @@ export class MatchesService {
         ],
       },
       include: {
-        userA: true,
-        userB: true,
+        userA: { include: { profileImages: true } },
+        userB: { include: { profileImages: true } },
       },
     });
 
@@ -145,6 +148,8 @@ export class MatchesService {
           bio: partner.bio,
           occupation: partner.occupation,
           trustScore: partner.trustScore,
+          profileImages: partner.profileImages,
+          selfieUrl: partner.selfieUrl,
         },
         scores: {
           compatibilityScore: m.compatibilityScore,

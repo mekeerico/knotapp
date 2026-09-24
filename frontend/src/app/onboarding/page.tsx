@@ -434,7 +434,7 @@ export default function Onboarding() {
 
   const handleFinalizeRegistration = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
         
       const res = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
@@ -478,7 +478,7 @@ export default function Onboarding() {
     setMessages(prev => [...prev, { role: "ai", text: "Analyzing response..." }]);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
       const question = interviewQuestionIndex === 0 ? "Shall we begin?" : interviewPrompts[interviewQuestionIndex - 1];
       const verifyRes = await fetch(`${API_URL}/users/onboarding/validate-answer`, {
@@ -538,7 +538,7 @@ export default function Onboarding() {
     setVerificationStep(0);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
       
       // Final cleanup of "Other" fields
       const finalLanguages = languagesSpoken.map(l => l === "Other" && otherLanguageInput ? otherLanguageInput : l);

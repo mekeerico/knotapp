@@ -105,7 +105,9 @@ export default function HomeScreen() {
   const metrics = activeMatch ? getMatchMetrics(activeMatch) : null;
   const photos = activeMatch?.profileImageUrls?.length
     ? activeMatch.profileImageUrls
-    : ['https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=800'];
+    : activeMatch?.selfieUrl
+    ? [activeMatch.selfieUrl]
+    : [`https://ui-avatars.com/api/?name=${encodeURIComponent(activeMatch?.name || activeMatch?.firstName || 'User')}&background=1E1E1E&color=FFFFFF&size=800`];
 
   const getDailyLimit = () => {
     switch (userProfile?.subscriptionTier) {
@@ -346,7 +348,7 @@ export default function HomeScreen() {
             <Text style={st.modalSub}>Your relationship profiles show exceptional compatibility.</Text>
             
             <View style={st.modalAvatars}>
-              <Image source={{ uri: userProfile?.profileImageUrls?.[0] || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200' }} style={st.modalAvatar} />
+              <Image source={{ uri: userProfile?.profileImageUrls?.[0] || (userProfile as any)?.selfieUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(userProfile?.name || userProfile?.firstName || 'Me')}&background=1E1E1E&color=FFFFFF&size=200` }} style={st.modalAvatar} />
               <View style={st.modalHeartWrap}>
                 <Ionicons name="heart" size={28} color={Colors.primary} />
               </View>

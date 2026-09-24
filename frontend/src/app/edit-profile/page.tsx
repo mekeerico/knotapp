@@ -20,7 +20,7 @@ export default function EditProfile() {
         return;
       }
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+        const API_URL = process.env.NEXT_PUBLIC_API_URL;
         const res = await fetch(`${API_URL}/users/profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -55,7 +55,7 @@ export default function EditProfile() {
     formData.append('photo', file);
 
     const token = localStorage.getItem('knot_token');
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
     try {
       const res = await fetch(`${API_URL}/upload`, {
@@ -85,7 +85,7 @@ export default function EditProfile() {
   const handleSave = async () => {
     setIsSaving(true);
     const token = localStorage.getItem('knot_token');
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+    const API_URL = process.env.NEXT_PUBLIC_API_URL;
     
     try {
       const updatedData = { ...profile, profileImageUrls: photos };

@@ -15,7 +15,7 @@ interface PaymentScreenProps {
 }
 
 const PAYSTACK_PUBLIC_KEY = (import.meta as any).env.VITE_PAYSTACK_PUBLIC_KEY || '';
-const MONTHLY_RATE_USD = 19.99;
+const MONTHLY_RATE_USD = 14.99;
 
 const PaymentScreen: React.FC<PaymentScreenProps> = ({ onBack, onSubscribe, user }) => {
     const [isProcessing, setIsProcessing] = useState(false);

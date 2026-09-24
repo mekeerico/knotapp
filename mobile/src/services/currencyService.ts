@@ -29,7 +29,7 @@ export const AFRICAN_COUNTRIES = ['Nigeria', 'Ghana', 'Kenya', 'South Africa'];
 
 export const TIER_PRICES = {
   Essential: { global: 0, africa: 0 },
-  Premium: { global: 19.99, africa: 12.00 },
+  Premium: { global: 14.99, africa: 12.00 },
   Elite: { global: 39.99, africa: 25.00 },
   Executive: { global: 199.00, africa: 199.00 },
 };

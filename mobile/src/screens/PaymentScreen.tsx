@@ -103,8 +103,15 @@ export default function PaymentScreen() {
   }, []);
 
   const getTierPriceDisplay = (tierId: string) => {
-    // If RevenueCat packages are available, extract from there for accuracy!
-    // Since this is dynamically mapping UI, we'll gracefully fallback to our static estimation if needed.
+    // Search for a loaded RevenueCat package matching this tier
+    const pkg = rcPackages.find(p => p.identifier.toLowerCase().includes(tierId.toLowerCase()));
+    
+    // If we found the package from RevenueCat, return the exact localized price string from the store!
+    if (pkg && pkg.product && pkg.product.priceString) {
+      return pkg.product.priceString;
+    }
+
+    // Fallback if RevenueCat packages haven't loaded yet
     const baseUsd = getTierPriceUSD(tierId as any, country);
     const finalUsd = isYearly ? baseUsd * 10 : baseUsd;
     const isAfrica = AFRICAN_COUNTRIES.includes(country);

@@ -39,6 +39,8 @@ services:
     environment:
       - PORT=8000
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
+      - GROK_API_KEY=${GROK_API_KEY}
     volumes:
       - ./backend-ai:/app
     depends_on:

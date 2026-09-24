@@ -3,6 +3,7 @@ import {
   ActivityIndicator, Alert, FlatList, Image, StyleSheet, Text,
   TextInput, TouchableOpacity, View,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -177,7 +178,9 @@ export default function AdminScreen() {
           keyExtractor={(m) => m.id}
           contentContainerStyle={{ padding: Spacing.md, paddingBottom: 24, gap: 12 }}
           renderItem={({ item }) => {
-            const photo = item.profileImageUrls?.[0] || 'https://ui-avatars.com/api/?name=User&background=1E1E1E&color=FFFFFF&size=200';
+            const displayName = item.name || [item.firstName, item.lastName].filter(Boolean).join(' ') || 'User';
+            const avatarName = encodeURIComponent(displayName);
+            const photo = item.profileImages?.[0]?.url || item.profileImageUrls?.[0] || item.selfieUrl || item.photoUrl || `https://ui-avatars.com/api/?name=${avatarName}&background=1E1E1E&color=FFFFFF&size=200`;
             return (
               <TouchableOpacity 
                 style={[s.memberCard, { backgroundColor: '#1A1A1A', borderColor: '#333' }]}
@@ -188,10 +191,11 @@ export default function AdminScreen() {
                   <Image source={{ uri: photo }} style={s.memberAvatar} />
                   <View style={{ flex: 1 }}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <Text style={[s.memberName, { color: Colors.white }]}>{item.name}, {item.age}</Text>
+                      <Text style={[s.memberName, { color: Colors.white }]}>{item.name || displayName}{item.age ? `, ${item.age}` : ''}</Text>
                       {item.isVerified && <Ionicons name="checkmark-circle" size={16} color="#D4AF37" />}
                     </View>
-                    <Text style={s.memberOcc}>{item.occupation}</Text>
+                    {item.occupation ? <Text style={s.memberOcc}>{item.occupation}</Text> : null}
+                    {item.email ? <Text style={s.memberEmail}>{item.email}</Text> : null}
                   </View>
                   <View style={{ flexDirection: 'row', gap: 8 }}>
                     <TouchableOpacity onPress={() => navigation.navigate('EditProfile', { user: item })} style={{ padding: 8, backgroundColor: '#3B82F62A', borderRadius: 12 }}>
@@ -248,6 +252,7 @@ const s = StyleSheet.create({
   memberAvatar: { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: Colors.white },
   memberName: { fontSize: 16, fontWeight: '900' },
   memberOcc: { fontSize: 10, color: Colors.gray400, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
+  memberEmail: { fontSize: 10, color: Colors.gray500, marginTop: 2 },
   memberActions: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.gray50 },
   verifyBtn: { backgroundColor: Colors.primary, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 10, elevation: 2 },
   verifyBtnRevoke: { backgroundColor: Colors.gray100, elevation: 0 },

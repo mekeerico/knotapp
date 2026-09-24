@@ -35,7 +35,7 @@ export default function Login() {
     try {
 
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://knot-backend-core.onrender.com';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
         
       const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
