@@ -18,14 +18,21 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger("knot-ai-service")
 
-# Configure OpenAI client for Text
+# Configure OpenAI client for Text and Vision
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
 GROK_API_KEY = os.getenv("GROK_API_KEY")
+GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 
 client = None
 text_model = "llama-3.3-70b"
 
-if GROK_API_KEY:
+if GEMINI_KEY:
+    client = OpenAI(
+        api_key=GEMINI_KEY,
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    )
+    text_model = "gemini-1.5-flash"
+elif GROK_API_KEY:
     client = OpenAI(
         api_key=GROK_API_KEY,
         base_url="https://api.x.ai/v1",
@@ -38,10 +45,9 @@ elif CEREBRAS_API_KEY:
     )
     text_model = "gpt-oss-120b"
 else:
-    logger.warning("Neither CEREBRAS_API_KEY nor GROK_API_KEY is set in environmental variables.")
+    logger.warning("No text generation API key (GEMINI_API_KEY, GROK_API_KEY, or CEREBRAS_API_KEY) was set.")
 
 # Configure OpenAI client for Google Gemini (Vision)
-GEMINI_KEY = os.getenv("GEMINI_API_KEY")
 gemini_client = None
 if not GEMINI_KEY:
     logger.warning("GEMINI_API_KEY is not set in environmental variables.")
