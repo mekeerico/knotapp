@@ -3,7 +3,8 @@ import { Platform } from 'react-native';
 import { User, Match, Message } from '../types';
 
 const DEV_API_URL = Platform.OS === 'web' ? 'http://localhost:8080' : Platform.OS === 'android' ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || (__DEV__ ? DEV_API_URL : 'http://16.192.76.171:8080');
+// Production builds must set EXPO_PUBLIC_API_URL (CI injects this from the repo variable)
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || DEV_API_URL;
 // Base URL for backend resources
 const BASE_URL = API_URL;
 
