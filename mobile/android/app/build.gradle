@@ -166,6 +166,10 @@ android {
     }
 }
 
+configurations.all {
+    exclude group: 'com.amazon.device', module: 'amazon-appstore-sdk'
+}
+
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")

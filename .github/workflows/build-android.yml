@@ -64,7 +64,7 @@ jobs:
           if [ -f "app/upload.keystore" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
             SIGNING_FLAGS="-PMYAPP_UPLOAD_STORE_FILE=upload.keystore -PMYAPP_UPLOAD_STORE_PASSWORD=$KEYSTORE_PASSWORD -PMYAPP_UPLOAD_KEY_ALIAS=$KEY_ALIAS -PMYAPP_UPLOAD_KEY_PASSWORD=$KEY_PASSWORD"
           fi
-          ./gradlew assembleRelease -Dorg.gradle.jvmargs="-Xmx2560m -XX:MaxMetaspaceSize=512m" --max-workers=2 $SIGNING_FLAGS --no-daemon
+          ./gradlew assembleRelease -Dorg.gradle.jvmargs="-Xmx3584m -XX:MaxMetaspaceSize=512m" --max-workers=2 $SIGNING_FLAGS --no-daemon
         working-directory: mobile/android
 
       - name: Build Release AAB
@@ -79,7 +79,7 @@ jobs:
           if [ -f "app/upload.keystore" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
             SIGNING_FLAGS="-PMYAPP_UPLOAD_STORE_FILE=upload.keystore -PMYAPP_UPLOAD_STORE_PASSWORD=$KEYSTORE_PASSWORD -PMYAPP_UPLOAD_KEY_ALIAS=$KEY_ALIAS -PMYAPP_UPLOAD_KEY_PASSWORD=$KEY_PASSWORD"
           fi
-          ./gradlew bundleRelease -Dorg.gradle.jvmargs="-Xmx2560m -XX:MaxMetaspaceSize=512m" --max-workers=2 $SIGNING_FLAGS --no-daemon
+          ./gradlew bundleRelease -Dorg.gradle.jvmargs="-Xmx3584m -XX:MaxMetaspaceSize=512m" --max-workers=2 $SIGNING_FLAGS --no-daemon
         working-directory: mobile/android
 
       - name: Upload APK Artifact
