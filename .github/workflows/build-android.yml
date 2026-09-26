@@ -52,7 +52,7 @@ jobs:
           fi
         working-directory: mobile
 
-      - name: Build Release APK
+      - name: Build Release APK and AAB
         env:
           EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
           NODE_ENV: production
@@ -64,22 +64,7 @@ jobs:
           if [ -f "app/upload.keystore" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
             SIGNING_FLAGS="-PMYAPP_UPLOAD_STORE_FILE=upload.keystore -PMYAPP_UPLOAD_STORE_PASSWORD=$KEYSTORE_PASSWORD -PMYAPP_UPLOAD_KEY_ALIAS=$KEY_ALIAS -PMYAPP_UPLOAD_KEY_PASSWORD=$KEY_PASSWORD"
           fi
-          ./gradlew assembleRelease -Dorg.gradle.jvmargs="-Xmx3g -XX:MaxMetaspaceSize=512m" --max-workers=2 -PreactNativeArchitectures=arm64-v8a $SIGNING_FLAGS --no-daemon
-        working-directory: mobile/android
-
-      - name: Build Release AAB
-        env:
-          EXPO_PUBLIC_API_URL: ${{ vars.EXPO_PUBLIC_API_URL }}
-          NODE_ENV: production
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          SIGNING_FLAGS=""
-          if [ -f "app/upload.keystore" ] && [ -n "$KEYSTORE_PASSWORD" ]; then
-            SIGNING_FLAGS="-PMYAPP_UPLOAD_STORE_FILE=upload.keystore -PMYAPP_UPLOAD_STORE_PASSWORD=$KEYSTORE_PASSWORD -PMYAPP_UPLOAD_KEY_ALIAS=$KEY_ALIAS -PMYAPP_UPLOAD_KEY_PASSWORD=$KEY_PASSWORD"
-          fi
-          ./gradlew bundleRelease -Dorg.gradle.jvmargs="-Xmx3g -XX:MaxMetaspaceSize=512m" --max-workers=2 -PreactNativeArchitectures=arm64-v8a $SIGNING_FLAGS --no-daemon
+          ./gradlew assembleRelease bundleRelease -Dorg.gradle.jvmargs="-Xmx3g -XX:MaxMetaspaceSize=512m" --max-workers=2 $SIGNING_FLAGS --no-daemon
         working-directory: mobile/android
 
       - name: Upload APK Artifact
