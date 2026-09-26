@@ -105,13 +105,13 @@ android {
             keyPassword 'android'
         }
         release {
-            if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE')) {
+            if (project.hasProperty('MYAPP_UPLOAD_STORE_FILE') && file(MYAPP_UPLOAD_STORE_FILE).exists() && project.hasProperty('MYAPP_UPLOAD_STORE_PASSWORD') && MYAPP_UPLOAD_STORE_PASSWORD != "") {
                 storeFile file(MYAPP_UPLOAD_STORE_FILE)
                 storePassword MYAPP_UPLOAD_STORE_PASSWORD
                 keyAlias MYAPP_UPLOAD_KEY_ALIAS
                 keyPassword MYAPP_UPLOAD_KEY_PASSWORD
             } else {
-                println("WARNING: Release signing config not found, falling back to debug.")
+                println("WARNING: Release signing config not found or invalid, falling back to debug.")
                 storeFile file('debug.keystore')
                 storePassword 'android'
                 keyAlias 'androiddebugkey'
