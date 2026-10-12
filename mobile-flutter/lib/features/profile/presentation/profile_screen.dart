@@ -1,0 +1,215 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/gold_button.dart';
+import '../../../core/widgets/knot_app_bar.dart';
+import '../../../core/widgets/verified_badge.dart';
+import '../../auth/providers/auth_provider.dart';
+
+class ProfileScreen extends ConsumerWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(authProvider).user;
+    final isVerified = user?.isVerified ?? false;
+
+    return Scaffold(
+      backgroundColor: AppColors.obsidianBlack,
+      appBar: const KnotAppBar(
+        title: 'SOVEREIGN IDENTITY',
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          child: Column(
+            children: [
+              // User Avatar & Name Card
+              GlassCard(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          width: 96,
+                          height: 96,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.champagneGold, width: 2),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.champagneGold.withOpacity(0.3),
+                                blurRadius: 16,
+                              ),
+                            ],
+                            image: DecorationImage(
+                              image: NetworkImage(user?.primaryPhoto ??
+                                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800'),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        if (isVerified)
+                          const Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: VerifiedBadge(size: 26),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      user?.fullName ?? 'Sovereign Candidate',
+                      style: AppTypography.displayMedium.copyWith(fontSize: 22),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${user?.occupation.isNotEmpty ?? false ? user!.occupation : "Professional"} • ${user?.residenceCity.isNotEmpty ?? false ? user!.residenceCity : "Global Registry"}',
+                      style: AppTypography.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Didit KYC Verification Card
+              GlassCard(
+                padding: const EdgeInsets.all(20),
+                backgroundColor: isVerified
+                    ? AppColors.emeraldVerified.withOpacity(0.08)
+                    : AppColors.champagneGold.withOpacity(0.08),
+                border: Border.all(
+                  color: isVerified
+                      ? AppColors.emeraldVerified.withOpacity(0.4)
+                      : AppColors.champagneGold.withOpacity(0.4),
+                  width: 1.2,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isVerified
+                            ? AppColors.emeraldVerified.withOpacity(0.2)
+                            : AppColors.champagneGold.withOpacity(0.2),
+                      ),
+                      child: Icon(
+                        isVerified ? Icons.verified_user : Icons.shield_outlined,
+                        color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isVerified ? 'DIDIT GOLD TRUST SEAL' : 'UNVERIFIED PROFILE',
+                            style: AppTypography.titleMedium.copyWith(
+                              color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isVerified
+                                ? 'Biometric 1:1 match and government document certified.'
+                                : 'Complete biometric scan to unlock high-intent marriage matches.',
+                            style: AppTypography.bodySmall.copyWith(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!isVerified)
+                      GoldButton(
+                        text: 'VERIFY',
+                        width: 90,
+                        height: 38,
+                        onPressed: () => context.push('/verification'),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Profile Actions Menu
+              _buildMenuItem(
+                context,
+                title: 'Edit Personal & Vow Preferences',
+                icon: Icons.edit_note,
+                onTap: () => context.push('/edit-profile'),
+              ),
+              const SizedBox(height: 12),
+              _buildMenuItem(
+                context,
+                title: 'Manage Candidate Photos',
+                icon: Icons.photo_library_outlined,
+                onTap: () => context.push('/manage-photos'),
+              ),
+              const SizedBox(height: 12),
+              _buildMenuItem(
+                context,
+                title: 'Sovereign VIP Tiers',
+                icon: Icons.workspace_premium,
+                onTap: () => context.push('/paywall'),
+              ),
+              const SizedBox(height: 12),
+              _buildMenuItem(
+                context,
+                title: 'Identity Biometric Center (Didit)',
+                icon: Icons.fingerprint,
+                onTap: () => context.push('/verification'),
+              ),
+              const SizedBox(height: 24),
+
+              // Sign Out Button
+              GoldButton(
+                text: 'Sign Out',
+                isSecondary: true,
+                onPressed: () async {
+                  await ref.read(authProvider.notifier).logout();
+                  if (context.mounted) {
+                    context.go('/auth');
+                  }
+                },
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMenuItem(
+    BuildContext context, {
+    required String title,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      onTap: onTap,
+      child: Row(
+        children: [
+          Icon(icon, color: AppColors.champagneGold, size: 22),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              title,
+              style: AppTypography.titleMedium.copyWith(fontSize: 14),
+            ),
+          ),
+          const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textSubtle),
+        ],
+      ),
+    );
+  }
+}

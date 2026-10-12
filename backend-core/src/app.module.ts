@@ -8,6 +8,7 @@ import { MatchesModule } from './matches/matches.module';
 import { MessagesModule } from './messages/messages.module';
 import { AIModule } from './ai/ai.module';
 import { PaymentsModule } from './payments/payments.module';
+import { VerificationModule } from './verification/verification.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { PaymentsModule } from './payments/payments.module';
     MessagesModule,
     AIModule,
     PaymentsModule,
+    VerificationModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

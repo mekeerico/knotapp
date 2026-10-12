@@ -1,10 +1,48 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Put,
+  Delete,
+  UseGuards,
+  Request,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { VerificationService } from '../verification/verification.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly verificationService: VerificationService,
+  ) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Post('verify-identity')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'idFront', maxCount: 1 },
+      { name: 'idBack', maxCount: 1 },
+      { name: 'selfie', maxCount: 1 },
+    ]),
+  )
+  async verifyIdentity(
+    @Request() req: any,
+    @UploadedFiles()
+    files: {
+      idFront?: Express.Multer.File[];
+      idBack?: Express.Multer.File[];
+      selfie?: Express.Multer.File[];
+    },
+  ) {
+    return this.verificationService.verifyIdentity(req.user.id, files as any);
+  }
 
   @Get()
   async getAll() {

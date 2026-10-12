@@ -73,6 +73,10 @@ model User {
 
   // Advanced Trust & Safety Metrics
   isVerified           Boolean   @default(false)
+  verifiedAt           DateTime?
+  verificationBadge    String?   @default("GOLD")
+  verificationScore    Int?      @default(0)
+  idDocType            String?
   pushToken            String?
   isPremium            Boolean   @default(false)
   isAdmin              Boolean   @default(false)
