@@ -59,6 +59,8 @@ services:
       - AI_SERVICE_URL=http://backend-ai:8000
       - JWT_SECRET=${JWT_SECRET:-supersecretprodtoken}
       - PAYSTACK_SECRET_KEY=${PAYSTACK_SECRET_KEY}
+      - DIDIT_API_KEY=${DIDIT_API_KEY}
+      - DIDIT_BASE_URL=${DIDIT_BASE_URL:-https://verification.didit.me}
     depends_on:
       db:
         condition: service_healthy

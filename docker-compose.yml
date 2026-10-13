@@ -60,6 +60,8 @@ services:
       - REDIS_URL=redis://redis:6379
       - AI_SERVICE_URL=http://backend-ai:8000
       - JWT_SECRET=supersecretlocaltoken
+      - DIDIT_API_KEY=${DIDIT_API_KEY}
+      - DIDIT_BASE_URL=${DIDIT_BASE_URL:-https://verification.didit.me}
     volumes:
       - ./backend-core:/app
       - /app/node_modules

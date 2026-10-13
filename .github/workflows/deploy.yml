@@ -17,7 +17,7 @@ jobs:
         run: |
           # Create a dedicated directory for the archive to prevent read errors
           mkdir -p build_archive
-          tar --exclude='./.git' --exclude='./node_modules' --exclude='./backend-core/node_modules' --exclude='./backend-ai/node_modules' --exclude='./frontend/node_modules' --exclude='./mobile/node_modules' --exclude='./build_archive' -czf build_archive/knot-deploy.tar.gz .
+          tar --exclude='./.git' --exclude='./node_modules' --exclude='./backend-core/node_modules' --exclude='./backend-ai/node_modules' --exclude='./frontend/node_modules' --exclude='./mobile/node_modules' --exclude='./mobile-flutter/.dart_tool' --exclude='./mobile-flutter/build' --exclude='./build_archive' -czf build_archive/knot-deploy.tar.gz .
 
       - name: Copy Archive to EC2
         uses: appleboy/scp-action@v0.1.7
