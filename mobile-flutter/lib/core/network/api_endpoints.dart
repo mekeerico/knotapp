@@ -10,10 +10,13 @@ class ApiEndpoints {
       return _overrideUrl;
     }
     if (kIsWeb) {
-      return 'http://localhost:8080';
+      return 'http://knotconnect.duckdns.org:8080';
+    }
+    if (kReleaseMode) {
+      return 'http://knotconnect.duckdns.org:8080';
     }
     if (Platform.isAndroid) {
-      // Android emulator reaches host loopback via 10.0.2.2
+      // Android emulator reaches host loopback via 10.0.2.2 in debug mode
       return 'http://10.0.2.2:8080';
     }
     // iOS simulator, macOS, Linux, Windows localhost
