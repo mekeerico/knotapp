@@ -34,7 +34,7 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --release --no-tree-shake-icons -v --dart-define=API_URL=http://knotconnect.duckdns.org:8080
+          flutter build apk --release --no-tree-shake-icons --dart-define=API_URL=http://knotconnect.duckdns.org:8080
           ls -la build/app/outputs/flutter-apk/
           cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/knot-app.apk
         working-directory: mobile-flutter
