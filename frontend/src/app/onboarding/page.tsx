@@ -441,9 +441,11 @@ export default function Onboarding() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           firstName, lastName, dateOfBirth, email, password,
+          gender, preferredGender: gender?.toLowerCase() === 'female' ? 'Male' : 'Female',
           bio: "", occupation, religion: religionSelect === "Other" ? religionCustom : religionSelect,
           education: "", culturalBackground: "", smoking, drinking, maritalStatus, childrenStatus,
-          marriageTimeline, willingToRelocate, childrenPreference, idealPartnerTraits: [],
+          marriageTimeline, willingToRelocate, childrenPreference,
+          languagesSpoken, idealPartnerTraits,
           marriageExpectations, careerGoals: "",
           residenceCountry, residenceState, residenceCity,
           originCountry, originState, originCity,
@@ -458,11 +460,30 @@ export default function Onboarding() {
       const data = await res.json();
       if (data.token) {
         localStorage.setItem('knot_token', data.token);
+
+        // Link to Didit Sovereign KYC verification endpoint
+        if (verificationSelfie && governmentId) {
+          try {
+            await fetch(`${API_URL}/users/verify-identity`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${data.token}`
+              },
+              body: JSON.stringify({
+                selfieUrl: verificationSelfie,
+                idUrl: governmentId
+              })
+            });
+          } catch (diditErr) {
+            console.warn("Didit identity verification sync error:", diditErr);
+          }
+        }
       }
       setStep(7);
     } catch (err) {
       console.error("Registration failed:", err);
-      // Even if it fails, go to step 5 for prototype continuity
+      // Even if it fails, go to step 7 for prototype continuity
       setStep(7);
     }
   };

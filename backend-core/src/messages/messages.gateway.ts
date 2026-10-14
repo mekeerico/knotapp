@@ -26,7 +26,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {}
 
   handleConnection(client: Socket) {
-    const userId = client.handshake.query.userId as string;
+    const userId = (client.handshake.query.userId || client.handshake.auth?.userId) as string;
     if (userId) {
       this.activeConnections.set(userId, client.id);
       this.logger.log(`User ${userId} connected with socket ${client.id}`);
@@ -46,16 +46,36 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
   @SubscribeMessage('sendMessage')
   async handleMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { senderId: string; receiverId: string; content: string },
+    @MessageBody() payload: { senderId?: string; receiverId: string; content?: string; text?: string },
   ) {
-    this.logger.log(`Message from ${payload.senderId} to ${payload.receiverId}`);
+    const content = payload.content || payload.text || '';
+    let senderId = payload.senderId;
+
+    if (!senderId) {
+      for (const [uid, sid] of this.activeConnections.entries()) {
+        if (sid === client.id) {
+          senderId = uid;
+          break;
+        }
+      }
+      if (!senderId) {
+        senderId = (client.handshake.query.userId || client.handshake.auth?.userId) as string;
+      }
+    }
+
+    if (!senderId || !payload.receiverId || !content.trim()) {
+      this.logger.warn(`Invalid message payload: ${JSON.stringify(payload)}`);
+      return;
+    }
+
+    this.logger.log(`Message from ${senderId} to ${payload.receiverId}`);
 
     // Fetch previous messages for context moderation
     const history = await this.prisma.message.findMany({
       where: {
         OR: [
-          { senderId: payload.senderId, receiverId: payload.receiverId },
-          { senderId: payload.receiverId, receiverId: payload.senderId },
+          { senderId, receiverId: payload.receiverId },
+          { senderId: payload.receiverId, receiverId: senderId },
         ],
       },
       take: 10,
@@ -65,12 +85,12 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     const conversationTranscript = history
       .reverse()
       .map((m) => ({
-        role: m.senderId === payload.senderId ? 'user' : 'model',
+        role: m.senderId === senderId ? 'user' : 'model',
         text: m.content,
       }));
     
     // Add current message to validation context
-    conversationTranscript.push({ role: 'user', text: payload.content });
+    conversationTranscript.push({ role: 'user', text: content });
 
     // AI Real-time Moderation check
     const modResult = await this.aiService.checkModeration(conversationTranscript);
@@ -78,9 +98,9 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     // Save message to database
     const savedMessage = await this.prisma.message.create({
       data: {
-        senderId: payload.senderId,
+        senderId,
         receiverId: payload.receiverId,
-        content: payload.content,
+        content,
         aiModerationStatus: modResult.status,
         flagReason: modResult.reason || null,
       },
@@ -89,7 +109,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     // Deduct trust score if flagged
     if (modResult.status === 'FLAGGED') {
       await this.prisma.user.update({
-        where: { id: payload.senderId },
+        where: { id: senderId },
         data: {
           trustScore: {
             decrement: modResult.trustDeduction || 20,
@@ -98,13 +118,15 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
       });
     }
 
-    // Emit back to sender
+    // Emit back to sender (both events for full cross-platform compatibility)
     client.emit('messageReceived', savedMessage);
+    client.emit('receiveMessage', savedMessage);
 
     // Forward to receiver if online
     const receiverSocketId = this.activeConnections.get(payload.receiverId);
     if (receiverSocketId) {
       this.server.to(receiverSocketId).emit('messageReceived', savedMessage);
+      this.server.to(receiverSocketId).emit('receiveMessage', savedMessage);
       
       // If message is safe, generate a smart AI Conversation Assistant Icebreaker / Prompter
       if (modResult.status === 'SAFE') {
@@ -126,7 +148,7 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
         select: { pushToken: true }
       });
       const sender = await this.prisma.user.findUnique({
-        where: { id: payload.senderId },
+        where: { id: senderId },
         select: { firstName: true }
       });
 
@@ -135,8 +157,8 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
         await this.notificationsService.sendPushNotification(
           receiver.pushToken,
           `New message from ${sender.firstName}`,
-          payload.content,
-          { url: `knot://chat/${payload.senderId}` }
+          content,
+          { url: `knot://chat/${senderId}` }
         );
       }
     }

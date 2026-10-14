@@ -1,12 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AIService } from '../ai/ai.service';
+import { DiditService } from '../verification/didit.service';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly aiService: AIService,
+    private readonly diditService: DiditService,
   ) {}
 
   async findAll() {
@@ -30,6 +34,7 @@ export class UsersService {
       'smoking', 'drinking', 'maritalStatus', 'childrenStatus', 'marriageTimeline', 'willingToRelocate',
       'childrenPreference', 'idealPartnerTraits', 'personalValues', 'marriageExpectations', 'careerGoals',
       'residenceCountry', 'residenceState', 'residenceCity', 'originCountry', 'originState', 'originCity',
+      'preferredResidenceCountry', 'preferredResidenceState', 'preferredResidenceCity', 'preferredOriginCountry', 'preferredOriginState', 'preferredOriginCity',
       'personalityArchetype', 'attachmentStyle', 'readinessScore', 'seriousnessLevel', 'trustScore',
       'isVerified', 'isPremium', 'idVerified', 'selfieVerified', 'selfieUrl', 'moderationFlags',
       'pushToken', 'subscriptionTier', 'subscriptionAmount', 'subscriptionPeriod', 'subscriptionDate'
@@ -142,7 +147,45 @@ export class UsersService {
     return this.aiService.validateOnboardingAnswer(question, answer);
   }
 
+  private toBuffer(val: string): Buffer | null {
+    try {
+      if (!val) return null;
+      if (val.includes('base64,')) {
+        return Buffer.from(val.split('base64,')[1], 'base64');
+      }
+      return Buffer.from(val, 'base64');
+    } catch {
+      return null;
+    }
+  }
+
   async verifyOnboardingDocuments(selfieUrl: string, idUrl: string, firstName: string, lastName: string, dateOfBirth: string) {
+    try {
+      if (selfieUrl && idUrl) {
+        const idBuf = this.toBuffer(idUrl);
+        const selfieBuf = this.toBuffer(selfieUrl);
+
+        if (idBuf && selfieBuf) {
+          const docResult = await this.diditService.verifyDocument(idBuf);
+          const livenessResult = await this.diditService.checkPassiveLiveness(selfieBuf);
+          const faceMatchResult = await this.diditService.checkFaceMatch(selfieBuf, idBuf);
+
+          if (docResult.isValid && livenessResult.isLive && faceMatchResult.isMatch) {
+            return {
+              success: true,
+              confidenceScore: Math.round(faceMatchResult.similarityScore),
+              ocrName: docResult.extractedData.fullName || `${firstName} ${lastName}`,
+              ocrAge: docResult.extractedData.dateOfBirth || dateOfBirth,
+              details: 'Biometric verification authenticated successfully via Didit Sovereign KYC.',
+            };
+          }
+        }
+      }
+    } catch (e: any) {
+      this.logger.warn(`Didit onboarding verification note: ${e.message}`);
+    }
+
+    // AI Service fallback
     return this.aiService.verifyOnboardingDocuments(selfieUrl, idUrl, firstName, lastName, dateOfBirth);
   }
 

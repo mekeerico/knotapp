@@ -32,30 +32,42 @@ class DiscoveryState {
   }
 }
 
+import '../../auth/providers/auth_provider.dart';
+
 class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
   final Dio _dio;
+  final Ref _ref;
 
-  DiscoveryNotifier(this._dio) : super(const DiscoveryState()) {
+  DiscoveryNotifier(this._dio, this._ref) : super(const DiscoveryState()) {
     loadCandidates();
   }
 
   Future<void> loadCandidates() async {
     state = state.copyWith(candidates: state.candidates, isLoading: true);
+    final user = _ref.read(authProvider).user;
+    final userGender = user?.gender.toLowerCase() ?? '';
+    final isMaleUser = userGender == 'male';
+
     try {
       final response = await _dio.get(ApiEndpoints.potentialMatches);
       if (response.data is List && (response.data as List).isNotEmpty) {
         final list = (response.data as List)
             .map((item) => MatchProfile.fromJson(item))
             .toList();
-        state = state.copyWith(candidates: list, isLoading: false);
-        return;
+        if (list.isNotEmpty) {
+          state = state.copyWith(candidates: list, isLoading: false);
+          return;
+        }
       }
     } catch (_) {
-      // Use premium default registry profiles
+      // Use gender-aligned registry profiles
     }
 
+    // Strictly enforce opposite sex in default candidate pool
+    final fallbackList = isMaleUser ? _defaultFemaleCandidates : _defaultMaleCandidates;
+
     state = state.copyWith(
-      candidates: _defaultCandidates,
+      candidates: fallbackList,
       isLoading: false,
     );
   }
@@ -82,9 +94,9 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     );
   }
 
-  static final List<MatchProfile> _defaultCandidates = [
+  static final List<MatchProfile> _defaultFemaleCandidates = [
     MatchProfile(
-      id: 'candidate-1',
+      id: 'candidate-female-1',
       name: 'Sophia Sterling',
       age: 27,
       city: 'London',
@@ -114,7 +126,70 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
       ],
     ),
     MatchProfile(
-      id: 'candidate-2',
+      id: 'candidate-female-2',
+      name: 'Amara Okafor',
+      age: 26,
+      city: 'New York',
+      country: 'United States',
+      occupation: 'Biotech Venture Fellow',
+      education: 'Columbia University',
+      religion: 'Christian',
+      culturalBackground: 'Global Diaspora',
+      marriageTimeline: '1-2 years',
+      willingToRelocate: 'Yes',
+      childrenPreference: 'Wants children',
+      bio: 'Combining intellect with warmth. Seeking someone who leads with kindness, faith, and mutual respect.',
+      personalValues: ['Family', 'Faith', 'Ambition', 'Loyalty'],
+      personalityArchetype: 'The Calm Connector',
+      attachmentStyle: 'Secure',
+      compatibilityScore: 91,
+      emotionalAlignment: 92,
+      valuesAlignment: 93,
+      lifestyleCompatibility: 88,
+      aiExplanation:
+          'Harmonious communication patterns and highly aligned values surrounding children and career balance.',
+      isVerified: true,
+      verificationBadge: 'GOLD',
+      photos: [
+        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800',
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=800',
+      ],
+    ),
+    MatchProfile(
+      id: 'candidate-female-3',
+      name: 'Zara Al-Mansoor',
+      age: 28,
+      city: 'Dubai',
+      country: 'United Arab Emirates',
+      occupation: 'Architectural Director',
+      education: 'Cambridge University',
+      religion: 'Muslim',
+      culturalBackground: 'Middle Eastern',
+      marriageTimeline: 'ASAP',
+      willingToRelocate: 'Maybe',
+      childrenPreference: 'Wants children',
+      bio: 'Deeply devoted to family honor, creative beauty, and building an enduring marital home.',
+      personalValues: ['Faith', 'Family', 'Honor', 'Wisdom'],
+      personalityArchetype: 'The Intentional Builder',
+      attachmentStyle: 'Secure',
+      compatibilityScore: 94,
+      emotionalAlignment: 91,
+      valuesAlignment: 95,
+      lifestyleCompatibility: 93,
+      aiExplanation:
+          'Strong mutual respect for lineage, family heritage, and disciplined marital leadership.',
+      isVerified: true,
+      verificationBadge: 'GOLD',
+      photos: [
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800',
+        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=800',
+      ],
+    ),
+  ];
+
+  static final List<MatchProfile> _defaultMaleCandidates = [
+    MatchProfile(
+      id: 'candidate-male-1',
       name: 'Julian Montgomery',
       age: 30,
       city: 'Zurich',
@@ -144,33 +219,63 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
       ],
     ),
     MatchProfile(
-      id: 'candidate-3',
-      name: 'Amara Okafor',
-      age: 26,
-      city: 'New York',
-      country: 'United States',
-      occupation: 'Biotech Venture Fellow',
-      education: 'Columbia University',
+      id: 'candidate-male-2',
+      name: 'Adebayo Adeleke',
+      age: 29,
+      city: 'London',
+      country: 'United Kingdom',
+      occupation: 'Private Equity Partner',
+      education: 'Oxford University',
       religion: 'Christian',
-      culturalBackground: 'Global Diaspora',
+      culturalBackground: 'African Diaspora',
       marriageTimeline: '1-2 years',
       willingToRelocate: 'Yes',
       childrenPreference: 'Wants children',
-      bio: 'Combining intellect with warmth. Seeking someone who leads with kindness, faith, and mutual respect.',
-      personalValues: ['Family', 'Faith', 'Ambition', 'Loyalty'],
-      personalityArchetype: 'The Calm Connector',
+      bio: 'Focused on creating a generational home founded on faith, mutual growth, and unshakeable respect.',
+      personalValues: ['Faith', 'Family', 'Generosity', 'Integrity'],
+      personalityArchetype: 'The Grounded Romantic',
       attachmentStyle: 'Secure',
-      compatibilityScore: 91,
-      emotionalAlignment: 92,
-      valuesAlignment: 93,
-      lifestyleCompatibility: 88,
+      compatibilityScore: 95,
+      emotionalAlignment: 93,
+      valuesAlignment: 97,
+      lifestyleCompatibility: 94,
       aiExplanation:
-          'Harmonious communication patterns and highly aligned values surrounding children and career balance.',
+          'Extraordinary alignment on spiritual commitment, family values, and proactive communication.',
       isVerified: true,
       verificationBadge: 'GOLD',
       photos: [
-        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800',
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=800',
+        'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=800',
+        'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=800',
+      ],
+    ),
+    MatchProfile(
+      id: 'candidate-male-3',
+      name: 'Dr. Alexander Wright',
+      age: 32,
+      city: 'Toronto',
+      country: 'Canada',
+      occupation: 'Cardiothoracic Fellow',
+      education: 'University of Toronto',
+      religion: 'Christian',
+      culturalBackground: 'Canadian-British',
+      marriageTimeline: 'ASAP',
+      willingToRelocate: 'Maybe',
+      childrenPreference: 'Wants children',
+      bio: 'Passionate about purpose, thoughtful conversations, and building an enduring marriage.',
+      personalValues: ['Empathy', 'Faith', 'Family', 'Service'],
+      personalityArchetype: 'The Calm Connector',
+      attachmentStyle: 'Secure',
+      compatibilityScore: 92,
+      emotionalAlignment: 94,
+      valuesAlignment: 91,
+      lifestyleCompatibility: 90,
+      aiExplanation:
+          'Deep emotional compatibility and shared readiness for lifelong marital commitment.',
+      isVerified: true,
+      verificationBadge: 'GOLD',
+      photos: [
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=800',
+        'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?q=80&w=800',
       ],
     ),
   ];
@@ -179,5 +284,5 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
 final discoveryProvider =
     StateNotifierProvider<DiscoveryNotifier, DiscoveryState>((ref) {
   final dio = ref.watch(dioProvider);
-  return DiscoveryNotifier(dio);
+  return DiscoveryNotifier(dio, ref);
 });

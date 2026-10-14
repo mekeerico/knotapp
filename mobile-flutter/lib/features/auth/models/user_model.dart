@@ -34,6 +34,12 @@ class UserModel {
   final String originCountry;
   final String originState;
   final String originCity;
+  final String preferredResidenceCountry;
+  final String preferredResidenceState;
+  final String preferredResidenceCity;
+  final String preferredOriginCountry;
+  final String preferredOriginState;
+  final String preferredOriginCity;
 
   // AI Indices
   final String? personalityArchetype;
@@ -86,6 +92,12 @@ class UserModel {
     this.originCountry = '',
     this.originState = '',
     this.originCity = '',
+    this.preferredResidenceCountry = '',
+    this.preferredResidenceState = '',
+    this.preferredResidenceCity = '',
+    this.preferredOriginCountry = '',
+    this.preferredOriginState = '',
+    this.preferredOriginCity = '',
     this.personalityArchetype,
     this.attachmentStyle,
     this.readinessScore = 0,
@@ -175,6 +187,12 @@ class UserModel {
       originCountry: json['originCountry']?.toString() ?? '',
       originState: json['originState']?.toString() ?? '',
       originCity: json['originCity']?.toString() ?? '',
+      preferredResidenceCountry: json['preferredResidenceCountry']?.toString() ?? '',
+      preferredResidenceState: json['preferredResidenceState']?.toString() ?? '',
+      preferredResidenceCity: json['preferredResidenceCity']?.toString() ?? '',
+      preferredOriginCountry: json['preferredOriginCountry']?.toString() ?? '',
+      preferredOriginState: json['preferredOriginState']?.toString() ?? '',
+      preferredOriginCity: json['preferredOriginCity']?.toString() ?? '',
       personalityArchetype: json['personalityArchetype']?.toString(),
       attachmentStyle: json['attachmentStyle']?.toString(),
       readinessScore: json['readinessScore'] is num ? (json['readinessScore'] as num).toInt() : 0,
@@ -226,6 +244,12 @@ class UserModel {
       'originCountry': originCountry,
       'originState': originState,
       'originCity': originCity,
+      'preferredResidenceCountry': preferredResidenceCountry,
+      'preferredResidenceState': preferredResidenceState,
+      'preferredResidenceCity': preferredResidenceCity,
+      'preferredOriginCountry': preferredOriginCountry,
+      'preferredOriginState': preferredOriginState,
+      'preferredOriginCity': preferredOriginCity,
       'personalityArchetype': personalityArchetype,
       'attachmentStyle': attachmentStyle,
       'readinessScore': readinessScore,

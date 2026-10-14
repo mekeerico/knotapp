@@ -6,18 +6,16 @@ export class AIController {
   constructor(private readonly aiService: AIService) {}
 
   @Post('coach')
-  async coachResponse(
-    @Body() body: { 
-      conversationHistory: Array<{ role: string; text: string }>; 
-      userProfile: any; 
-      currentMessage: string;
-    }
-  ) {
-    const { conversationHistory, userProfile, currentMessage } = body;
+  async coachResponse(@Body() body: any) {
+    const conversationHistory =
+      body?.conversationHistory || body?.conversation_history || [];
+    const userProfile = body?.userProfile || body?.user_profile || {};
+    const currentMessage =
+      body?.currentMessage || body?.current_message || body?.message || "";
     const response = await this.aiService.getCoachResponse(
-      conversationHistory || [],
-      userProfile || {},
-      currentMessage || ""
+      conversationHistory,
+      userProfile,
+      currentMessage
     );
     return { response };
   }

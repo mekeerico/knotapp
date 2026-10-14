@@ -40,8 +40,9 @@ export class UsersController {
       idBack?: Express.Multer.File[];
       selfie?: Express.Multer.File[];
     },
+    @Body() body?: any,
   ) {
-    return this.verificationService.verifyIdentity(req.user.id, files as any);
+    return this.verificationService.verifyIdentity(req.user.id, files as any, body);
   }
 
   @Get()

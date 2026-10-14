@@ -18,16 +18,30 @@ export class MatchesService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found.');
 
-    // In a real-world scenario, we filter by gender preferences, locations, etc.
-    // For matchmaking excellence, we select up to 5 potentially highly-aligned candidates
-    const candidates = await this.prisma.user.findMany({
+    // Strictly enforce opposite-sex matching only (Male <-> Female)
+    const userGender = user.gender?.toLowerCase() || '';
+    const targetGender = userGender === 'female' ? 'Male' : 'Female';
+
+    let candidates = await this.prisma.user.findMany({
       where: {
         id: { not: userId },
-        isVerified: true, // Only match with verified real humans
+        isVerified: true,
+        gender: { equals: targetGender, mode: 'insensitive' },
       },
-      take: 5,
+      take: 10,
       include: { profileImages: true },
     });
+
+    if (candidates.length === 0) {
+      candidates = await this.prisma.user.findMany({
+        where: {
+          id: { not: userId },
+          gender: { equals: targetGender, mode: 'insensitive' },
+        },
+        take: 10,
+        include: { profileImages: true },
+      });
+    }
 
     const matchesList: any[] = [];
 

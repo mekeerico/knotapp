@@ -20,12 +20,17 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
+    const gender = dto.gender || '';
+    const preferredGender = dto.preferredGender || (gender.toLowerCase() === 'female' ? 'Male' : gender.toLowerCase() === 'male' ? 'Female' : '');
+
     const user = await this.prisma.user.create({
       data: {
         email: dto.email.toLowerCase(),
         passwordHash,
         firstName: dto.firstName || '',
         lastName: dto.lastName || '',
+        gender,
+        preferredGender,
         dateOfBirth: dto.dateOfBirth || '',
         bio: dto.bio || '',
         occupation: dto.occupation || '',
@@ -38,6 +43,12 @@ export class AuthService {
         originCountry: dto.originCountry || '',
         originState: dto.originState || '',
         originCity: dto.originCity || '',
+        preferredResidenceCountry: dto.preferredResidenceCountry || '',
+        preferredResidenceState: dto.preferredResidenceState || '',
+        preferredResidenceCity: dto.preferredResidenceCity || '',
+        preferredOriginCountry: dto.preferredOriginCountry || '',
+        preferredOriginState: dto.preferredOriginState || '',
+        preferredOriginCity: dto.preferredOriginCity || '',
         languagesSpoken: dto.languagesSpoken || [],
         idealPartnerTraits: dto.idealPartnerTraits || [],
         smoking: dto.smoking || 'Non-smoker',

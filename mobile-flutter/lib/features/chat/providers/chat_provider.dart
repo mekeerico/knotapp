@@ -45,14 +45,17 @@ class ChatNotifier extends StateNotifier<ChatState> {
   void _initSocket() async {
     final storage = _ref.read(secureStorageProvider);
     final token = await storage.getToken();
+    final currentUserId = _ref.read(authProvider).user?.id ?? '';
 
     try {
       _socket = IO.io(
         ApiEndpoints.baseUrl,
         IO.OptionBuilder()
             .setTransports(['websocket'])
-            .disableAutoConnect()
+            .setQuery({'userId': currentUserId})
+            .setAuth({'token': token ?? '', 'userId': currentUserId})
             .setExtraHeaders({'Authorization': 'Bearer $token'})
+            .enableAutoConnect()
             .build(),
       );
 
@@ -66,19 +69,26 @@ class ChatNotifier extends StateNotifier<ChatState> {
         state = state.copyWith(isConnected: false);
       });
 
-      _socket?.on('receiveMessage', (data) {
+      void handleIncoming(dynamic data) {
         if (data is Map<String, dynamic>) {
-          final currentUserId = _ref.read(authProvider).user?.id ?? '';
-          final newMsg = ChatMessage.fromJson(data, currentUserId);
-          final matchId = newMsg.senderId == currentUserId
+          final userId = _ref.read(authProvider).user?.id ?? '';
+          final newMsg = ChatMessage.fromJson(data, userId);
+          final matchId = newMsg.senderId == userId
               ? newMsg.receiverId
               : newMsg.senderId;
 
-          final currentList = state.messagesByMatch[matchId] ?? [];
-          final updated = {...state.messagesByMatch, matchId: [...currentList, newMsg]};
-          state = state.copyWith(messagesByMatch: updated);
+          if (matchId.isNotEmpty) {
+            final currentList = state.messagesByMatch[matchId] ?? [];
+            if (!currentList.any((m) => m.id == newMsg.id && newMsg.id.isNotEmpty)) {
+              final updated = {...state.messagesByMatch, matchId: [...currentList, newMsg]};
+              state = state.copyWith(messagesByMatch: updated);
+            }
+          }
         }
-      });
+      }
+
+      _socket?.on('receiveMessage', handleIncoming);
+      _socket?.on('messageReceived', handleIncoming);
     } catch (_) {
       // Offline fallback handling
     }
@@ -101,6 +111,25 @@ class ChatNotifier extends StateNotifier<ChatState> {
         messagesByMatch: {...state.messagesByMatch, matchId: seed},
       );
     }
+    // Load remote chat history asynchronously
+    loadMessageHistory(matchId);
+  }
+
+  Future<void> loadMessageHistory(String matchId) async {
+    try {
+      final res = await _dio.get('${ApiEndpoints.messages}/$matchId');
+      if (res.data is List) {
+        final currentUserId = _ref.read(authProvider).user?.id ?? 'me';
+        final history = (res.data as List)
+            .map((item) => ChatMessage.fromJson(item as Map<String, dynamic>, currentUserId))
+            .toList();
+        if (history.isNotEmpty) {
+          state = state.copyWith(
+            messagesByMatch: {...state.messagesByMatch, matchId: history},
+          );
+        }
+      }
+    } catch (_) {}
   }
 
   Future<void> sendMessage(String text) async {
@@ -123,21 +152,24 @@ class ChatNotifier extends StateNotifier<ChatState> {
     };
     state = state.copyWith(messagesByMatch: updated);
 
-    // Emit over WebSocket
+    // Emit over WebSocket with senderId
     if (_socket != null && _socket!.connected) {
       _socket!.emit('sendMessage', {
+        'senderId': currentUserId,
         'receiverId': matchId,
         'content': text.trim(),
+        'text': text.trim(),
       });
     }
 
     // Also persist via REST endpoint
     try {
       await _dio.post(
-        ApiEndpoints.messages,
+        '${ApiEndpoints.messages}/$matchId',
         data: {
           'receiverId': matchId,
           'content': text.trim(),
+          'text': text.trim(),
         },
       );
     } catch (_) {}

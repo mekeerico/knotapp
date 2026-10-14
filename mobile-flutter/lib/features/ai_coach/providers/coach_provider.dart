@@ -68,8 +68,11 @@ class CoachNotifier extends StateNotifier<CoachState> {
       final response = await _dio.post(
         ApiEndpoints.aiCoach,
         data: {
+          'conversationHistory': history,
           'conversation_history': history,
+          'userProfile': user?.toJson() ?? {},
           'user_profile': user?.toJson() ?? {},
+          'currentMessage': text,
           'current_message': text,
         },
       );

@@ -25,23 +25,73 @@ export class VerificationService {
     private readonly diditService: DiditService,
   ) {}
 
+  private toBuffer(val: string): Buffer | null {
+    try {
+      if (!val) return null;
+      if (val.includes('base64,')) {
+        return Buffer.from(val.split('base64,')[1], 'base64');
+      }
+      return Buffer.from(val, 'base64');
+    } catch {
+      return null;
+    }
+  }
+
   async verifyIdentity(
     userId: string,
-    files: {
+    files?: {
       idFront?: MulterFile[];
       idBack?: MulterFile[];
       selfie?: MulterFile[];
     },
+    body?: {
+      idFront?: string;
+      idBack?: string;
+      selfie?: string;
+      idUrl?: string;
+      selfieUrl?: string;
+    },
   ) {
-    const idFront = files.idFront?.[0];
-    const idBack = files.idBack?.[0];
-    const selfie = files.selfie?.[0];
+    let idFront = files?.idFront?.[0];
+    let idBack = files?.idBack?.[0];
+    let selfie = files?.selfie?.[0];
+
+    // Support JSON base64 or Data URL payloads from web
+    if (!idFront && (body?.idFront || body?.idUrl)) {
+      const b64 = (body.idFront || body.idUrl)!;
+      const buf = this.toBuffer(b64);
+      if (buf) {
+        idFront = {
+          fieldname: 'idFront',
+          originalname: 'id_front.jpg',
+          encoding: '7bit',
+          mimetype: 'image/jpeg',
+          size: buf.length,
+          buffer: buf,
+        };
+      }
+    }
+
+    if (!selfie && (body?.selfie || body?.selfieUrl)) {
+      const b64 = (body.selfie || body.selfieUrl)!;
+      const buf = this.toBuffer(b64);
+      if (buf) {
+        selfie = {
+          fieldname: 'selfie',
+          originalname: 'selfie.jpg',
+          encoding: '7bit',
+          mimetype: 'image/jpeg',
+          size: buf.length,
+          buffer: buf,
+        };
+      }
+    }
 
     if (!idFront) {
-      throw new BadRequestException('Document front image (idFront) is required for verification.');
+      throw new BadRequestException('Document front image (idFront) is required for Didit verification.');
     }
     if (!selfie) {
-      throw new BadRequestException('Live selfie image (selfie) is required for biometric verification.');
+      throw new BadRequestException('Live selfie image (selfie) is required for Didit biometric verification.');
     }
 
     this.logger.log(`Beginning Didit identity verification sequence for user ${userId}`);

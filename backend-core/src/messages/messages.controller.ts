@@ -34,13 +34,26 @@ export class MessagesController {
     }).catch(() => []);
   }
 
+  @Post()
+  async sendDirectMessage(
+    @Request() req: any,
+    @Body() body: { receiverId?: string; matchId?: string; content?: string; text?: string }
+  ) {
+    const targetMatchId = body.receiverId || body.matchId;
+    if (!targetMatchId) {
+      throw new HttpException('Missing receiverId', HttpStatus.BAD_REQUEST);
+    }
+    return this.sendMessage(targetMatchId, req, { text: body.content || body.text || '' });
+  }
+
   @Post(':matchId')
   async sendMessage(
     @Param('matchId') matchId: string,
     @Request() req: any,
-    @Body() body: { text: string }
+    @Body() body: { text?: string; content?: string }
   ) {
     const senderId = req.user.id;
+    const textContent = body.text || body.content || '';
 
     // Check if sender is premium
     const sender = await this.prisma.user.findUnique({ where: { id: senderId } });
@@ -62,7 +75,7 @@ export class MessagesController {
 
     return this.prisma.message.create({
       data: {
-        content: body.text,
+        content: textContent,
         senderId,
         receiverId: matchId,
       }

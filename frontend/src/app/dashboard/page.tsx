@@ -7,7 +7,7 @@ import {
   Sparkles, ShieldCheck, Heart, User, Bot, MessageSquare, 
   Settings, LogOut, Send, AlertTriangle, Shield, CheckCircle2,
   TrendingUp, Award, Activity, Compass, BrainCircuit, HeartHandshake,
-  Menu, X, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, Camera
+  Menu, X, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, Camera, Loader2
 } from "lucide-react";
 
 export default function Dashboard() {
@@ -34,6 +34,59 @@ export default function Dashboard() {
   const [matchesViewedToday, setMatchesViewedToday] = useState(0);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
+
+  // Didit Verification Modal States
+  const [showDiditModal, setShowDiditModal] = useState(false);
+  const [diditIdFile, setDiditIdFile] = useState<File | null>(null);
+  const [diditSelfieFile, setDiditSelfieFile] = useState<File | null>(null);
+  const [diditLoading, setDiditLoading] = useState(false);
+  const [diditError, setDiditError] = useState("");
+
+  const handleDiditVerify = async () => {
+    if (!diditIdFile || !diditSelfieFile) {
+      setDiditError("Please select both your Government ID and a Live Selfie.");
+      return;
+    }
+    setDiditLoading(true);
+    setDiditError("");
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const token = localStorage.getItem('knot_token');
+      const formData = new FormData();
+      formData.append('idFront', diditIdFile);
+      formData.append('selfie', diditSelfieFile);
+
+      const res = await fetch(`${API_URL}/users/verify-identity`, {
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.success === false) {
+        setDiditError(data.message || data.error || "Didit verification failed. Please ensure your ID is clear and your selfie is well lit.");
+        setDiditLoading(false);
+        return;
+      }
+
+      setUserProfile((prev: any) => ({
+        ...prev,
+        isVerified: true,
+        idVerified: true,
+        selfieVerified: true,
+        verificationBadge: 'GOLD',
+        trustScore: data.trustScore || 95,
+      }));
+      setShowDiditModal(false);
+      setDiditLoading(false);
+      alert("🎉 Identity verified successfully via Didit Sovereign KYC! Your Gold Trust Seal has been activated.");
+    } catch (e: any) {
+      setDiditError(e.message || "Network error connecting to Didit verification service.");
+      setDiditLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1299,7 +1352,10 @@ export default function Dashboard() {
 
                 {/* Identity Verification */}
                 <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-3 flex flex-col justify-center">
-                  <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black mb-1">Identity Verification</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black mb-1">Identity Verification</h4>
+                    <span className="text-[10px] text-[#D4AF37] font-bold">Didit Sovereign KYC</span>
+                  </div>
                   <div className="flex items-center justify-between text-xs">
                     <span>Government ID Scan</span>
                     <span className={userProfile?.isVerified === false ? "text-red-400 font-bold" : "text-[#10B981] font-bold"}>{userProfile?.isVerified === false ? "Pending" : "Approved"}</span>
@@ -1308,9 +1364,18 @@ export default function Dashboard() {
                     <span>Liveness Selfie Match</span>
                     <span className={userProfile?.isVerified === false ? "text-red-400 font-bold" : "text-[#10B981] font-bold"}>{userProfile?.isVerified === false ? "Pending" : "Approved"}</span>
                   </div>
-                  <div className={`mt-3 p-2.5 rounded-xl text-[10px] font-black text-center uppercase tracking-wide ${userProfile?.isVerified === false ? "bg-red-500/10 border border-red-500/20 text-red-400" : "bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981]"}`}>
-                    {userProfile?.isVerified === false ? "Verification Required" : "Identity Verified"}
-                  </div>
+                  {userProfile?.isVerified === false ? (
+                    <button
+                      onClick={() => setShowDiditModal(true)}
+                      className="mt-3 py-2.5 px-4 rounded-xl text-xs font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                    >
+                      <ShieldCheck className="w-4 h-4" /> Verify with Didit
+                    </button>
+                  ) : (
+                    <div className="mt-3 p-2.5 rounded-xl text-[10px] font-black text-center uppercase tracking-wide bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981]">
+                      Identity Verified via Didit
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1553,6 +1618,118 @@ export default function Dashboard() {
                 className="w-full py-3 rounded-full text-xs font-bold bg-white/5 border border-white/10 hover:bg-white/10 text-gray-400"
               >
                 Keep Exploring Matches
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Didit Sovereign KYC Verification Modal */}
+      {showDiditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="glass-card rounded-[32px] max-w-md w-full p-6 sm:p-8 border border-[#D4AF37]/40 text-center space-y-5 animate-in fade-in zoom-in duration-300 relative">
+            <button
+              onClick={() => {
+                setShowDiditModal(false);
+                setDiditError("");
+              }}
+              className="absolute top-5 right-5 text-gray-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37]">
+              <ShieldCheck className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-xl font-serif font-black text-white">Didit Sovereign Identity Verification</h3>
+              <p className="text-xs text-gray-400">
+                Authenticate your government document and biometric liveness to unlock the Gold Trust Seal.
+              </p>
+            </div>
+
+            {diditError && (
+              <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-xs text-red-400 font-semibold text-left">
+                {diditError}
+              </div>
+            )}
+
+            <div className="space-y-4 text-left">
+              {/* ID Front Upload */}
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">
+                  1. Government ID Document (Front)
+                </label>
+                <div className="p-3 bg-[#121721] border border-white/10 rounded-xl flex items-center justify-between">
+                  <span className="text-xs text-gray-300 truncate max-w-[200px]">
+                    {diditIdFile ? diditIdFile.name : "Select ID photo / document"}
+                  </span>
+                  <label className="py-1 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-white font-bold cursor-pointer">
+                    Browse
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) setDiditIdFile(file);
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Live Selfie Upload */}
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">
+                  2. Live Selfie (Clear Portrait)
+                </label>
+                <div className="p-3 bg-[#121721] border border-white/10 rounded-xl flex items-center justify-between">
+                  <span className="text-xs text-gray-300 truncate max-w-[200px]">
+                    {diditSelfieFile ? diditSelfieFile.name : "Select clear selfie photo"}
+                  </span>
+                  <label className="py-1 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-white font-bold cursor-pointer">
+                    Browse
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) setDiditSelfieFile(file);
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex flex-col gap-2">
+              <button
+                onClick={handleDiditVerify}
+                disabled={diditLoading || !diditIdFile || !diditSelfieFile}
+                className="w-full py-3.5 rounded-xl text-xs font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] disabled:opacity-50 transition flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+              >
+                {diditLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Verifying with Didit...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-4 h-4" /> Submit to Didit Verification
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setShowDiditModal(false);
+                  setDiditError("");
+                }}
+                disabled={diditLoading}
+                className="w-full py-2.5 rounded-xl text-xs text-gray-400 hover:text-white"
+              >
+                Cancel
               </button>
             </div>
           </div>
