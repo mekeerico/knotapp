@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../models/match_profile.dart';
 
 class DiscoveryState {
@@ -31,8 +32,6 @@ class DiscoveryState {
     );
   }
 }
-
-import '../../auth/providers/auth_provider.dart';
 
 class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
   final Dio _dio;

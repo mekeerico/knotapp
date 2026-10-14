@@ -68,6 +68,13 @@ class AppTypography {
     letterSpacing: 0.5,
   );
 
+  static TextStyle labelSmall = GoogleFonts.plusJakartaSans(
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textSubtle,
+    letterSpacing: 0.3,
+  );
+
   static TextStyle button = GoogleFonts.plusJakartaSans(
     fontSize: 15,
     fontWeight: FontWeight.bold,

@@ -1,4 +1,5 @@
 /// Curated global location and onboarding options data for KNOT Mobile.
+library;
 
 class KnotLocationData {
   static const List<String> countries = [
