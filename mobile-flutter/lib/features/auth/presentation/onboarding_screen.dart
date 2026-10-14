@@ -518,8 +518,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   // STEP 3: Where You Live & Heritage
   Widget _buildResidenceAndOriginStep() {
-    final residenceStates = KnotLocationData.statesByCountry[_residenceCountry] ?? [];
-    final originStates = KnotLocationData.statesByCountry[_originCountry] ?? [];
+    final List<String> residenceStates = KnotLocationData.statesByCountry[_residenceCountry] ?? const <String>[];
+    final List<String> originStates = KnotLocationData.statesByCountry[_originCountry] ?? const <String>[];
 
     return GlassCard(
       child: Column(
@@ -667,10 +667,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   // STEP 5: Future Partner Preferences & Marriage Plans
   Widget _buildPartnerPlansStep() {
-    final prefResStates = [
+    final List<String> prefResStates = <String>[
       'Any State/Province/Region',
       'Enter State/Province/Region',
-      ...(KnotLocationData.statesByCountry[_prefResCountry] ?? []),
+      ...(KnotLocationData.statesByCountry[_prefResCountry] ?? const <String>[]),
     ];
 
     return GlassCard(
