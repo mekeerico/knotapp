@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Save, Camera, X } from "lucide-react";
+import { getApiUrl } from "../../services/api";
 
 export default function EditProfile() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function EditProfile() {
         return;
       }
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        const API_URL = getApiUrl();
         const res = await fetch(`${API_URL}/users/profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -55,7 +56,7 @@ export default function EditProfile() {
     formData.append('photo', file);
 
     const token = localStorage.getItem('knot_token');
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    const API_URL = getApiUrl();
 
     try {
       const res = await fetch(`${API_URL}/upload`, {
@@ -85,7 +86,7 @@ export default function EditProfile() {
   const handleSave = async () => {
     setIsSaving(true);
     const token = localStorage.getItem('knot_token');
-    const API_URL = process.env.NEXT_PUBLIC_API_URL;
+    const API_URL = getApiUrl();
     
     try {
       const updatedData = { ...profile, profileImageUrls: photos };

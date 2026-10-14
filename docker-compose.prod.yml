@@ -76,13 +76,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api-backend}
     container_name: knot-frontend-prod
     restart: always
     ports:
       - "80:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-/api-backend}
+      - INTERNAL_BACKEND_URL=http://backend-core:8080
     depends_on:
       - backend-core
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ShieldAlert, Trash2, Users, AlertCircle, Loader2, LogOut, Lock, Unlock, Plus, X, Menu, Calendar, Briefcase, User, MapPin, Camera, Check, ChevronDown } from "lucide-react";
 import { COUNTRIES, STATES_BY_COUNTRY } from "../../services/locationData";
+import { getApiUrl } from "../../services/api";
 
 const MultiSelectDropdown = ({ label, options, values, onChange, placeholder }: { label: string, options: string[], values: string[], onChange: (v: string[]) => void, placeholder: string }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -67,7 +68,7 @@ export default function AdminDashboard() {
   const resolveImageUrl = (url: string | undefined | null): string => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    const base = process.env.NEXT_PUBLIC_API_URL || '';
+    const base = getApiUrl();
     return `${base}${url}`;
   };
   const [users, setUsers] = useState<any[]>([]);
@@ -133,7 +134,7 @@ export default function AdminDashboard() {
   const fetchUsers = async () => {
     let remoteUsers: any[] = [];
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const API_URL = getApiUrl();
       const token = localStorage.getItem('knot_token');
       if (token) {
         const res = await fetch(`${API_URL}/users`, {
@@ -189,7 +190,7 @@ export default function AdminDashboard() {
     setCreateError("");
     
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const API_URL = getApiUrl();
       const res = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -256,7 +257,7 @@ export default function AdminDashboard() {
   const handleDelete = async (id: string) => {
     const token = localStorage.getItem('knot_token');
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const API_URL = getApiUrl();
         
       const res = await fetch(`${API_URL}/admin/users/${id}`, {
         method: 'DELETE',
@@ -279,7 +280,7 @@ export default function AdminDashboard() {
   const toggleSuspend = async (id: string, currentStatus: boolean) => {
     const token = localStorage.getItem('knot_token');
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const API_URL = getApiUrl();
       const res = await fetch(`${API_URL}/admin/users/${id}/suspend`, {
         method: 'PATCH',
         headers: { 

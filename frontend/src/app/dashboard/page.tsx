@@ -9,13 +9,14 @@ import {
   TrendingUp, Award, Activity, Compass, BrainCircuit, HeartHandshake,
   Menu, X, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, Camera, Loader2
 } from "lucide-react";
+import { getApiUrl } from "../../services/api";
 
 export default function Dashboard() {
   // Helper: resolve relative image URLs (like /uploads/...) to absolute using backend base URL
   const resolveImageUrl = (url: string | undefined | null): string => {
     if (!url) return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    const base = process.env.NEXT_PUBLIC_API_URL || '';
+    const base = getApiUrl();
     return `${base}${url}`;
   };
   const [activeTab, setActiveTab] = useState("matches"); // matches, insights, coach, messages, profile
@@ -50,7 +51,7 @@ export default function Dashboard() {
     setDiditLoading(true);
     setDiditError("");
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const API_URL = getApiUrl() || 'http://localhost:8080';
       const token = localStorage.getItem('knot_token');
       const formData = new FormData();
       formData.append('idFront', diditIdFile);
@@ -97,7 +98,7 @@ export default function Dashboard() {
       }
 
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        const API_URL = getApiUrl();
           
         // Fetch real profile
         const profileRes = await fetch(`${API_URL}/users/profile`, {
@@ -211,7 +212,7 @@ export default function Dashboard() {
       const token = localStorage.getItem('knot_token');
       if (!token) return;
       try {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        const API_URL = getApiUrl();
         const res = await fetch(`${API_URL}/messages/${partnerId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -256,7 +257,7 @@ export default function Dashboard() {
 
     // Optional: Set a typing state if desired, here we just await fetch
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/ai/coach`, {
+      const res = await fetch(`${getApiUrl() || 'http://localhost:8080'}/ai/coach`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -292,7 +293,7 @@ export default function Dashboard() {
     try {
       const token = localStorage.getItem('knot_token');
       if (partnerId && token) {
-        const API_URL = process.env.NEXT_PUBLIC_API_URL;
+        const API_URL = getApiUrl();
         await fetch(`${API_URL}/messages/${partnerId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
@@ -301,7 +302,7 @@ export default function Dashboard() {
       }
 
       const history = chatMessages.map(m => ({ role: m.sender === "me" ? "user" : "match", text: m.text }));
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/coach`, {
+      const res = await fetch(`${getApiUrl()}/ai/coach`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -360,7 +361,7 @@ export default function Dashboard() {
       setShowMatchModal(true);
       setIsCalculatingMatch(true);
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/compatibility`, {
+        const res = await fetch(`${getApiUrl()}/ai/compatibility`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -420,7 +421,7 @@ export default function Dashboard() {
           // Run async logic inside a standard function to prevent Paystack type-check errors
           (async () => {
             try {
-              const verifyRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/payments/verify`, {
+              const verifyRes = await fetch(`${getApiUrl() || 'http://localhost:8080'}/payments/verify`, {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",

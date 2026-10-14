@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { getApiUrl } from "../../services/api";
 
 export default function Login() {
   const router = useRouter();
@@ -35,7 +36,7 @@ export default function Login() {
     try {
 
 
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const API_URL = getApiUrl();
         
       const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",

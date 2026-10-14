@@ -7,6 +7,7 @@ import {
   MapPin, Brain, GraduationCap, Briefcase, Calendar, ArrowRight, Loader2,
   Camera, Upload, X, Shield, RefreshCw, Smile, Eye, EyeOff, ChevronDown, Check
 } from "lucide-react";
+import { getApiUrl } from "../../services/api";
 
 const MultiSelectDropdown = ({ label, options, values, onChange, placeholder }: { label: string, options: string[], values: string[], onChange: (v: string[]) => void, placeholder: string }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -434,7 +435,7 @@ export default function Onboarding() {
 
   const handleFinalizeRegistration = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const API_URL = getApiUrl();
         
       const res = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
@@ -499,7 +500,7 @@ export default function Onboarding() {
     setMessages(prev => [...prev, { role: "ai", text: "Analyzing response..." }]);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const API_URL = getApiUrl();
 
       const question = interviewQuestionIndex === 0 ? "Shall we begin?" : interviewPrompts[interviewQuestionIndex - 1];
       const verifyRes = await fetch(`${API_URL}/users/onboarding/validate-answer`, {
@@ -559,7 +560,7 @@ export default function Onboarding() {
     setVerificationStep(0);
 
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL;
+      const API_URL = getApiUrl();
       
       // Final cleanup of "Other" fields
       const finalLanguages = languagesSpoken.map(l => l === "Other" && otherLanguageInput ? otherLanguageInput : l);
