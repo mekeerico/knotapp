@@ -18,7 +18,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _currentStep = 0;
-  static const int _totalSteps = 7; // Steps 0 to 5 = Forms, Step 6 = Optional Didit Verification
+  static const int _totalSteps = 10; // Steps 0 to 8 = Forms, Step 9 = Optional Didit Verification
   bool _isMovingForward = true;
   bool _isSaving = false;
 
@@ -51,6 +51,35 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _originStateCustomController = TextEditingController();
   final _originCityController = TextEditingController();
 
+  // Controllers - Screen 7: Lifestyle Habits & Marital History
+  String _maritalStatus = 'Never married';
+  String _smoking = 'Non-smoker';
+  String _drinking = 'Non-drinker';
+  String _childrenIntent = 'Open to children';
+
+  // Controllers - Screen 8: Preferred Future Partner Residence & Cultural Origin
+  String _prefResCountry = 'Any Country';
+  final _prefResCountryCustomController = TextEditingController();
+  String _prefResState = 'Any State/Province/Region';
+  final _prefResStateCustomController = TextEditingController();
+  String _prefOriCountry = 'Any Country';
+  final _prefOriCountryCustomController = TextEditingController();
+  String _prefOriState = 'Any Heritage';
+  final _prefOriCustomController = TextEditingController();
+
+  // Controllers - Screen 9: Marriage Intentions & Traits
+  String _marriageTimeline = '1-2 years';
+  String _willingToRelocate = 'Yes';
+  RangeValues _partnerAgeRange = const RangeValues(22, 45);
+  final List<String> _idealPartnerTraits = ['Kind', 'Honest', 'Family-oriented'];
+  final _otherTraitController = TextEditingController();
+  final _marriageExpectationsController = TextEditingController();
+  final List<String> _selectedCoreValues = ['Faith', 'Family', 'Loyalty', 'Integrity'];
+  final List<String> _availableCoreValues = [
+    'Faith', 'Family', 'Loyalty', 'Integrity', 'Growth',
+    'Harmony', 'Respect', 'Love', 'Patience', 'Honesty'
+  ];
+
   final List<String> _religions = [
     'Christian', 'Muslim', 'Jewish', 'Hindu', 'Buddhist',
     'Atheist', 'Agnostic', 'Other'
@@ -73,6 +102,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _residenceCityController.dispose();
     _originStateCustomController.dispose();
     _originCityController.dispose();
+    _prefResCountryCustomController.dispose();
+    _prefResStateCustomController.dispose();
+    _prefOriCountryCustomController.dispose();
+    _prefOriCustomController.dispose();
+    _otherTraitController.dispose();
+    _marriageExpectationsController.dispose();
     super.dispose();
   }
 
@@ -149,6 +184,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_currentStep == 5) {
       if (_originCountry.isEmpty || _originCityController.text.trim().isEmpty) {
         _showError('Please provide your country of heritage/origin and ancestral city/town.');
+        return;
+      }
+    }
+
+    // Screen 7 Validation: Lifestyle Habits & Marital History (Has defaults, valid)
+
+    // Screen 8 Validation: Preferred Future Partner Residence & Cultural Origin
+    if (_currentStep == 7) {
+      if (_prefResCountry == 'Enter Choice Country' && _prefResCountryCustomController.text.trim().isEmpty) {
+        _showError('Please specify preferred country of residence.');
+        return;
+      }
+      if (_prefOriCountry == 'Enter Choice Country' && _prefOriCountryCustomController.text.trim().isEmpty) {
+        _showError('Please specify preferred heritage country.');
+        return;
+      }
+    }
+
+    // Screen 9 Validation: Marriage Intentions & Traits
+    if (_currentStep == 8) {
+      if (_idealPartnerTraits.isEmpty) {
+        _showError('Please select at least one ideal partner trait.');
         return;
       }
     }
@@ -234,6 +291,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     final preferredGender = _gender == 'Female' ? 'Male' : 'Female';
 
+    // Resolve custom partner residence
+    final finalPrefResCountry = _prefResCountry == 'Enter Choice Country'
+        ? _prefResCountryCustomController.text.trim()
+        : _prefResCountry;
+    final finalPrefResState = _prefResState == 'Enter State/Province/Region'
+        ? _prefResStateCustomController.text.trim()
+        : _prefResState;
+
+    // Resolve custom partner origin
+    final finalPrefOriCountry = _prefOriCountry == 'Enter Choice Country'
+        ? _prefOriCountryCustomController.text.trim()
+        : _prefOriCountry;
+    final finalPrefOriState = _prefOriState == 'Enter Native Heritage'
+        ? _prefOriCustomController.text.trim()
+        : _prefOriState;
+
+    // Traits
+    final traits = List<String>.from(_idealPartnerTraits);
+    if (traits.contains('Other') && _otherTraitController.text.trim().isNotEmpty) {
+      traits.remove('Other');
+      traits.add(_otherTraitController.text.trim());
+    }
+
     final updateData = {
       'firstName': _firstNameController.text.trim(),
       'lastName': _lastNameController.text.trim(),
@@ -251,13 +331,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       'originCountry': _originCountry,
       'originState': finalOriginState,
       'originCity': _originCityController.text.trim(),
-      // Lifestyle Defaults
-      'maritalStatus': 'Never married',
-      'smoking': 'Non-smoker',
-      'drinking': 'Never',
-      'childrenPreference': 'Open to children',
-      'marriageTimeline': '1-2 years',
-      'willingToRelocate': 'Yes',
+      // Lifestyle Habits & Marital History
+      'maritalStatus': _maritalStatus,
+      'smoking': _smoking,
+      'drinking': _drinking,
+      'childrenPreference': _childrenIntent,
+      // Preferred Partner Residence & Heritage
+      'preferredResidenceCountry': finalPrefResCountry,
+      'preferredResidenceState': finalPrefResState,
+      'preferredOriginCountry': finalPrefOriCountry,
+      'preferredOriginState': finalPrefOriState,
+      // Marriage Intentions & Traits
+      'marriageTimeline': _marriageTimeline,
+      'willingToRelocate': _willingToRelocate,
+      'partnerMinAge': _partnerAgeRange.start.round(),
+      'partnerMaxAge': _partnerAgeRange.end.round(),
+      'idealPartnerTraits': traits,
+      'personalValues': _selectedCoreValues,
+      'marriageExpectations': _marriageExpectationsController.text.trim(),
       'personalityArchetype': 'The Intentional Builder',
       'attachmentStyle': 'Secure',
       'readinessScore': 94,
@@ -330,8 +421,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
-        title: _currentStep < 6
-            ? 'ONBOARDING (${_currentStep + 1}/6)'
+        title: _currentStep < 9
+            ? 'ONBOARDING (${_currentStep + 1}/9)'
             : 'IDENTITY VERIFICATION',
         leading: _currentStep > 0
             ? IconButton(
@@ -381,9 +472,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const SizedBox(height: 28),
 
               // Bottom Button Bar
-              if (_currentStep < 6)
+              if (_currentStep < 9)
                 GoldButton(
-                  text: _currentStep == 5 ? 'Continue to Verification' : 'Continue',
+                  text: _currentStep == 8 ? 'Continue to Verification' : 'Continue',
                   onPressed: _nextStep,
                 ),
               const SizedBox(height: 24),
@@ -409,6 +500,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case 5:
         return _buildHeritageStep();
       case 6:
+        return _buildLifestyleStep();
+      case 7:
+        return _buildPartnerPreferencesStep();
+      case 8:
+        return _buildMarriageIntentionsStep();
+      case 9:
         return _buildVerificationStep();
       default:
         return const SizedBox.shrink();
@@ -767,7 +864,291 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   // ==========================================
-  // SCREEN 7: DIDIT VERIFICATION (OPTIONAL)
+  // SCREEN 7: LIFESTYLE & MARITAL HISTORY
+  // ==========================================
+  Widget _buildLifestyleStep() {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('LIFESTYLE & HABITS', style: AppTypography.headingLarge),
+          const SizedBox(height: 6),
+          Text(
+            'Your marital history and lifestyle habits.',
+            style: AppTypography.bodySmall,
+          ),
+          const SizedBox(height: 24),
+          _buildDropdownField(
+            label: 'Marital History',
+            value: _maritalStatus,
+            items: KnotLocationData.maritalStatusOptions,
+            onChanged: (val) {
+              if (val != null) setState(() => _maritalStatus = val);
+            },
+          ),
+          const SizedBox(height: 18),
+          _buildDropdownField(
+            label: 'Smoking Habits',
+            value: _smoking,
+            items: KnotLocationData.smokingOptions,
+            onChanged: (val) {
+              if (val != null) setState(() => _smoking = val);
+            },
+          ),
+          const SizedBox(height: 18),
+          _buildDropdownField(
+            label: 'Drinking Habits',
+            value: _drinking,
+            items: KnotLocationData.drinkingOptions,
+            onChanged: (val) {
+              if (val != null) setState(() => _drinking = val);
+            },
+          ),
+          const SizedBox(height: 18),
+          _buildDropdownField(
+            label: 'Children Preference',
+            value: _childrenIntent,
+            items: KnotLocationData.childrenIntentOptions,
+            onChanged: (val) {
+              if (val != null) setState(() => _childrenIntent = val);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // SCREEN 8: PREFERRED FUTURE PARTNER RESIDENCE & ORIGIN
+  // ==========================================
+  Widget _buildPartnerPreferencesStep() {
+    final List<String> prefResStates = <String>[
+      'Any State/Province/Region',
+      'Enter State/Province/Region',
+      ...(KnotLocationData.statesByCountry[_prefResCountry] ?? const <String>[]),
+    ];
+
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('PARTNER PREFERENCES', style: AppTypography.headingLarge),
+          const SizedBox(height: 6),
+          Text(
+            'Preferred residence and cultural background for your future partner.',
+            style: AppTypography.bodySmall,
+          ),
+          const SizedBox(height: 20),
+          _buildDropdownField(
+            label: 'Preferred Partner Country of Residence',
+            value: _prefResCountry,
+            items: ['Any Country', 'Enter Choice Country', ...KnotLocationData.countries],
+            onChanged: (val) {
+              if (val != null) {
+                setState(() {
+                  _prefResCountry = val;
+                  _prefResState = 'Any State/Province/Region';
+                });
+              }
+            },
+          ),
+          if (_prefResCountry == 'Enter Choice Country') ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: _prefResCountryCustomController,
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+              decoration: const InputDecoration(hintText: 'Type choice country'),
+            ),
+          ],
+          const SizedBox(height: 14),
+          _buildDropdownField(
+            label: 'Preferred Partner State / Province / Region',
+            value: prefResStates.contains(_prefResState) ? _prefResState : prefResStates.first,
+            items: prefResStates,
+            onChanged: (val) {
+              if (val != null) setState(() => _prefResState = val);
+            },
+          ),
+          if (_prefResState == 'Enter State/Province/Region') ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: _prefResStateCustomController,
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+              decoration: const InputDecoration(hintText: 'Type choice state/province/region'),
+            ),
+          ],
+          const SizedBox(height: 18),
+          _buildDropdownField(
+            label: 'Preferred Partner Heritage Country',
+            value: _prefOriCountry,
+            items: ['Any Country', 'Enter Choice Country', ...KnotLocationData.countries],
+            onChanged: (val) {
+              if (val != null) setState(() => _prefOriCountry = val);
+            },
+          ),
+          if (_prefOriCountry == 'Enter Choice Country') ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: _prefOriCountryCustomController,
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+              decoration: const InputDecoration(hintText: 'Type choice heritage country'),
+            ),
+          ],
+          const SizedBox(height: 14),
+          _buildDropdownField(
+            label: 'Native Heritage / Ethno-Cultural Background',
+            value: _prefOriState,
+            items: const ['Any Heritage', 'Enter Native Heritage'],
+            onChanged: (val) {
+              if (val != null) setState(() => _prefOriState = val);
+            },
+          ),
+          if (_prefOriState == 'Enter Native Heritage') ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: _prefOriCustomController,
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+              decoration: const InputDecoration(hintText: 'e.g. Yoruba, Scottish, English, Catalan'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // SCREEN 9: MARRIAGE INTENTIONS & TRAITS
+  // ==========================================
+  Widget _buildMarriageIntentionsStep() {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('MARRIAGE INTENTIONS', style: AppTypography.headingLarge),
+          const SizedBox(height: 6),
+          Text(
+            'Timeline, expectations, and core traits for sacred marriage.',
+            style: AppTypography.bodySmall,
+          ),
+          const SizedBox(height: 20),
+          _buildDropdownField(
+            label: 'Intended Marriage Timeline',
+            value: _marriageTimeline,
+            items: KnotLocationData.vowTimelineOptions,
+            onChanged: (val) {
+              if (val != null) setState(() => _marriageTimeline = val);
+            },
+          ),
+          const SizedBox(height: 14),
+          _buildDropdownField(
+            label: 'Willingness to Relocate for Marriage',
+            value: _willingToRelocate,
+            items: KnotLocationData.relocationOptions,
+            onChanged: (val) {
+              if (val != null) setState(() => _willingToRelocate = val);
+            },
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildFieldLabel('Ideal Partner Age Range'),
+              Text(
+                '${_partnerAgeRange.start.round()} - ${_partnerAgeRange.end.round()} yrs',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.champagneGold,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          RangeSlider(
+            values: _partnerAgeRange,
+            min: 18,
+            max: 65,
+            divisions: 47,
+            activeColor: AppColors.champagneGold,
+            inactiveColor: AppColors.darkSlate,
+            labels: RangeLabels(
+              '${_partnerAgeRange.start.round()}',
+              '${_partnerAgeRange.end.round()}',
+            ),
+            onChanged: (values) {
+              setState(() => _partnerAgeRange = values);
+            },
+          ),
+          const SizedBox(height: 18),
+          _buildFieldLabel('Ideal Partner Traits'),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: KnotLocationData.majorTraits.map((trait) {
+              final isSelected = _idealPartnerTraits.contains(trait);
+              return _buildChoiceChip(
+                trait,
+                isSelected,
+                () {
+                  setState(() {
+                    if (isSelected) {
+                      _idealPartnerTraits.remove(trait);
+                    } else {
+                      _idealPartnerTraits.add(trait);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
+          if (_idealPartnerTraits.contains('Other')) ...[
+            const SizedBox(height: 10),
+            TextField(
+              controller: _otherTraitController,
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+              decoration: const InputDecoration(hintText: 'Specify custom partner trait'),
+            ),
+          ],
+          const SizedBox(height: 20),
+          _buildFieldLabel('Marriage Expectations'),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _marriageExpectationsController,
+            maxLines: 3,
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+            decoration: const InputDecoration(
+              hintText: 'What are your core expectations for communication, commitment, and married life?',
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildFieldLabel('Sacred Core Values'),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _availableCoreValues.map((v) {
+              final isSelected = _selectedCoreValues.contains(v);
+              return _buildChoiceChip(
+                v,
+                isSelected,
+                () {
+                  setState(() {
+                    if (isSelected) {
+                      _selectedCoreValues.remove(v);
+                    } else {
+                      _selectedCoreValues.add(v);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // SCREEN 10: DIDIT VERIFICATION (OPTIONAL)
   // ==========================================
   Widget _buildVerificationStep() {
     return GlassCard(
@@ -838,39 +1219,44 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
           const SizedBox(height: 20),
 
-          // Accepted Government ID Documents Section
-          Text(
-            'ACCEPTED GOVERNMENT ID DOCUMENTS',
-            style: AppTypography.labelLarge.copyWith(
-              color: AppColors.champagneGold,
-              letterSpacing: 1.2,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+          // Accepted Government ID Documents Section (Compact text format)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.darkCardElevated,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.25), width: 1.0),
             ),
-          ),
-          const SizedBox(height: 10),
-          _buildAcceptedDocTile(
-            icon: Icons.flight_takeoff,
-            title: 'International Passport',
-            subtitle: 'Valid passport from any country (photo page)',
-          ),
-          const SizedBox(height: 8),
-          _buildAcceptedDocTile(
-            icon: Icons.directions_car_outlined,
-            title: "Driver's License",
-            subtitle: 'Valid national or state driver license (front & back)',
-          ),
-          const SizedBox(height: 8),
-          _buildAcceptedDocTile(
-            icon: Icons.badge_outlined,
-            title: 'National Identity Card / NIN',
-            subtitle: 'Citizen ID card, NIMC NIN slip, or national card',
-          ),
-          const SizedBox(height: 8),
-          _buildAcceptedDocTile(
-            icon: Icons.how_to_vote_outlined,
-            title: "Voter's Card / Residence Permit",
-            subtitle: 'Official voter ID or permanent resident card',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.assignment_outlined, color: AppColors.champagneGold, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      'ACCEPTED GOVERNMENT ID DOCUMENTS',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.champagneGold,
+                        letterSpacing: 1.1,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '• International Passport\n• Driver\'s License\n• National Identity Card (NIN)\n• Voter\'s Card / Residence Permit',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textPure,
+                    height: 1.6,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
           ),
 
           const SizedBox(height: 24),
@@ -914,51 +1300,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAcceptedDocTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.darkCardElevated,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.2), width: 0.8),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: AppColors.champagneGold.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: AppColors.champagneGold, size: 20),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.titleMedium.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 16),
         ],
       ),
     );

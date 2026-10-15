@@ -98,6 +98,25 @@ class _LivenessScannerOverlayState extends State<LivenessScannerOverlay>
     }
   }
 
+  Future<void> _pickSelfieFromNative() async {
+    try {
+      final XFile? file = await _picker.pickImage(
+        source: ImageSource.camera,
+        preferredCameraDevice: CameraDevice.front,
+      );
+      if (file != null) {
+        widget.onSelfieCaptured(file.path);
+        return;
+      }
+      final XFile? galleryFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (galleryFile != null) {
+        widget.onSelfieCaptured(galleryFile.path);
+      }
+    } catch (e) {
+      debugPrint('Native selfie picker error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -108,15 +127,37 @@ class _LivenessScannerOverlayState extends State<LivenessScannerOverlay>
       children: [
         // Camera Stream
         Positioned.fill(
-          child: _isInitialized && _controller != null
-              ? CameraPreview(_controller!)
+          child: _isInitialized && _controller != null && _controller!.value.isInitialized
+              ? SizedBox.expand(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: _controller!.value.previewSize?.height ?? size.width,
+                      height: _controller!.value.previewSize?.width ?? size.height,
+                      child: CameraPreview(_controller!),
+                    ),
+                  ),
+                )
               : Container(
                   color: AppColors.obsidianBlack,
                   child: Center(
-                    child: Icon(
-                      Icons.face,
-                      size: 96,
-                      color: AppColors.champagneGold.withOpacity(0.5),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation(AppColors.champagneGold),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Starting front camera...',
+                          style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -217,16 +258,48 @@ class _LivenessScannerOverlayState extends State<LivenessScannerOverlay>
 
         // Bottom Capture Trigger
         Positioned(
-          bottom: 40,
-          left: 24,
-          right: 24,
+          bottom: 30,
+          left: 20,
+          right: 20,
           child: Column(
             children: [
+              // Phone Camera / Gallery Fallback Button
+              GestureDetector(
+                onTap: _pickSelfieFromNative,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.darkCardElevated.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.champagneGold.withValues(alpha: 0.5),
+                      width: 1.0,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.camera_front_outlined, color: AppColors.champagneGold, size: 18),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Take Selfie via Phone Camera / Gallery',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: AppColors.champagneGold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
               GestureDetector(
                 onTap: _isScanning ? null : _captureSelfie,
                 child: Container(
-                  width: 84,
-                  height: 84,
+                  width: 80,
+                  height: 80,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(color: AppColors.champagneGold, width: 3),
@@ -267,7 +340,7 @@ class _LivenessScannerOverlayState extends State<LivenessScannerOverlay>
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               Text(
                 'Didit 1:1 Biometric Liveness Verification',
                 style: AppTypography.bodySmall.copyWith(

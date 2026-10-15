@@ -235,18 +235,51 @@ class _CameraViewfinderState extends State<CameraViewfinder> {
 
         // Bottom Capture Controls
         Positioned(
-          bottom: 40,
-          left: 24,
-          right: 24,
+          bottom: 30,
+          left: 20,
+          right: 20,
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
+              // Prominent Upload from Files / Gallery Button
+              GestureDetector(
+                onTap: _pickFromGallery,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppColors.darkCardElevated.withValues(alpha: 0.9),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: AppColors.champagneGold.withValues(alpha: 0.5),
+                      width: 1.2,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.file_upload_outlined, color: AppColors.champagneGold, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Upload ID from Gallery / Files',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: AppColors.champagneGold,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // Gallery Upload Shortcut
+                  // Gallery Upload Shortcut Icon
                   IconButton(
                     onPressed: _pickFromGallery,
-                    icon: const Icon(Icons.photo_library_outlined, size: 28),
+                    icon: const Icon(Icons.photo_library_outlined, size: 30),
                     color: AppColors.textPure,
                     tooltip: 'Upload from files',
                   ),
@@ -255,8 +288,8 @@ class _CameraViewfinderState extends State<CameraViewfinder> {
                   GestureDetector(
                     onTap: _isCapturing ? null : _capturePhoto,
                     child: Container(
-                      width: 80,
-                      height: 80,
+                      width: 78,
+                      height: 78,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(color: AppColors.champagneGold, width: 3),
@@ -288,7 +321,13 @@ class _CameraViewfinderState extends State<CameraViewfinder> {
                                     ),
                                   ),
                                 )
-                              : null,
+                              : const Center(
+                                  child: Icon(
+                                    Icons.camera_alt,
+                                    color: AppColors.obsidianBlack,
+                                    size: 28,
+                                  ),
+                                ),
                         ),
                       ),
                     ),
@@ -307,7 +346,7 @@ class _CameraViewfinderState extends State<CameraViewfinder> {
                     const SizedBox(width: 48),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
                 'Aligned with Didit Sovereign Trust & Security',
                 style: AppTypography.bodySmall.copyWith(
