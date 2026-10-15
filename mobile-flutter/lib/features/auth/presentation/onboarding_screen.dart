@@ -18,64 +18,38 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _currentStep = 0;
-  static const int _totalSteps = 6;
+  static const int _totalSteps = 7; // Steps 0 to 5 = Forms, Step 6 = Optional Didit Verification
+  bool _isMovingForward = true;
+  bool _isSaving = false;
 
-  // Controllers - Step 1: Legal Identity & Age
+  // Controllers - Screen 1: Legal Identity
   final _firstNameController = TextEditingController();
   final _lastNameController = TextEditingController();
-  DateTime? _selectedDob;
-  String _gender = 'Female';
 
-  // Controllers - Step 2: Vocation, Faith & Languages
+  // Controllers - Screen 2: Gender Identity & Date of Birth
+  String _gender = 'Female';
+  DateTime? _selectedDob;
+
+  // Controllers - Screen 3: Vocation & Faith
   final _occupationController = TextEditingController();
   String _religionSelect = 'Christian';
   final _religionCustomController = TextEditingController();
+
+  // Controllers - Screen 4: Language
   final List<String> _selectedLanguages = ['English'];
   final _otherLanguageController = TextEditingController();
 
-  // Controllers - Step 3: Where You Live & Heritage
+  // Controllers - Screen 5: Location (Current Residence)
   String _residenceCountry = 'United States of America';
   String _residenceState = '';
   final _residenceStateCustomController = TextEditingController();
   final _residenceCityController = TextEditingController();
 
+  // Controllers - Screen 6: Heritage & Origin
   String _originCountry = 'United States of America';
   String _originState = '';
   final _originStateCustomController = TextEditingController();
   final _originCityController = TextEditingController();
-
-  // Controllers - Step 4: Lifestyle Habits
-  String _maritalStatus = 'Never married';
-  String _smoking = 'Non-smoker';
-  String _drinking = 'Non-drinker';
-
-  // Controllers - Step 5: Future Partner Preferences
-  String _prefResCountry = 'Any Country';
-  final _prefResCountryCustomController = TextEditingController();
-  String _prefResState = 'Any State/Province/Region';
-  final _prefResStateCustomController = TextEditingController();
-
-  String _prefOriCountry = 'Any Country';
-  final _prefOriCountryCustomController = TextEditingController();
-  String _prefOriState = 'Any Heritage';
-  final _prefOriCustomController = TextEditingController();
-
-  String _partnerChildrenStatus = 'No Kid(s)';
-  String _marriageTimeline = '1-2 years';
-  String _willingToRelocate = 'Yes';
-
-  // Controllers - Step 6: Family Goals, Traits & Expectations
-  String _childrenIntent = 'Want children';
-  final List<String> _idealPartnerTraits = ['Kind', 'Family-oriented', 'Faith'];
-  final _otherTraitController = TextEditingController();
-  RangeValues _partnerAgeRange = const RangeValues(22, 38);
-  final _marriageExpectationsController = TextEditingController();
-  final List<String> _selectedCoreValues = ['Faith', 'Family', 'Integrity'];
-
-  final List<String> _availableCoreValues = [
-    'Faith', 'Family', 'Integrity', 'Growth', 'Ambition',
-    'Loyalty', 'Communication', 'Adventure', 'Empathy', 'Respect'
-  ];
 
   final List<String> _religions = [
     'Christian', 'Muslim', 'Jewish', 'Hindu', 'Buddhist',
@@ -85,7 +59,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
-    // Default DOB to 26 years ago
     _selectedDob = DateTime.now().subtract(const Duration(days: 365 * 26));
   }
 
@@ -100,12 +73,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _residenceCityController.dispose();
     _originStateCustomController.dispose();
     _originCityController.dispose();
-    _prefResCountryCustomController.dispose();
-    _prefResStateCustomController.dispose();
-    _prefOriCountryCustomController.dispose();
-    _prefOriCustomController.dispose();
-    _otherTraitController.dispose();
-    _marriageExpectationsController.dispose();
     super.dispose();
   }
 
@@ -125,12 +92,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return '${_selectedDob!.year}-${_selectedDob!.month.toString().padLeft(2, '0')}-${_selectedDob!.day.toString().padLeft(2, '0')}';
   }
 
-  void _nextStep() async {
-    // Step 0 Validation: Identity & Age
+  void _nextStep() {
+    // Screen 1 Validation: Legal Identity
     if (_currentStep == 0) {
-      if (_firstNameController.text.trim().isEmpty ||
-          _lastNameController.text.trim().isEmpty) {
+      if (_firstNameController.text.trim().isEmpty || _lastNameController.text.trim().isEmpty) {
         _showError('Please enter your legal first and last name.');
+        return;
+      }
+    }
+
+    // Screen 2 Validation: Gender & Age (18+)
+    if (_currentStep == 1) {
+      if (_selectedDob == null) {
+        _showError('Please select your date of birth.');
         return;
       }
       if (_calculatedAge < 18) {
@@ -139,128 +113,60 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       }
     }
 
-    // Step 1 Validation: Vocation & Faith
-    if (_currentStep == 1) {
+    // Screen 3 Validation: Vocation & Faith
+    if (_currentStep == 2) {
       if (_occupationController.text.trim().isEmpty) {
         _showError('Please enter your occupation.');
         return;
       }
       if (_religionSelect == 'Other' && _religionCustomController.text.trim().isEmpty) {
-        _showError('Please specify your religion / faith.');
-        return;
-      }
-      if (_selectedLanguages.isEmpty) {
-        _showError('Please select at least one language spoken.');
+        _showError('Please specify your religion or faith.');
         return;
       }
     }
 
-    // Step 2 Validation: Locations
-    if (_currentStep == 2) {
-      if (_residenceCountry.isEmpty || _residenceCityController.text.trim().isEmpty) {
-        _showError('Please provide your Country of residence and City.');
+    // Screen 4 Validation: Language
+    if (_currentStep == 3) {
+      if (_selectedLanguages.isEmpty) {
+        _showError('Please select at least one language spoken.');
         return;
       }
+      if (_selectedLanguages.contains('Other') && _otherLanguageController.text.trim().isEmpty) {
+        _showError('Please specify your other language.');
+        return;
+      }
+    }
+
+    // Screen 5 Validation: Current Residence
+    if (_currentStep == 4) {
+      if (_residenceCountry.isEmpty || _residenceCityController.text.trim().isEmpty) {
+        _showError('Please provide your country of residence and city.');
+        return;
+      }
+    }
+
+    // Screen 6 Validation: Heritage & Origin
+    if (_currentStep == 5) {
       if (_originCountry.isEmpty || _originCityController.text.trim().isEmpty) {
-        _showError('Please provide your Country of heritage/origin and City.');
+        _showError('Please provide your country of heritage/origin and ancestral city/town.');
         return;
       }
     }
 
     if (_currentStep < _totalSteps - 1) {
-      setState(() => _currentStep++);
-    } else {
-      // Step 6: Finalize Onboarding & Save
-      final finalReligion = _religionSelect == 'Other'
-          ? _religionCustomController.text.trim()
-          : _religionSelect;
+      setState(() {
+        _isMovingForward = true;
+        _currentStep++;
+      });
+    }
+  }
 
-      final finalResState = _residenceState.isNotEmpty
-          ? _residenceState
-          : _residenceStateCustomController.text.trim();
-
-      final finalOriginState = _originState.isNotEmpty
-          ? _originState
-          : _originStateCustomController.text.trim();
-
-      final finalPrefResCountry = _prefResCountry == 'Enter Choice Country'
-          ? _prefResCountryCustomController.text.trim()
-          : _prefResCountry;
-
-      final finalPrefResState = _prefResState == 'Enter State/Province/Region'
-          ? _prefResStateCustomController.text.trim()
-          : _prefResState;
-
-      final finalPrefOriCountry = _prefOriCountry == 'Enter Choice Country'
-          ? _prefOriCountryCustomController.text.trim()
-          : _prefOriCountry;
-
-      final finalPrefOriState = _prefOriState == 'Enter Native Heritage'
-          ? _prefOriCustomController.text.trim()
-          : _prefOriState;
-
-      // Languages
-      final languages = List<String>.from(_selectedLanguages);
-      if (languages.contains('Other') && _otherLanguageController.text.trim().isNotEmpty) {
-        languages.remove('Other');
-        languages.add(_otherLanguageController.text.trim());
-      }
-
-      // Traits
-      final traits = List<String>.from(_idealPartnerTraits);
-      if (traits.contains('Other') && _otherTraitController.text.trim().isNotEmpty) {
-        traits.remove('Other');
-        traits.add(_otherTraitController.text.trim());
-      }
-
-      // Opposite sex automatically derived
-      final preferredGender = _gender == 'Female' ? 'Male' : 'Female';
-
-      final updateData = {
-        'firstName': _firstNameController.text.trim(),
-        'lastName': _lastNameController.text.trim(),
-        'gender': _gender,
-        'preferredGender': preferredGender,
-        'dateOfBirth': _formattedDob,
-        'occupation': _occupationController.text.trim(),
-        'religion': finalReligion,
-        'languagesSpoken': languages,
-        // Lifestyle
-        'maritalStatus': _maritalStatus,
-        'smoking': _smoking,
-        'drinking': _drinking,
-        // Residence
-        'residenceCountry': _residenceCountry,
-        'residenceState': finalResState,
-        'residenceCity': _residenceCityController.text.trim(),
-        // Heritage
-        'originCountry': _originCountry,
-        'originState': finalOriginState,
-        'originCity': _originCityController.text.trim(),
-        // Preferred Partner Location & Heritage
-        'preferredResidenceCountry': finalPrefResCountry,
-        'preferredResidenceState': finalPrefResState,
-        'preferredOriginCountry': finalPrefOriCountry,
-        'preferredOriginState': finalPrefOriState,
-        // Future Marriage Plans
-        'childrenStatus': _partnerChildrenStatus,
-        'marriageTimeline': _marriageTimeline,
-        'willingToRelocate': _willingToRelocate,
-        'childrenPreference': _childrenIntent,
-        // Traits & Expectations
-        'idealPartnerTraits': traits,
-        'personalValues': _selectedCoreValues,
-        'marriageExpectations': _marriageExpectationsController.text.trim(),
-        'personalityArchetype': 'The Intentional Builder',
-        'attachmentStyle': 'Secure',
-        'readinessScore': 92,
-        'seriousnessLevel': 96,
-      };
-
-      await ref.read(authProvider.notifier).updateProfile(updateData);
-      if (mounted) {
-        context.go('/verification');
-      }
+  void _prevStep() {
+    if (_currentStep > 0) {
+      setState(() {
+        _isMovingForward = false;
+        _currentStep--;
+      });
     }
   }
 
@@ -294,7 +200,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               surface: AppColors.darkCardElevated,
               onSurface: AppColors.textPure,
             ),
-            dialogBackgroundColor: AppColors.obsidianBlack,
           ),
           child: child!,
         );
@@ -306,16 +211,127 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
+  Future<void> _saveOnboardingData() async {
+    setState(() => _isSaving = true);
+
+    final finalReligion = _religionSelect == 'Other'
+        ? _religionCustomController.text.trim()
+        : _religionSelect;
+
+    final finalResState = _residenceState.isNotEmpty
+        ? _residenceState
+        : _residenceStateCustomController.text.trim();
+
+    final finalOriginState = _originState.isNotEmpty
+        ? _originState
+        : _originStateCustomController.text.trim();
+
+    final languages = List<String>.from(_selectedLanguages);
+    if (languages.contains('Other') && _otherLanguageController.text.trim().isNotEmpty) {
+      languages.remove('Other');
+      languages.add(_otherLanguageController.text.trim());
+    }
+
+    final preferredGender = _gender == 'Female' ? 'Male' : 'Female';
+
+    final updateData = {
+      'firstName': _firstNameController.text.trim(),
+      'lastName': _lastNameController.text.trim(),
+      'gender': _gender,
+      'preferredGender': preferredGender,
+      'dateOfBirth': _formattedDob,
+      'occupation': _occupationController.text.trim(),
+      'religion': finalReligion,
+      'languagesSpoken': languages,
+      // Residence
+      'residenceCountry': _residenceCountry,
+      'residenceState': finalResState,
+      'residenceCity': _residenceCityController.text.trim(),
+      // Heritage & Origin
+      'originCountry': _originCountry,
+      'originState': finalOriginState,
+      'originCity': _originCityController.text.trim(),
+      // Lifestyle Defaults
+      'maritalStatus': 'Never married',
+      'smoking': 'Non-smoker',
+      'drinking': 'Never',
+      'childrenPreference': 'Open to children',
+      'marriageTimeline': '1-2 years',
+      'willingToRelocate': 'Yes',
+      'personalityArchetype': 'The Intentional Builder',
+      'attachmentStyle': 'Secure',
+      'readinessScore': 94,
+      'seriousnessLevel': 98,
+    };
+
+    try {
+      await ref.read(authProvider.notifier).updateProfile(updateData);
+    } catch (e) {
+      debugPrint('Onboarding profile save notice: $e');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _completeAndRedirectToAuth({bool diditVerificationCompleted = false}) async {
+    await _saveOnboardingData();
+
+    if (!mounted) return;
+
+    // Show success dialog instructing user to sign in
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.darkCardElevated,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
+          children: [
+            const Icon(Icons.check_circle_outline, color: AppColors.champagneGold, size: 28),
+            const SizedBox(width: 10),
+            Text('Profile Created!', style: AppTypography.headingMedium),
+          ],
+        ),
+        content: Text(
+          diditVerificationCompleted
+              ? 'Your registry profile and identity verification have been submitted successfully. Please sign in with your email and password to enter your dashboard.'
+              : 'Your onboarding details have been saved securely. Since verification was skipped, your profile will remain private until verified. Please sign in to continue.',
+          style: AppTypography.bodyMedium,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: Text(
+              'Sign In Now',
+              style: AppTypography.labelLarge.copyWith(color: AppColors.champagneGold),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Logout session so user signs in fresh as required by user prompt
+    await ref.read(authProvider.notifier).logout();
+
+    if (mounted) {
+      context.go('/auth');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
-        title: 'ONBOARDING (${_currentStep + 1}/$_totalSteps)',
+        title: _currentStep < 6
+            ? 'ONBOARDING (${_currentStep + 1}/6)'
+            : 'IDENTITY VERIFICATION',
         leading: _currentStep > 0
             ? IconButton(
                 icon: const Icon(Icons.arrow_back_ios, color: AppColors.champagneGold, size: 18),
-                onPressed: () => setState(() => _currentStep--),
+                onPressed: _prevStep,
               )
             : null,
       ),
@@ -325,7 +341,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Progress Line
+              // Progress Bar
               LinearProgressIndicator(
                 value: (_currentStep + 1) / _totalSteps,
                 backgroundColor: AppColors.darkSlate,
@@ -334,20 +350,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
               const SizedBox(height: 24),
 
-              if (_currentStep == 0) _buildIdentityStep(),
-              if (_currentStep == 1) _buildVocationAndFaithStep(),
-              if (_currentStep == 2) _buildResidenceAndOriginStep(),
-              if (_currentStep == 3) _buildLifestyleHabitsStep(),
-              if (_currentStep == 4) _buildPartnerPlansStep(),
-              if (_currentStep == 5) _buildFamilyGoalsAndExpectationsStep(),
+              // Animated "Fly-In" Transition Container
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 380),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (Widget child, Animation<double> animation) {
+                  final inOffset = _isMovingForward
+                      ? const Offset(1.0, 0.0)
+                      : const Offset(-1.0, 0.0);
 
-              const SizedBox(height: 32),
-              GoldButton(
-                text: _currentStep == _totalSteps - 1
-                    ? 'Complete & Verify Identity'
-                    : 'Continue',
-                onPressed: _nextStep,
+                  final slideIn = Tween<Offset>(begin: inOffset, end: Offset.zero).animate(animation);
+
+                  return SlideTransition(
+                    position: slideIn,
+                    child: FadeTransition(opacity: animation, child: child),
+                  );
+                },
+                child: KeyedSubtree(
+                  key: ValueKey<int>(_currentStep),
+                  child: _buildCurrentFormStep(),
+                ),
               ),
+
+              const SizedBox(height: 28),
+
+              // Bottom Button Bar
+              if (_currentStep < 6)
+                GoldButton(
+                  text: _currentStep == 5 ? 'Continue to Verification' : 'Continue',
+                  onPressed: _nextStep,
+                ),
               const SizedBox(height: 24),
             ],
           ),
@@ -356,82 +389,137 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  // STEP 1: Legal Identity & Age (No seeking option, strict opposite-sex)
-  Widget _buildIdentityStep() {
+  Widget _buildCurrentFormStep() {
+    switch (_currentStep) {
+      case 0:
+        return _buildLegalIdentityStep();
+      case 1:
+        return _buildGenderIdentityStep();
+      case 2:
+        return _buildVocationAndFaithStep();
+      case 3:
+        return _buildLanguageStep();
+      case 4:
+        return _buildLocationStep();
+      case 5:
+        return _buildHeritageStep();
+      case 6:
+        return _buildVerificationStep();
+      default:
+        return const SizedBox.shrink();
+    }
+  }
+
+  // ==========================================
+  // SCREEN 1: LEGAL IDENTITY
+  // ==========================================
+  Widget _buildLegalIdentityStep() {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Legal Candidate Identity', style: AppTypography.headingLarge),
+          Text('LEGAL IDENTITY', style: AppTypography.headingLarge),
           const SizedBox(height: 6),
           Text(
-            'Must match your Government ID for biometric verification.',
+            'Enter your official legal name as shown on your government ID.',
             style: AppTypography.bodySmall,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           _buildFieldLabel('Legal First Name'),
           TextField(
             controller: _firstNameController,
             style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
             decoration: const InputDecoration(hintText: 'First Name (e.g. Sophia)'),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 18),
           _buildFieldLabel('Legal Last Name'),
           TextField(
             controller: _lastNameController,
             style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-            decoration: const InputDecoration(hintText: 'Last Name (e.g. Al-Mansoor)'),
+            decoration: const InputDecoration(hintText: 'Last Name (e.g. Sterling)'),
           ),
-          const SizedBox(height: 20),
-          _buildFieldLabel('Gender Identity'),
-          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // SCREEN 2: GENDER IDENTITY & BIRTH DATE
+  // ==========================================
+  Widget _buildGenderIdentityStep() {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('GENDER IDENTITY', style: AppTypography.headingLarge),
+          const SizedBox(height: 6),
+          Text(
+            'Accurate biological gender and age are required for matrimonial alignment.',
+            style: AppTypography.bodySmall,
+          ),
+          const SizedBox(height: 24),
+
+          _buildFieldLabel('Your Legal Biological Gender'),
+          const SizedBox(height: 6),
           Row(
             children: [
-              _buildChoiceChip(
-                'Female',
-                _gender == 'Female',
-                () => setState(() => _gender = 'Female'),
+              Expanded(
+                child: _buildGenderOption(
+                  label: 'Female',
+                  isSelected: _gender == 'Female',
+                  onTap: () => setState(() => _gender = 'Female'),
+                ),
               ),
-              const SizedBox(width: 14),
-              _buildChoiceChip(
-                'Male',
-                _gender == 'Male',
-                () => setState(() => _gender = 'Male'),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildGenderOption(
+                  label: 'Male',
+                  isSelected: _gender == 'Male',
+                  onTap: () => setState(() => _gender = 'Male'),
+                ),
               ),
             ],
           ),
+
           const SizedBox(height: 24),
-          _buildFieldLabel('Date of Birth & Age'),
-          const SizedBox(height: 8),
-          InkWell(
+          _buildFieldLabel('Date of Birth'),
+          const SizedBox(height: 6),
+          GestureDetector(
             onTap: _pickDob,
-            borderRadius: BorderRadius.circular(16),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
               decoration: BoxDecoration(
                 color: AppColors.darkCardElevated,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.borderSubtle),
+                border: Border.all(
+                  color: _calculatedAge >= 18 ? AppColors.borderSubtle : Colors.redAccent,
+                  width: 1.2,
+                ),
               ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Icon(Icons.calendar_today, color: AppColors.champagneGold, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _selectedDob != null ? _formattedDob : 'Select Date of Birth',
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-                    ),
+                  Row(
+                    children: [
+                      const Icon(Icons.cake_outlined, color: AppColors.champagneGold, size: 20),
+                      const SizedBox(width: 12),
+                      Text(
+                        _selectedDob == null ? 'Select Date of Birth' : _formattedDob,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: _selectedDob == null ? AppColors.textMuted : AppColors.textPure,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.champagneGold.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.champagneGold.withOpacity(0.5)),
+                      color: AppColors.champagneGold.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      'Age $_calculatedAge',
+                      '$_calculatedAge yrs',
                       style: AppTypography.labelSmall.copyWith(
                         color: AppColors.champagneGold,
                         fontWeight: FontWeight.bold,
@@ -447,25 +535,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  // STEP 2: Vocation, Faith & Languages
+  // ==========================================
+  // SCREEN 3: VOCATION & FAITH
+  // ==========================================
   Widget _buildVocationAndFaithStep() {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Vocation, Faith & Languages', style: AppTypography.headingLarge),
+          Text('VOCATION & FAITH', style: AppTypography.headingLarge),
           const SizedBox(height: 6),
-          Text('Core foundations for mutual alignment.', style: AppTypography.bodySmall),
-          const SizedBox(height: 20),
-          _buildFieldLabel('Occupation'),
+          Text(
+            'Your professional career and spiritual core.',
+            style: AppTypography.bodySmall,
+          ),
+          const SizedBox(height: 24),
+
+          _buildFieldLabel('Occupation / Career'),
           TextField(
             controller: _occupationController,
             style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-            decoration: const InputDecoration(hintText: 'e.g. Software Architect, Physician'),
+            decoration: const InputDecoration(hintText: 'e.g. Software Engineer, Physician, Architect'),
           ),
-          const SizedBox(height: 18),
+
+          const SizedBox(height: 20),
           _buildDropdownField(
-            label: 'Religion / Faith',
+            label: 'Religion & Faith',
             value: _religionSelect,
             items: _religions,
             onChanged: (val) {
@@ -477,12 +572,30 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             TextField(
               controller: _religionCustomController,
               style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-              decoration: const InputDecoration(hintText: 'Specify your religion or belief'),
+              decoration: const InputDecoration(hintText: 'Specify your religion or faith'),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // SCREEN 4: LANGUAGE
+  // ==========================================
+  Widget _buildLanguageStep() {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('LANGUAGE(S) SPOKEN', style: AppTypography.headingLarge),
+          const SizedBox(height: 6),
+          Text(
+            'Select all languages in which you can communicate comfortably.',
+            style: AppTypography.bodySmall,
+          ),
           const SizedBox(height: 20),
-          _buildFieldLabel('Languages Spoken'),
-          const SizedBox(height: 8),
+
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -503,12 +616,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               );
             }).toList(),
           ),
+
           if (_selectedLanguages.contains('Other')) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
+            _buildFieldLabel('Specify Other Language(s)'),
             TextField(
               controller: _otherLanguageController,
               style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-              decoration: const InputDecoration(hintText: 'Specify other language(s)'),
+              decoration: const InputDecoration(hintText: 'e.g. Hebrew, Japanese, Dutch'),
             ),
           ],
         ],
@@ -516,23 +631,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
-  // STEP 3: Where You Live & Heritage
-  Widget _buildResidenceAndOriginStep() {
+  // ==========================================
+  // SCREEN 5: LOCATION (CURRENT RESIDENCE)
+  // ==========================================
+  Widget _buildLocationStep() {
     final List<String> residenceStates = KnotLocationData.statesByCountry[_residenceCountry] ?? const <String>[];
-    final List<String> originStates = KnotLocationData.statesByCountry[_originCountry] ?? const <String>[];
 
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Location & Heritage', style: AppTypography.headingLarge),
+          Text('CURRENT RESIDENCE', style: AppTypography.headingLarge),
           const SizedBox(height: 6),
-          Text('Where you reside and your native origin.', style: AppTypography.bodySmall),
+          Text(
+            'Where you currently reside and live day-to-day.',
+            style: AppTypography.bodySmall,
+          ),
           const SizedBox(height: 20),
 
-          // Residence Section
-          Text('CURRENT RESIDENCE', style: AppTypography.titleMedium.copyWith(color: AppColors.champagneGold)),
-          const SizedBox(height: 12),
           _buildDropdownField(
             label: 'Country of Residence',
             value: _residenceCountry,
@@ -546,10 +662,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               }
             },
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 14),
           if (residenceStates.isNotEmpty)
             _buildDropdownField(
-              label: 'State / Province',
+              label: 'State / Province / Region',
               value: _residenceState.isNotEmpty && residenceStates.contains(_residenceState)
                   ? _residenceState
                   : residenceStates.first,
@@ -559,26 +676,44 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               },
             )
           else ...[
-            _buildFieldLabel('State / Province'),
+            _buildFieldLabel('State / Province / Region'),
             TextField(
               controller: _residenceStateCustomController,
               style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
               decoration: const InputDecoration(hintText: 'State / Province / Region'),
             ),
           ],
-          const SizedBox(height: 12),
-          _buildFieldLabel('City / Town'),
+
+          const SizedBox(height: 14),
+          _buildFieldLabel('Residence City / Town'),
           TextField(
             controller: _residenceCityController,
             style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-            decoration: const InputDecoration(hintText: 'City of residence (e.g. New York, London)'),
+            decoration: const InputDecoration(hintText: 'e.g. Dallas, London, Lagos, Toronto'),
           ),
+        ],
+      ),
+    );
+  }
 
-          const SizedBox(height: 28),
+  // ==========================================
+  // SCREEN 6: HERITAGE & ORIGIN
+  // ==========================================
+  Widget _buildHeritageStep() {
+    final List<String> originStates = KnotLocationData.statesByCountry[_originCountry] ?? const <String>[];
 
-          // Heritage / Origin Section
-          Text('HERITAGE & ORIGIN', style: AppTypography.titleMedium.copyWith(color: AppColors.champagneGold)),
-          const SizedBox(height: 12),
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('HERITAGE & ORIGIN', style: AppTypography.headingLarge),
+          const SizedBox(height: 6),
+          Text(
+            'Your native heritage, cultural background, and ancestral origin.',
+            style: AppTypography.bodySmall,
+          ),
+          const SizedBox(height: 20),
+
           _buildDropdownField(
             label: 'Country of Heritage / Origin',
             value: _originCountry,
@@ -592,10 +727,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               }
             },
           ),
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 14),
           if (originStates.isNotEmpty)
             _buildDropdownField(
-              label: 'State / Province / Region',
+              label: 'State / Province / Region of Origin',
               value: _originState.isNotEmpty && originStates.contains(_originState)
                   ? _originState
                   : originStates.first,
@@ -605,341 +741,174 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               },
             )
           else ...[
-            _buildFieldLabel('State / Province / Region'),
+            _buildFieldLabel('State / Province / Region of Origin'),
             TextField(
               controller: _originStateCustomController,
               style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-              decoration: const InputDecoration(hintText: 'State / Province / Native region'),
+              decoration: const InputDecoration(hintText: 'State / Province / Region of Origin'),
             ),
           ],
-          const SizedBox(height: 12),
+
+          const SizedBox(height: 14),
           _buildFieldLabel('Origin City / Ancestral Town'),
           TextField(
             controller: _originCityController,
             style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-            decoration: const InputDecoration(hintText: 'Ancestral town or city of origin'),
+            decoration: const InputDecoration(hintText: 'e.g. Edinburgh, Abeokuta, Lyon, Kyoto'),
           ),
         ],
       ),
     );
   }
 
-  // STEP 4: Lifestyle Habits
-  Widget _buildLifestyleHabitsStep() {
+  // ==========================================
+  // SCREEN 7: DIDIT VERIFICATION (OPTIONAL)
+  // ==========================================
+  Widget _buildVerificationStep() {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Lifestyle Habits', style: AppTypography.headingLarge),
-          const SizedBox(height: 6),
-          Text('Transparency for meaningful lifelong partnership.', style: AppTypography.bodySmall),
-          const SizedBox(height: 24),
-          _buildDropdownField(
-            label: 'Marriage History',
-            value: _maritalStatus,
-            items: KnotLocationData.maritalStatusOptions,
-            onChanged: (val) {
-              if (val != null) setState(() => _maritalStatus = val);
-            },
-          ),
-          const SizedBox(height: 18),
-          _buildDropdownField(
-            label: 'Smoking Habits',
-            value: _smoking,
-            items: KnotLocationData.smokingOptions,
-            onChanged: (val) {
-              if (val != null) setState(() => _smoking = val);
-            },
-          ),
-          const SizedBox(height: 18),
-          _buildDropdownField(
-            label: 'Drinking Habits',
-            value: _drinking,
-            items: KnotLocationData.drinkingOptions,
-            onChanged: (val) {
-              if (val != null) setState(() => _drinking = val);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // STEP 5: Future Partner Preferences & Marriage Plans
-  Widget _buildPartnerPlansStep() {
-    final List<String> prefResStates = <String>[
-      'Any State/Province/Region',
-      'Enter State/Province/Region',
-      ...(KnotLocationData.statesByCountry[_prefResCountry] ?? const <String>[]),
-    ];
-
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Future Partner Plans', style: AppTypography.headingLarge),
-          const SizedBox(height: 6),
-          Text('Your vision for your intended partner.', style: AppTypography.bodySmall),
-          const SizedBox(height: 20),
-
-          // Partner Residence
-          Text('FUTURE PARTNER RESIDENCE', style: AppTypography.titleMedium.copyWith(color: AppColors.champagneGold)),
-          const SizedBox(height: 12),
-          _buildDropdownField(
-            label: 'Partner Country of Residence',
-            value: _prefResCountry,
-            items: ['Any Country', 'Enter Choice Country', ...KnotLocationData.countries],
-            onChanged: (val) {
-              if (val != null) {
-                setState(() {
-                  _prefResCountry = val;
-                  _prefResState = 'Any State/Province/Region';
-                });
-              }
-            },
-          ),
-          if (_prefResCountry == 'Enter Choice Country') ...[
-            const SizedBox(height: 10),
-            TextField(
-              controller: _prefResCountryCustomController,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-              decoration: const InputDecoration(hintText: 'Type choice country'),
-            ),
-          ],
-          const SizedBox(height: 12),
-          _buildDropdownField(
-            label: 'State / Province / Region',
-            value: prefResStates.contains(_prefResState) ? _prefResState : prefResStates.first,
-            items: prefResStates,
-            onChanged: (val) {
-              if (val != null) setState(() => _prefResState = val);
-            },
-          ),
-          if (_prefResState == 'Enter State/Province/Region') ...[
-            const SizedBox(height: 10),
-            TextField(
-              controller: _prefResStateCustomController,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-              decoration: const InputDecoration(hintText: 'Type choice state/province/region'),
-            ),
-          ],
-
-          const SizedBox(height: 24),
-
-          // Partner Native Heritage
-          Text('PARTNER NATIVE HERITAGE', style: AppTypography.titleMedium.copyWith(color: AppColors.champagneGold)),
-          const SizedBox(height: 12),
-          _buildDropdownField(
-            label: 'Preferred Partner Heritage Country',
-            value: _prefOriCountry,
-            items: ['Any Country', 'Enter Choice Country', ...KnotLocationData.countries],
-            onChanged: (val) {
-              if (val != null) setState(() => _prefOriCountry = val);
-            },
-          ),
-          if (_prefOriCountry == 'Enter Choice Country') ...[
-            const SizedBox(height: 10),
-            TextField(
-              controller: _prefOriCountryCustomController,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-              decoration: const InputDecoration(hintText: 'Type choice heritage country'),
-            ),
-          ],
-          const SizedBox(height: 12),
-          _buildDropdownField(
-            label: 'Native Heritage / Tribe / Ethno-Cultural Background',
-            value: _prefOriState,
-            items: const ['Any Heritage', 'Enter Native Heritage'],
-            onChanged: (val) {
-              if (val != null) setState(() => _prefOriState = val);
-            },
-          ),
-          if (_prefOriState == 'Enter Native Heritage') ...[
-            const SizedBox(height: 10),
-            TextField(
-              controller: _prefOriCustomController,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-              decoration: const InputDecoration(hintText: 'e.g. Yoruba, Scottish, English, Catalan'),
-            ),
-          ],
-
-          const SizedBox(height: 24),
-
-          // Marriage Plans
-          Text('MARRIAGE PLANS', style: AppTypography.titleMedium.copyWith(color: AppColors.champagneGold)),
-          const SizedBox(height: 12),
-          _buildDropdownField(
-            label: 'Partner Children Status',
-            value: _partnerChildrenStatus,
-            items: KnotLocationData.partnerChildrenStatusOptions,
-            onChanged: (val) {
-              if (val != null) setState(() => _partnerChildrenStatus = val);
-            },
-          ),
-          const SizedBox(height: 14),
-          _buildDropdownField(
-            label: 'Vow Timeline',
-            value: _marriageTimeline,
-            items: KnotLocationData.vowTimelineOptions,
-            onChanged: (val) {
-              if (val != null) setState(() => _marriageTimeline = val);
-            },
-          ),
-          const SizedBox(height: 14),
-          _buildDropdownField(
-            label: 'Willing to Relocate?',
-            value: _willingToRelocate,
-            items: KnotLocationData.relocationOptions,
-            onChanged: (val) {
-              if (val != null) setState(() => _willingToRelocate = val);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // STEP 6: Family Goals, Traits & Expectations
-  Widget _buildFamilyGoalsAndExpectationsStep() {
-    return GlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Family Goals & Vision', style: AppTypography.headingLarge),
-          const SizedBox(height: 6),
-          Text('Expectations and alignment for lifelong marriage.', style: AppTypography.bodySmall),
-          const SizedBox(height: 20),
-
-          // Children Intent / Family Goals
-          _buildDropdownField(
-            label: 'Family Goal: Children Intent',
-            value: _childrenIntent,
-            items: KnotLocationData.childrenIntentOptions,
-            onChanged: (val) {
-              if (val != null) setState(() => _childrenIntent = val);
-            },
-          ),
-
-          const SizedBox(height: 20),
-
-          // Ideal Partner Traits
-          _buildFieldLabel('Ideal Partner Traits'),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: KnotLocationData.majorTraits.map((trait) {
-              final isSelected = _idealPartnerTraits.contains(trait);
-              return _buildChoiceChip(
-                trait,
-                isSelected,
-                () {
-                  setState(() {
-                    if (isSelected) {
-                      _idealPartnerTraits.remove(trait);
-                    } else {
-                      _idealPartnerTraits.add(trait);
-                    }
-                  });
-                },
-              );
-            }).toList(),
-          ),
-          if (_idealPartnerTraits.contains('Other')) ...[
-            const SizedBox(height: 10),
-            TextField(
-              controller: _otherTraitController,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-              decoration: const InputDecoration(hintText: 'Specify custom partner trait'),
-            ),
-          ],
-
-          const SizedBox(height: 24),
-
-          // Ideal Partner Age Range
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildFieldLabel('Ideal Partner Age Range'),
-              Text(
-                '${_partnerAgeRange.start.round()} - ${_partnerAgeRange.end.round()} yrs',
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.champagneGold,
-                  fontWeight: FontWeight.bold,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.champagneGold.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
                 ),
+                child: const Icon(Icons.verified_user_outlined, color: AppColors.champagneGold, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text('SOVEREIGN IDENTITY VERIFICATION', style: AppTypography.headingMedium),
               ),
             ],
           ),
-          RangeSlider(
-            values: _partnerAgeRange,
-            min: 18,
-            max: 65,
-            divisions: 47,
-            activeColor: AppColors.champagneGold,
-            inactiveColor: AppColors.darkSlate,
-            labels: RangeLabels(
-              '${_partnerAgeRange.start.round()}',
-              '${_partnerAgeRange.end.round()}',
-            ),
-            onChanged: (values) {
-              setState(() => _partnerAgeRange = values);
-            },
+          const SizedBox(height: 12),
+          Text(
+            'Government ID Upload & Biometric Live Selfie via Didit KYC.',
+            style: AppTypography.bodySmall,
           ),
-
           const SizedBox(height: 20),
 
-          // Marriage Expectations
-          _buildFieldLabel('Marriage Expectations'),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _marriageExpectationsController,
-            maxLines: 3,
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-            decoration: const InputDecoration(
-              hintText: 'What are your core expectations for communication, commitment, and married life?',
+          // Prominent Alert Box regarding optional status and public visibility
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade900.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.amber.shade600.withValues(alpha: 0.4), width: 1.2),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, color: Colors.amber.shade400, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Optional Step',
+                        style: AppTypography.titleMedium.copyWith(
+                          color: Colors.amber.shade300,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'You may skip this verification now and complete it later from your Profile screen.\n\n⚠️ Note: If you skip verification, your profile will remain hidden and will not be made public to other members until you complete verification.',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textPure,
+                          height: 1.45,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
 
-          // Sacred Core Values
-          _buildFieldLabel('Sacred Core Values'),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _availableCoreValues.map((v) {
-              final isSelected = _selectedCoreValues.contains(v);
-              return _buildChoiceChip(
-                v,
-                isSelected,
-                () {
-                  setState(() {
-                    if (isSelected) {
-                      _selectedCoreValues.remove(v);
-                    } else {
-                      _selectedCoreValues.add(v);
+          // Action 1: Verify Now
+          GoldButton(
+            text: _isSaving ? 'Saving Profile...' : 'Verify with Didit Now',
+            onPressed: _isSaving
+                ? null
+                : () async {
+                    await _saveOnboardingData();
+                    if (mounted) {
+                      context.push('/verification');
                     }
-                  });
-                },
-              );
-            }).toList(),
+                  },
+          ),
+
+          const SizedBox(height: 12),
+
+          // Action 2: Skip For Now
+          Center(
+            child: TextButton(
+              onPressed: _isSaving
+                  ? null
+                  : () => _completeAndRedirectToAuth(diditVerificationCompleted: false),
+              child: Text(
+                'Skip for Now & Sign In Later',
+                style: AppTypography.labelLarge.copyWith(
+                  color: AppColors.textMuted,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // --- REUSABLE LUXURY UI HELPERS ---
-
+  // ==========================================
+  // REUSABLE HELPER WIDGETS
+  // ==========================================
   Widget _buildFieldLabel(String label) {
-    return Text(
-      label.toUpperCase(),
-      style: const TextStyle(
-        fontSize: 10,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1.1,
-        color: AppColors.textMuted,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Text(
+        label,
+        style: AppTypography.labelLarge.copyWith(color: AppColors.champagneGold, fontSize: 12),
+      ),
+    );
+  }
+
+  Widget _buildGenderOption({
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.champagneGold.withValues(alpha: 0.18)
+              : AppColors.darkCardElevated,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected ? AppColors.champagneGold : AppColors.borderSubtle,
+            width: isSelected ? 1.6 : 1.0,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: AppTypography.labelLarge.copyWith(
+              color: isSelected ? AppColors.champagneGold : AppColors.textMuted,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -950,17 +919,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     required List<String> items,
     required ValueChanged<String?> onChanged,
   }) {
-    // Deduplicate and ensure value exists in items
-    final safeItems = items.toSet().toList();
-    final safeValue = safeItems.contains(value) ? value : safeItems.first;
+    final effectiveValue = items.contains(value) ? value : items.first;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildFieldLabel(label),
-        const SizedBox(height: 6),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
             color: AppColors.darkCardElevated,
             borderRadius: BorderRadius.circular(16),
@@ -968,15 +934,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: safeValue,
+              value: effectiveValue,
               isExpanded: true,
               dropdownColor: AppColors.darkCardElevated,
               icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.champagneGold),
               style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-              items: safeItems.map((item) {
+              items: items.map((item) {
                 return DropdownMenuItem<String>(
                   value: item,
-                  child: Text(item, overflow: TextOverflow.ellipsis),
+                  child: Text(
+                    item,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+                  ),
                 );
               }).toList(),
               onChanged: onChanged,
@@ -994,7 +964,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.champagneGold.withOpacity(0.18)
+              ? AppColors.champagneGold.withValues(alpha: 0.18)
               : AppColors.darkCardElevated,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(

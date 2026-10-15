@@ -461,31 +461,21 @@ export default function Onboarding() {
       const data = await res.json();
       if (data.token) {
         localStorage.setItem('knot_token', data.token);
-
-        // Link to Didit Sovereign KYC verification endpoint
-        if (verificationSelfie && governmentId) {
-          try {
-            await fetch(`${API_URL}/users/verify-identity`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${data.token}`
-              },
-              body: JSON.stringify({
-                selfieUrl: verificationSelfie,
-                idUrl: governmentId
-              })
-            });
-          } catch (diditErr) {
-            console.warn("Didit identity verification sync error:", diditErr);
-          }
-        }
       }
-      setStep(7);
+      localStorage.setItem('knot_userProfile', JSON.stringify({
+        firstName, lastName, dateOfBirth, email, 
+        residenceCity, residenceCountry, occupation,
+        isVerified: false
+      }));
+      setStep(6);
     } catch (err) {
       console.error("Registration failed:", err);
-      // Even if it fails, go to step 7 for prototype continuity
-      setStep(7);
+      localStorage.setItem('knot_userProfile', JSON.stringify({
+        firstName, lastName, dateOfBirth, email, 
+        residenceCity, residenceCountry, occupation,
+        isVerified: false
+      }));
+      setStep(6);
     }
   };
 
@@ -1098,83 +1088,73 @@ export default function Onboarding() {
           </div>
         )}
 
-        {/* Step 4: Identity & Trust Verification */}
+        {/* Step 4: Mobile App Verification Notice */}
         {step === 4 && (
-          <div className="glass-card rounded-[32px] p-6 sm:p-8 border border-white/10 space-y-6 max-w-md mx-auto">
-            <div className="text-center space-y-2 mb-8">
-              <h2 className="text-2xl font-serif font-black text-white">Identity & Trust Verification</h2>
-              <p className="text-sm text-gray-400">Help us keep the community safe</p>
+          <div className="glass-card rounded-[32px] p-6 sm:p-8 border border-[#D4AF37]/30 space-y-6 max-w-lg mx-auto text-center relative overflow-hidden">
+            <div className="w-16 h-16 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center mx-auto text-[#D4AF37]">
+              <ShieldCheck className="w-8 h-8" />
             </div>
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Selfie Scan for Verification</label>
-                <div className="p-4 bg-[#121721] border border-white/10 rounded-2xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center">
-                      {verificationSelfie ? <img src={verificationSelfie} className="w-full h-full rounded-full object-cover" /> : <Camera className="w-5 h-5 text-[#D4AF37]" />}
-                    </div>
-                    <div>
-                      <button onClick={startLivenessScanner} className="text-sm font-bold text-[#D4AF37] hover:underline">Start Live Face Scan</button>
-                      <p className="text-[10px] text-gray-500">Strictly for verification</p>
-                    </div>
-                  </div>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-serif font-black text-white">Biometric & ID Verification</h2>
+              <p className="text-xs uppercase tracking-widest text-[#D4AF37] font-bold">
+                Completed Securely via KNOT Mobile App
+              </p>
+            </div>
+
+            <p className="text-xs leading-relaxed text-gray-300">
+              To guarantee authenticity, prevent impersonation, and protect the sanctity of our matrimonial registry, all biometric face verification and official government ID document scanning are handled securely via the <strong className="text-white">KNOT Mobile App</strong> (iOS & Android).
+            </p>
+
+            <div className="bg-[#121721] border border-white/10 rounded-2xl p-4 text-left space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] text-xs font-bold shrink-0 mt-0.5">
+                  1
+                </div>
+                <div className="text-xs text-gray-300">
+                  <span className="font-bold text-white">Complete Web Onboarding:</span> Proceed to complete your AI matchmaking interview and create your registry account on web now.
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Government ID Scan</label>
-                <p className="text-[10px] text-gray-500 mb-2">Int'l Passport, Driver's License, voters card or National ID</p>
-                <div className="p-4 bg-[#121721] border border-white/10 rounded-2xl flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-                      {governmentId ? <img src={governmentId} className="w-full h-full rounded-xl object-cover" /> : <ShieldCheck className="w-5 h-5 text-gray-400" />}
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <button onClick={startIdScanner} className="text-sm font-bold text-white hover:underline text-left">Scan ID Document</button>
-                      <div className="relative">
-                        <button className="text-xs font-bold text-gray-400 hover:text-white text-left pointer-events-none">Upload ID</button>
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              setUploadedGovId(file);
-                              setGovernmentId(URL.createObjectURL(file));
-                            }
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] text-xs font-bold shrink-0 mt-0.5">
+                  2
+                </div>
+                <div className="text-xs text-gray-300">
+                  <span className="font-bold text-white">Verify on Mobile:</span> Open the KNOT Mobile App on your smartphone, sign in, and complete the 60-second biometric selfie and government ID scan through your Profile page.
                 </div>
               </div>
             </div>
 
-            <div className="pt-4 space-y-4">
+            {/* Privacy Warning Banner */}
+            <div className="p-4 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/25 text-left">
+              <div className="flex items-center gap-2 mb-1">
+                <Shield className="w-4 h-4 text-[#D4AF37]" />
+                <span className="text-[11px] font-bold text-[#D4AF37] uppercase tracking-wider">Profile Privacy Notice</span>
+              </div>
+              <p className="text-[11px] text-gray-300 leading-relaxed">
+                If you proceed without mobile verification, your profile will remain <strong>private and hidden</strong> from other members until you complete the verification process through the mobile app.
+              </p>
+            </div>
+
+            <div className="pt-2 space-y-3">
               <button 
-                onClick={() => {
-                  handleProcessAIVerification();
-                }} 
-                disabled={!verificationSelfie || !governmentId}
-                className="w-full py-4 rounded-xl text-sm font-black rose-glow-btn text-white disabled:opacity-50"
+                onClick={() => setStep(5)}
+                className="w-full py-4 rounded-xl text-sm font-black rose-glow-btn text-white flex items-center justify-center gap-2"
               >
-                Verify Identity & Documents
+                Continue to AI Interview <ArrowRight className="w-4 h-4" />
               </button>
-              
-              <div className="text-center">
-                <p className="text-[#D4AF37] text-xs font-bold mt-2">
-                  🔒 Identity Verification is Compulsory for Registry Safety
-                </p>
+
+              <div className="flex items-center justify-center gap-2 text-[11px] text-gray-400">
+                <span>Mobile App Available on:</span>
+                <span className="font-bold text-[#D4AF37]">Android Play Store & iOS TestFlight</span>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step 5: Futuristic AI Identity & Document Verification Scan */}
-        {step === 6 && (
+        {/* Step 5: Conversational AI Onboarding Interview */}
+        {step === 5 && (
           <div className="glass-card rounded-[32px] border border-white/10 flex flex-col h-[500px] overflow-hidden">
             {/* Header */}
             <div className="p-4 bg-[#121721]/90 border-b border-white/5 flex items-center gap-3">
@@ -1235,122 +1215,8 @@ export default function Onboarding() {
           </div>
         )}
 
-        {/* Step 4: Conversational AI Onboarding Interview */}
-        {step === 5 && !verificationSkipped && (
-          <div className="glass-card rounded-[36px] p-6 sm:p-8 border border-[#D4AF37]/20 space-y-8 max-w-xl mx-auto overflow-hidden relative">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-serif font-black text-white">AI Biometric Liveness & ID Match</h2>
-              <p className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-black">Secure Verification Session In Progress</p>
-            </div>
-
-            {/* Split Scanner UI */}
-            <div className="grid grid-cols-2 gap-6 relative">
-              {/* Selfie Scan Frame */}
-              <div className="space-y-2 text-center relative">
-                <div className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Selfie Feed</div>
-                <div className="aspect-square rounded-full bg-[#121721] border border-white/10 overflow-hidden relative flex items-center justify-center">
-                  {profilePicture ? (
-                    <img src={profilePicture} alt="Selfie" className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="w-10 h-10 text-gray-500" />
-                  )}
-                  {/* Glowing Laser Scan Bar */}
-                  {verificationStep < 4 && (
-                    <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent animate-pulse shadow-[0_0_12px_#D4AF37]" style={{
-                      animation: "scan 2s ease-in-out infinite",
-                      top: "20%"
-                    }} />
-                  )}
-                </div>
-              </div>
-
-              {/* ID Scan Frame */}
-              <div className="space-y-2 text-center relative">
-                <div className="text-[9px] uppercase tracking-widest text-gray-400 font-bold">Government Document</div>
-                <div className="aspect-video w-full rounded-2xl bg-[#121721] border border-white/10 overflow-hidden relative flex items-center justify-center my-auto">
-                  {governmentId ? (
-                    <img src={governmentId} alt="ID Document" className="w-full h-full object-cover" />
-                  ) : (
-                    <ShieldCheck className="w-10 h-10 text-gray-500" />
-                  )}
-                  {/* Glowing Laser Scan Bar */}
-                  {verificationStep < 4 && (
-                    <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#E27D8D] to-transparent animate-pulse shadow-[0_0_12px_#E27D8D]" style={{
-                      animation: "scan 2s ease-in-out infinite",
-                      top: "40%"
-                    }} />
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Checkpoints Progress */}
-            <div className="space-y-3 p-4 bg-white/5 border border-white/5 rounded-2xl text-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">1. Scanning ID text & details...</span>
-                {verificationStep >= 1 ? (
-                  <span className="text-[#10B981] font-bold flex items-center gap-1">✔ Match</span>
-                ) : (
-                  <span className="text-[#D4AF37] font-bold flex items-center gap-1 animate-pulse"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Scanning</span>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">2. Extracting face keypoints...</span>
-                {verificationStep >= 2 ? (
-                  <span className="text-[#10B981] font-bold flex items-center gap-1">✔ Extracted</span>
-                ) : verificationStep === 1 ? (
-                  <span className="text-[#D4AF37] font-bold flex items-center gap-1 animate-pulse"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Computing</span>
-                ) : (
-                  <span className="text-gray-600">Pending</span>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">3. Biometric comparison (Selfie vs ID)...</span>
-                {verificationStep >= 3 ? (
-                  <span className="text-[#10B981] font-bold flex items-center gap-1">✔ 98.7% Confirmed</span>
-                ) : verificationStep === 2 ? (
-                  <span className="text-[#D4AF37] font-bold flex items-center gap-1 animate-pulse"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Matching</span>
-                ) : (
-                  <span className="text-gray-600">Pending</span>
-                )}
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">4. Age & Name consistency validation...</span>
-                {verificationStep >= 4 ? (
-                  <span className="text-[#10B981] font-bold flex items-center gap-1">✔ Approved</span>
-                ) : verificationStep === 3 ? (
-                  <span className="text-[#D4AF37] font-bold flex items-center gap-1 animate-pulse"><Loader2 className="w-3.5 h-3.5 animate-spin" /> Verifying</span>
-                ) : (
-                  <span className="text-gray-600">Pending</span>
-                )}
-              </div>
-            </div>
-
-            {/* Proceed button when real-time scan completes */}
-            {verificationStep >= 4 && (
-              <button 
-                onClick={() => setStep(6)}
-                className="w-full py-4 rounded-xl text-sm font-black bg-[#10B981] text-white flex items-center justify-center gap-2 hover:bg-[#059669] transition"
-              >
-                Identity Verified — Continue to AI Interview <ArrowRight className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Scanning styles */}
-            <style jsx>{`
-              @keyframes scan {
-                0%, 100% { top: 5%; }
-                50% { top: 95%; }
-              }
-            `}</style>
-          </div>
-        )}
-
-        {/* Step 5: Cinematic AI Relationship Certificate Reveal */}
-        {step === 7 && (
+        {/* Step 6: Cinematic AI Relationship Certificate Reveal */}
+        {step === 6 && (
           <div className="space-y-8 animate-fade-in">
             <div className="glass-card rounded-[36px] p-6 sm:p-8 border border-[#D4AF37]/30 shadow-2xl relative overflow-hidden max-w-md mx-auto">
               <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#D4AF37]/10 to-transparent rounded-bl-full pointer-events-none" />
@@ -1358,10 +1224,10 @@ export default function Onboarding() {
               <div className="text-center space-y-4 mb-6">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase trust-badge">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  VERIFIED REGISTRY CERTIFICATE
+                  PRE-VERIFIED REGISTRY CERTIFICATE
                 </div>
                 <h3 className="text-2xl font-serif font-black text-white">{firstName} {lastName}</h3>
-                <p className="text-xs text-gray-400">{residenceCity || "Lagos"}, {residenceCountry || "Nigeria"} • Active Verified Member</p>
+                <p className="text-xs text-gray-400">{residenceCity || "Lagos"}, {residenceCountry || "Nigeria"} • Candidate Member</p>
               </div>
 
               <div className="space-y-4 pt-4 border-t border-white/5">
@@ -1398,6 +1264,12 @@ export default function Onboarding() {
                   </div>
                 </div>
               </div>
+
+              {/* Mobile Verification Notice Card in Certificate */}
+              <div className="mt-4 p-3 bg-white/5 border border-[#D4AF37]/20 rounded-2xl text-[11px] text-gray-300 text-center">
+                <span className="text-[#D4AF37] font-bold block mb-1">📱 Pending Mobile Verification</span>
+                Complete your identity check via the KNOT Mobile App to make your profile public in the registry.
+              </div>
             </div>
 
             <div className="text-center">
@@ -1413,155 +1285,7 @@ export default function Onboarding() {
 
       </main>
 
-      {/* Selfie Liveness Face Scan Modal */}
-      {isLivenessModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#0A0E14]/90 flex items-center justify-center p-4 backdrop-blur-md">
-          <div className="bg-[#0E131F] border border-[#D4AF37]/30 rounded-[32px] p-6 max-w-sm w-full text-center space-y-6 relative overflow-hidden">
-            <button 
-              onClick={() => setIsLivenessModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
 
-            <div className="space-y-1">
-              <h3 className="text-lg font-serif font-black text-white flex items-center justify-center gap-2">
-                <Camera className="w-5 h-5 text-[#D4AF37]" /> Biometric Face Scanner
-              </h3>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Verifying Live Authenticity</p>
-            </div>
-
-            {/* Circular Aperture View */}
-            <div className="w-48 h-48 rounded-full border-4 border-dashed border-[#D4AF37] mx-auto flex items-center justify-center relative overflow-hidden bg-[#121721] shadow-[0_0_24px_rgba(212,175,55,0.15)]">
-              {isCameraActive ? (
-                <video 
-                  ref={videoRef} 
-                  autoPlay 
-                  playsInline 
-                  muted 
-                  className="w-full h-full object-cover rounded-full"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
-                  <Loader2 className="w-8 h-8 text-[#D4AF37] animate-spin mb-2" />
-                  <span className="text-[9px] text-gray-500">Streaming Biometric Outline...</span>
-                </div>
-              )}
-
-              {/* Laser Line Scanning Effect */}
-              {livenessState !== "complete" && (
-                <div className="absolute left-0 right-0 h-1 bg-[#D4AF37] opacity-60 animate-bounce" style={{
-                  animationDuration: "3s"
-                }} />
-              )}
-
-              {/* Calibration Face Outline overlay */}
-              {livenessState === "ready" && (
-                <div className="absolute inset-4 rounded-full border border-dashed border-white/20 pointer-events-none flex items-center justify-center">
-                  <div className="w-16 h-20 rounded-full border-2 border-white/30" />
-                </div>
-              )}
-
-              
-              {/* Complete Overlay Flash */}
-              {livenessState === "complete" && (
-                <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center animate-pulse gap-2">
-                  <ShieldCheck className="w-12 h-12 text-[#10B981]" />
-                  <img src={verificationSelfie || ""} className="w-24 h-24 rounded-full object-cover border-4 border-[#10B981]" />
-                </div>
-              )}
-            </div>
-
-            {/* Instruction Prompts */}
-            <div className="p-3 bg-white/5 border border-white/5 rounded-2xl min-h-[64px] flex flex-col items-center justify-center">
-              <span className="text-xs font-bold text-gray-200">{livenessPrompt}</span>
-              <div className="flex gap-1.5 mt-2">
-                <span className={`w-2 h-2 rounded-full ${livenessState === "ready" ? "bg-[#D4AF37] animate-pulse" : "bg-[#10B981]"}`} />
-                <span className={`w-2 h-2 rounded-full ${livenessState === "smile" ? "bg-[#D4AF37] animate-pulse" : (livenessState === "straight" || livenessState === "complete") ? "bg-[#10B981]" : "bg-white/15"}`} />
-                <span className={`w-2 h-2 rounded-full ${livenessState === "straight" ? "bg-[#D4AF37] animate-pulse" : livenessState === "complete" ? "bg-[#10B981]" : "bg-white/15"}`} />
-              </div>
-            </div>
-            
-            {livenessState === "complete" && (
-              <div className="flex gap-4 w-full">
-                <button onClick={startLivenessScanner} className="flex-1 py-3 rounded-full border border-white/20 text-white text-sm font-bold hover:bg-white/5 transition">
-                  Retake
-                </button>
-                <button onClick={() => { setIsLivenessModalOpen(false); setIsCameraActive(false); }} className="flex-1 py-3 rounded-full bg-[#10B981] text-white text-sm font-bold hover:bg-[#0ea5e9] transition">
-                  Ok
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ID Scan Rectangular Modal */}
-      {isIdScanModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#0A0E14]/90 flex items-center justify-center p-4 backdrop-blur-md">
-          <div className="bg-[#0E131F] border border-white/10 rounded-[32px] p-6 max-w-sm w-full text-center space-y-6 relative overflow-hidden">
-            <button 
-              onClick={() => setIsIdScanModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-1">
-              <h3 className="text-lg font-serif font-black text-white flex items-center justify-center gap-2">
-                <Shield className="w-5 h-5 text-[#E27D8D]" /> Government ID Scanner
-              </h3>
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Scanning Document Verification</p>
-            </div>
-
-            {/* Rectangular Card Aperture View */}
-            <div className="w-full aspect-[1.586/1] rounded-2xl border-4 border-dashed border-[#E27D8D] mx-auto flex items-center justify-center relative overflow-hidden bg-[#121721] shadow-[0_0_24px_rgba(226,125,141,0.15)]">
-              {isCameraActive ? (
-                <video 
-                  ref={idVideoRef} 
-                  autoPlay 
-                  playsInline 
-                  muted 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center p-4 text-center">
-                  <Loader2 className="w-8 h-8 text-[#E27D8D] animate-spin mb-2" />
-                  <span className="text-[9px] text-gray-500">Scanning ID card features...</span>
-                </div>
-              )}
-
-              {/* Scanning laser line sweep */}
-              {idScanState === "scanning" && (
-                <div className="absolute left-0 right-0 h-1 bg-[#E27D8D] shadow-[0_0_8px_#E27D8D] animate-pulse" style={{
-                  animation: "id-sweep 1.5s ease-in-out infinite",
-                  top: "0%"
-                }} />
-              )}
-
-              {/* Scan Complete flash */}
-              {idScanState === "complete" && (
-                <div className="absolute inset-0 bg-white/95 flex items-center justify-center">
-                  <CheckCircle2 className="w-12 h-12 text-[#10B981]" />
-                </div>
-              )}
-            </div>
-
-            {/* Instruction Prompts */}
-            <div className="p-3 bg-white/5 border border-white/5 rounded-2xl min-h-[48px] flex items-center justify-center">
-              <span className="text-xs font-bold text-gray-200">{idScanPrompt}</span>
-            </div>
-
-            {/* CSS Animation Keyframes for ID sweep */}
-            <style jsx>{`
-              @keyframes id-sweep {
-                0%, 100% { top: 5%; }
-                50% { top: 95%; }
-              }
-            `}</style>
-          </div>
-        </div>
-      )}
 
       {/* Footer */}
       <footer className="w-full text-center py-6 mt-auto">

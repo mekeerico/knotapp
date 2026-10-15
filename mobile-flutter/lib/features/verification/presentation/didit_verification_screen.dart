@@ -178,10 +178,14 @@ class DiditVerificationScreen extends ConsumerWidget {
             const SizedBox(height: 32),
 
             GoldButton(
-              text: 'Enter Registry',
+              text: 'Complete Verification',
               onPressed: () {
                 notifier.reset();
-                context.go('/discovery');
+                if (context.canPop()) {
+                  context.pop(true);
+                } else {
+                  context.go('/auth');
+                }
               },
             ),
           ],
