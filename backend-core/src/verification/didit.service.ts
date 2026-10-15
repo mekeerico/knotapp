@@ -41,7 +41,8 @@ export interface DiditFaceMatchResult {
 @Injectable()
 export class DiditService {
   private readonly logger = new Logger(DiditService.name);
-  private readonly apiKey = process.env.DIDIT_API_KEY || '';
+  private readonly apiKey =
+    process.env.DIDIT_API_KEY || '-MJNez-b0M38eBc53f0KygmPZ9wyL7ePajTIDr1R03k';
   private readonly baseUrl = (
     process.env.DIDIT_BASE_URL || 'https://verification.didit.me'
   ).replace(/\/$/, '');
