@@ -37,4 +37,10 @@ export class PaymentsController {
   ) {
     return this.paymentsService.handleWebhook(body, signature);
   }
+
+  @Post('revenuecat-webhook')
+  @HttpCode(HttpStatus.OK)
+  async handleRevenueCatWebhook(@Body() body: any) {
+    return this.paymentsService.handleRevenueCatWebhook(body);
+  }
 }

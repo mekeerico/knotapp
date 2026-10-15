@@ -428,7 +428,7 @@ export default function Dashboard() {
                 },
                 body: JSON.stringify({
                   reference: response.reference,
-                  userId: "c8b74c0b-426b-4e14-9b2f-768a1d2e3c4d",
+                  userId: userProfile?.id,
                   months: 1,
                 }),
               });

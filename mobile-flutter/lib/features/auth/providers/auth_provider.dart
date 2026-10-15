@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/services/revenue_cat_service.dart';
 import '../data/auth_repository.dart';
 import '../models/user_model.dart';
 
@@ -52,6 +53,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _repo.getProfile();
       state = state.copyWith(status: AuthStatus.authenticated, user: user);
+      RevenueCatService.logIn(user.id);
     } catch (_) {
       state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
     }
@@ -62,6 +64,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _repo.login(email, password);
       state = state.copyWith(status: AuthStatus.authenticated, user: user);
+      RevenueCatService.logIn(user.id);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -77,6 +80,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       final user = await _repo.register(email, password);
       state = state.copyWith(status: AuthStatus.authenticated, user: user);
+      RevenueCatService.logIn(user.id);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -99,10 +103,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   void setUser(UserModel user) {
     state = state.copyWith(status: AuthStatus.authenticated, user: user);
+    RevenueCatService.logIn(user.id);
   }
 
   Future<void> logout() async {
     await _repo.logout();
+    await RevenueCatService.logOut();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 }

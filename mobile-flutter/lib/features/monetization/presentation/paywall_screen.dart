@@ -1,23 +1,180 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+import '../../../core/services/revenue_cat_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/gold_button.dart';
 import '../../../core/widgets/knot_app_bar.dart';
+import '../../auth/providers/auth_provider.dart';
 
-class PaywallScreen extends StatefulWidget {
+class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
 
   @override
-  State<PaywallScreen> createState() => _PaywallScreenState();
+  ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
 }
 
-class _PaywallScreenState extends State<PaywallScreen> {
-  int _selectedTier = 1; // 0: Essential, 1: Gold Sovereign, 2: Platinum Vows
+class _PaywallScreenState extends ConsumerState<PaywallScreen> {
+  int _selectedTier = 1; // 0: Premium, 1: Elite, 2: Executive
+  bool _isLoading = true;
+  bool _isProcessing = false;
+  Offerings? _offerings;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOfferings();
+  }
+
+  Future<void> _loadOfferings() async {
+    setState(() => _isLoading = true);
+    final offerings = await RevenueCatService.getOfferings();
+    if (mounted) {
+      setState(() {
+        _offerings = offerings;
+        _isLoading = false;
+      });
+    }
+  }
+
+  Package? _getPackageForTier(int tier) {
+    final packages = _offerings?.current?.availablePackages ?? [];
+    if (packages.isEmpty) return null;
+
+    if (tier == 0) {
+      return packages.firstWhere(
+        (p) => p.identifier.toLowerCase().contains('premium') || p.storeProduct.identifier.contains('premium'),
+        orElse: () => packages[0],
+      );
+    } else if (tier == 1) {
+      return packages.firstWhere(
+        (p) => p.identifier.toLowerCase().contains('elite') || p.storeProduct.identifier.contains('elite'),
+        orElse: () => packages.length > 1 ? packages[1] : packages[0],
+      );
+    } else {
+      return packages.firstWhere(
+        (p) => p.identifier.toLowerCase().contains('executive') || p.storeProduct.identifier.contains('executive'),
+        orElse: () => packages.length > 2 ? packages[2] : packages.last,
+      );
+    }
+  }
+
+  Future<void> _handlePurchase() async {
+    final package = _getPackageForTier(_selectedTier);
+    if (package == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Connecting to Google Play Store... Please ensure you are logged into Google Play.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final customerInfo = await RevenueCatService.purchasePackage(package);
+      if (customerInfo != null && RevenueCatService.hasActiveSubscription(customerInfo)) {
+        final tierName = _selectedTier == 0
+            ? 'Premium'
+            : _selectedTier == 1
+                ? 'Elite'
+                : 'Executive';
+
+        // Update local auth state & sync with backend
+        ref.read(authProvider.notifier).updateProfile({
+          'isPremium': true,
+          'subscriptionTier': tierName,
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.champagneGold,
+              content: Text(
+                '🌟 $tierName Registry Activated! Welcome to VIP Alignment.',
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+            ),
+          );
+          context.pop();
+        }
+      }
+    } on PlatformException catch (e) {
+      final errorCode = PurchasesErrorHelper.getErrorCode(e);
+      if (errorCode != PurchasesErrorCode.purchaseCancelledError) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.message ?? 'Purchase failed. Please try again.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error completing purchase: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _handleRestore() async {
+    setState(() => _isProcessing = true);
+    try {
+      final customerInfo = await RevenueCatService.restorePurchases();
+      if (customerInfo != null && RevenueCatService.hasActiveSubscription(customerInfo)) {
+        final activeTier = RevenueCatService.getActiveTier(customerInfo) ?? 'Premium';
+        ref.read(authProvider.notifier).updateProfile({
+          'isPremium': true,
+          'subscriptionTier': activeTier,
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: AppColors.champagneGold,
+              content: Text(
+                'Purchases restored! Active Tier: $activeTier',
+                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+            ),
+          );
+          context.pop();
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No active subscriptions found for this account.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Restore error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final pkg0 = _getPackageForTier(0);
+    final pkg1 = _getPackageForTier(1);
+    final pkg2 = _getPackageForTier(2);
+
+    final price0 = pkg0?.storeProduct.priceString ?? '\$29 / mo';
+    final price1 = pkg1?.storeProduct.priceString ?? '\$69 / mo';
+    final price2 = pkg2?.storeProduct.priceString ?? '\$149 / mo';
+
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
@@ -26,11 +183,27 @@ class _PaywallScreenState extends State<PaywallScreen> {
           icon: const Icon(Icons.close, color: AppColors.champagneGold),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          TextButton(
+            onPressed: _isProcessing ? null : _handleRestore,
+            child: Text(
+              'Restore',
+              style: AppTypography.labelLarge.copyWith(
+                fontSize: 12,
+                color: AppColors.champagneGold,
+              ),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Column(
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(color: AppColors.champagneGold),
+              )
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Column(
             children: [
               Text(
                 'Unlock Sovereign Privileges',
@@ -45,13 +218,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Tier 1: Essential
+              // Tier 1: Premium
               _buildTierCard(
                 index: 0,
-                title: 'ESSENTIAL REGISTRY',
-                price: '\$29 / mo',
+                title: 'PREMIUM REGISTRY',
+                price: price0,
                 description: 'Standard access to verified candidates and daily recommendations.',
-                features: [
+                features: const [
                   'Browse verified marriage profiles',
                   'Standard compatibility scoring',
                   'Basic AI Coach guidance',
@@ -59,13 +232,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Tier 2: Gold Sovereign (Popular)
+              // Tier 2: Elite (Most Popular)
               _buildTierCard(
                 index: 1,
-                title: 'GOLD SOVEREIGN',
-                price: '\$69 / mo',
+                title: 'ELITE SOVEREIGN',
+                price: price1,
                 description: 'Unlimited messaging and prioritized placement in verified candidate feeds.',
-                features: [
+                features: const [
                   'Unlimited direct conversations',
                   'Priority Didit Verification prominence',
                   'Full Psychological Radar breakdowns',
@@ -75,14 +248,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Tier 3: Platinum Vows
+              // Tier 3: Executive
               _buildTierCard(
                 index: 2,
-                title: 'PLATINUM VOWS',
-                price: '\$149 / mo',
+                title: 'EXECUTIVE VOWS',
+                price: price2,
                 description: 'Private concierge matchmaking with personalized marital guidance.',
-                features: [
-                  'All Gold Sovereign privileges',
+                features: const [
+                  'All Elite Sovereign privileges',
                   'Direct 24/7 AI Behavioral Therapist',
                   'Ultra-priority high-trust placement',
                   'Comprehensive background certification',
@@ -90,22 +263,23 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
               const SizedBox(height: 28),
 
-              GoldButton(
-                text: _selectedTier == 0
-                    ? 'Select Essential'
-                    : _selectedTier == 1
-                        ? 'Upgrade to Gold Sovereign'
-                        : 'Enter Platinum Vows',
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Subscription successfully activated.')),
-                  );
-                  context.pop();
-                },
-              ),
+              if (_isProcessing)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: CircularProgressIndicator(color: AppColors.champagneGold),
+                )
+              else
+                GoldButton(
+                  text: _selectedTier == 0
+                      ? 'Upgrade to Premium'
+                      : _selectedTier == 1
+                          ? 'Upgrade to Elite Sovereign'
+                          : 'Enter Executive Vows',
+                  onPressed: _handlePurchase,
+                ),
               const SizedBox(height: 14),
               Text(
-                'Secured via RevenueCat / App Store In-App Purchases. Cancel anytime.',
+                'Secured via Google Play / App Store In-App Purchases. Cancel anytime.',
                 style: AppTypography.bodySmall.copyWith(fontSize: 11, color: AppColors.textSubtle),
                 textAlign: TextAlign.center,
               ),
@@ -135,12 +309,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
           color: isSelected
               ? AppColors.champagneGold
               : isPopular
-                  ? AppColors.champagneGold.withOpacity(0.5)
+                  ? AppColors.champagneGold.withValues(alpha: 0.5)
                   : AppColors.borderSubtle,
           width: isSelected ? 2.0 : 1.0,
         ),
         backgroundColor: isSelected
-            ? AppColors.champagneGold.withOpacity(0.1)
+            ? AppColors.champagneGold.withValues(alpha: 0.1)
             : AppColors.darkSlate,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

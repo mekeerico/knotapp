@@ -127,4 +127,48 @@ export class PaymentsService {
 
     return { received: true };
   }
+
+  async handleRevenueCatWebhook(body: any) {
+    try {
+      const event = body?.event;
+      if (!event) return { received: true, note: 'No event' };
+
+      const userId = event.app_user_id;
+      const type = event.type; // INITIAL_PURCHASE, RENEWAL, PRODUCT_CHANGE, CANCELLATION, EXPIRATION
+      const entitlementIds = event.entitlement_ids || [];
+
+      let tier = 'Premium';
+      if (entitlementIds.includes('Executive') || event.product_id?.includes('executive')) {
+        tier = 'Executive';
+      } else if (entitlementIds.includes('Elite') || event.product_id?.includes('elite')) {
+        tier = 'Elite';
+      }
+
+      console.log(`[RevenueCat Webhook] Event: ${type} for user: ${userId}, Tier: ${tier}`);
+
+      if (userId && !userId.startsWith('$RCAnonymousID')) {
+        if (type === 'INITIAL_PURCHASE' || type === 'RENEWAL' || type === 'PRODUCT_CHANGE' || type === 'UNCANCELLATION') {
+          await this.prisma.user.update({
+            where: { id: userId },
+            data: {
+              isPremium: true,
+              subscriptionTier: tier,
+              subscriptionDate: new Date(),
+            },
+          });
+          console.log(`[RevenueCat Webhook] User ${userId} marked Premium (${tier})`);
+        } else if (type === 'EXPIRATION') {
+          await this.prisma.user.update({
+            where: { id: userId },
+            data: { isPremium: false },
+          });
+          console.log(`[RevenueCat Webhook] User ${userId} subscription expired`);
+        }
+      }
+      return { success: true };
+    } catch (error: any) {
+      console.error('[RevenueCat Webhook] Processing error:', error.message);
+      return { success: false, error: error.message };
+    }
+  }
 }
