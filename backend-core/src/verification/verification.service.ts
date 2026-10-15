@@ -104,13 +104,21 @@ export class VerificationService {
     this.logger.log(`Beginning identity verification for user ${userId} ("${user.firstName} ${user.lastName}")`);
 
     // Step 1: Run Gemini AI Vision Multi-Factor Verification (Strict Name Match, ID Validity & Biometrics)
-    const geminiResult = await this.geminiVisionService.verifyWithGeminiVision(
-      idFront.buffer,
-      selfie.buffer,
-      user.firstName,
-      user.lastName,
-      user.dateOfBirth,
-    );
+    let geminiResult;
+    try {
+      geminiResult = await this.geminiVisionService.verifyWithGeminiVision(
+        idFront.buffer,
+        selfie.buffer,
+        user.firstName,
+        user.lastName,
+        user.dateOfBirth,
+      );
+    } catch (err: any) {
+      this.logger.error(`Error during Gemini Vision verification: ${err.message}`);
+      throw new BadRequestException(
+        'Unable to process identity document. Please ensure your National ID / NIN or Passport is clearly visible and well-lit, and retry.',
+      );
+    }
 
     if (!geminiResult.isGovernmentId) {
       throw new BadRequestException(
@@ -131,7 +139,7 @@ export class VerificationService {
       );
     }
 
-    if (!geminiResult.faceMatches || geminiResult.faceMatchScore < 70) {
+    if (!geminiResult.faceMatches || geminiResult.faceMatchScore < 60) {
       throw new BadRequestException(
         `Biometric mismatch: The face in the live selfie does not match the portrait photo on the identity document (Similarity: ${geminiResult.faceMatchScore}%). Please ensure you are uploading your own legitimate ID.`,
       );

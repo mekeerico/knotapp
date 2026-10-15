@@ -65,6 +65,7 @@ services:
       - FLW_ENCRYPTION_KEY=${FLW_ENCRYPTION_KEY}
       - DIDIT_API_KEY=${DIDIT_API_KEY}
       - DIDIT_BASE_URL=${DIDIT_BASE_URL:-https://verification.didit.me}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     depends_on:
       db:
         condition: service_healthy
