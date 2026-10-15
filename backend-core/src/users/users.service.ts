@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AIService } from '../ai/ai.service';
 import { DiditService } from '../verification/didit.service';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class UsersService {
@@ -62,8 +64,28 @@ export class UsersService {
       if (dto.profileImageUrls && Array.isArray(dto.profileImageUrls)) {
         await tx.image.deleteMany({ where: { userId: id } });
         if (dto.profileImageUrls.length > 0) {
+          const uploadsDir = path.join(process.cwd(), 'uploads');
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+
+          const processedUrls = dto.profileImageUrls.map((rawUrl: string, index: number) => {
+            if (rawUrl.startsWith('data:image') || (rawUrl.length > 500 && !rawUrl.startsWith('http'))) {
+              try {
+                const base64Data = rawUrl.includes('base64,') ? rawUrl.split('base64,')[1] : rawUrl;
+                const buffer = Buffer.from(base64Data, 'base64');
+                const filename = `photo_${id}_${Date.now()}_${index}.jpg`;
+                fs.writeFileSync(path.join(uploadsDir, filename), buffer);
+                return `/uploads/${filename}`;
+              } catch (e) {
+                return rawUrl;
+              }
+            }
+            return rawUrl;
+          });
+
           await tx.image.createMany({
-            data: dto.profileImageUrls.map((url: string, index: number) => ({
+            data: processedUrls.map((url: string, index: number) => ({
               userId: id,
               url,
               isPrimary: index === 0,

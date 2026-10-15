@@ -374,45 +374,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     if (!mounted) return;
 
-    // Show success dialog instructing user to sign in
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.darkCardElevated,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Row(
-          children: [
-            const Icon(Icons.check_circle_outline, color: AppColors.champagneGold, size: 28),
-            const SizedBox(width: 10),
-            Text('Profile Created!', style: AppTypography.headingMedium),
-          ],
-        ),
-        content: Text(
-          diditVerificationCompleted
-              ? 'Your registry profile and identity verification have been submitted successfully. Please sign in with your email and password to enter your dashboard.'
-              : 'Your onboarding details have been saved securely. Since verification was skipped, your profile will remain private until verified. Please sign in to continue.',
-          style: AppTypography.bodyMedium,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-            },
-            child: Text(
-              'Sign In Now',
-              style: AppTypography.labelLarge.copyWith(color: AppColors.champagneGold),
-            ),
-          ),
-        ],
-      ),
-    );
-
     // Logout session so user signs in fresh as required by user prompt
     await ref.read(authProvider.notifier).logout();
 
     if (mounted) {
       context.go('/auth');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            diditVerificationCompleted
+                ? 'Identity verification submitted successfully! Please sign in to enter your dashboard.'
+                : 'Onboarding details saved. Since verification was skipped, your profile remains private until verified. Please sign in.',
+            style: const TextStyle(color: Colors.white),
+          ),
+          backgroundColor: diditVerificationCompleted ? const Color(0xFF10B981) : AppColors.darkCardElevated,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 4),
+        ),
+      );
     }
   }
 
@@ -1235,13 +1214,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   children: [
                     const Icon(Icons.assignment_outlined, color: AppColors.champagneGold, size: 18),
                     const SizedBox(width: 8),
-                    Text(
-                      'ACCEPTED GOVERNMENT ID DOCUMENTS',
-                      style: AppTypography.labelLarge.copyWith(
-                        color: AppColors.champagneGold,
-                        letterSpacing: 1.1,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        "ACCEPTED GOVERNMENT ID'S",
+                        style: AppTypography.labelLarge.copyWith(
+                          color: AppColors.champagneGold,
+                          letterSpacing: 1.1,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],

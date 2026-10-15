@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/glass_card.dart';
@@ -22,6 +25,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _countryController;
   String _timeline = '1-2 years';
 
+  final ImagePicker _picker = ImagePicker();
+  String _primaryPhoto = '';
+  List<String> _allPhotos = [];
+  bool _hasChangedPhoto = false;
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +39,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _cityController = TextEditingController(text: user?.residenceCity ?? '');
     _countryController = TextEditingController(text: user?.residenceCountry ?? '');
     _timeline = user?.marriageTimeline ?? '1-2 years';
+
+    _allPhotos = List.from(user?.profileImageUrls ?? []);
+    if (_allPhotos.isNotEmpty) {
+      _primaryPhoto = _allPhotos.first;
+    } else if (user?.selfieUrl != null && user!.selfieUrl!.isNotEmpty) {
+      _primaryPhoto = user.selfieUrl!;
+    } else {
+      _primaryPhoto = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800';
+    }
   }
 
   @override
@@ -42,8 +59,66 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     super.dispose();
   }
 
+  ImageProvider _resolveImageProvider(String path) {
+    if (path.startsWith('data:image')) {
+      final base64String = path.contains('base64,') ? path.split('base64,')[1] : path;
+      return MemoryImage(base64Decode(base64String));
+    }
+    if (path.startsWith('/uploads/')) {
+      const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
+      return NetworkImage('$apiBase$path');
+    }
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      return NetworkImage(path);
+    }
+    return FileImage(File(path));
+  }
+
+  Future<void> _pickNewPrimaryPhoto() async {
+    try {
+      final XFile? file = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+      );
+
+      if (file != null) {
+        final bytes = await file.readAsBytes();
+        final dataUrl = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+
+        setState(() {
+          _primaryPhoto = dataUrl;
+          _hasChangedPhoto = true;
+          if (_allPhotos.isNotEmpty) {
+            _allPhotos[0] = dataUrl;
+          } else {
+            _allPhotos.add(dataUrl);
+          }
+        });
+
+        // Save immediately to backend so it displays on Match screen right away
+        await ref.read(authProvider.notifier).updateProfile({
+          'profileImageUrls': _allPhotos,
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Primary photo updated and set for Match screen display!'),
+              backgroundColor: Color(0xFF10B981),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking primary photo: $e');
+    }
+  }
+
   void _save() async {
-    final updateData = {
+    final Map<String, dynamic> updateData = {
       'bio': _bioController.text.trim(),
       'occupation': _occupationController.text.trim(),
       'residenceCity': _cityController.text.trim(),
@@ -51,10 +126,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       'marriageTimeline': _timeline,
     };
 
+    if (_hasChangedPhoto) {
+      updateData['profileImageUrls'] = _allPhotos;
+    }
+
     await ref.read(authProvider.notifier).updateProfile(updateData);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully.')),
+        const SnackBar(
+          content: Text('Profile updated successfully.'),
+          backgroundColor: Color(0xFF10B981),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
       context.pop();
     }
@@ -67,15 +150,96 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       appBar: KnotAppBar(
         title: 'EDIT CANDIDATE PROFILE',
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.champagneGold),
+          icon: const Icon(Icons.arrow_back_ios, color: AppColors.champagneGold, size: 18),
           onPressed: () => context.pop(),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             children: [
+              // PROFILE PICTURE & MATCH DISPLAY SECTION
+              GlassCard(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          width: 104,
+                          height: 104,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.champagneGold, width: 2.5),
+                            image: DecorationImage(
+                              image: _resolveImageProvider(_primaryPhoto),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: _pickNewPrimaryPhoto,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: AppColors.goldGradient,
+                              ),
+                              child: const Icon(Icons.camera_alt, color: AppColors.obsidianBlack, size: 18),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Match Screen Display Image',
+                      style: AppTypography.titleMedium.copyWith(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'This photo will be displayed on the Discovery & Match screen for eligible candidates.',
+                      style: AppTypography.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 14),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      alignment: WrapAlignment.center,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: _pickNewPrimaryPhoto,
+                          icon: const Icon(Icons.photo_camera, size: 16, color: AppColors.champagneGold),
+                          label: Text(
+                            'Change Profile Picture',
+                            style: AppTypography.labelLarge.copyWith(color: AppColors.champagneGold, fontSize: 13),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: AppColors.champagneGold),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () => context.push('/manage-photos'),
+                          icon: const Icon(Icons.collections, size: 16, color: AppColors.textPure),
+                          label: Text(
+                            'Portfolio (Add up to 4 more)',
+                            style: AppTypography.labelLarge.copyWith(color: AppColors.textPure, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 18),
+
               GlassCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,7 +285,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                         return ChoiceChip(
                           label: Text(t),
                           selected: isSelected,
-                          selectedColor: AppColors.champagneGold.withOpacity(0.2),
+                          selectedColor: AppColors.champagneGold.withValues(alpha: 0.2),
                           backgroundColor: AppColors.darkCardElevated,
                           labelStyle: AppTypography.bodySmall.copyWith(
                             color: isSelected ? AppColors.champagneGold : AppColors.textMuted,

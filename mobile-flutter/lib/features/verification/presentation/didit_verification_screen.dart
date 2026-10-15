@@ -8,6 +8,7 @@ import '../../../../core/widgets/gold_button.dart';
 import '../../../../core/widgets/verified_badge.dart';
 import '../../../../core/widgets/knot_app_bar.dart';
 import '../providers/verification_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 import 'widgets/camera_viewfinder.dart';
 import 'widgets/liveness_scanner_overlay.dart';
 import 'widgets/verification_processing_sheet.dart';
@@ -33,13 +34,14 @@ class DiditVerificationScreen extends ConsumerWidget {
         ),
       ),
       body: SafeArea(
-        child: _buildCurrentStep(context, state, notifier),
+        child: _buildCurrentStep(context, ref, state, notifier),
       ),
     );
   }
 
   Widget _buildCurrentStep(
     BuildContext context,
+    WidgetRef ref,
     VerificationState state,
     VerificationNotifier notifier,
   ) {
@@ -73,7 +75,7 @@ class DiditVerificationScreen extends ConsumerWidget {
         );
 
       case VerificationStep.success:
-        return _buildSuccessCelebration(context, state, notifier);
+        return _buildSuccessCelebration(context, ref, state, notifier);
 
       case VerificationStep.failed:
         return _buildFailureView(context, state, notifier);
@@ -82,6 +84,7 @@ class DiditVerificationScreen extends ConsumerWidget {
 
   Widget _buildSuccessCelebration(
     BuildContext context,
+    WidgetRef ref,
     VerificationState state,
     VerificationNotifier notifier,
   ) {
@@ -178,13 +181,19 @@ class DiditVerificationScreen extends ConsumerWidget {
             const SizedBox(height: 32),
 
             GoldButton(
-              text: 'Complete Verification',
-              onPressed: () {
+              text: 'Proceed to Sign In',
+              onPressed: () async {
                 notifier.reset();
-                if (context.canPop()) {
-                  context.pop(true);
-                } else {
+                await ref.read(authProvider.notifier).logout();
+                if (context.mounted) {
                   context.go('/auth');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Identity verified successfully! Please sign in to enter your dashboard.'),
+                      backgroundColor: Color(0xFF10B981),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                 }
               },
             ),

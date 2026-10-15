@@ -136,11 +136,18 @@ class UserModel {
   }
 
   String get primaryPhoto {
+    String? raw;
     if (profileImageUrls.isNotEmpty) {
-      return profileImageUrls.first;
+      raw = profileImageUrls.first;
+    } else if (selfieUrl != null && selfieUrl!.isNotEmpty) {
+      raw = selfieUrl;
     }
-    if (selfieUrl != null && selfieUrl!.isNotEmpty) {
-      return selfieUrl!;
+    if (raw != null && raw.isNotEmpty) {
+      if (raw.startsWith('/uploads/')) {
+        const baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
+        return '$baseUrl$raw';
+      }
+      return raw;
     }
     return 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800';
   }

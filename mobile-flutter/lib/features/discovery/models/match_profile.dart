@@ -53,14 +53,41 @@ class MatchProfile {
   });
 
   factory MatchProfile.fromJson(Map<String, dynamic> json) {
+    // If backend wrapped match in { matchId, partner, scores }, unwrap partner!
+    final partner = json['partner'] is Map<String, dynamic>
+        ? json['partner'] as Map<String, dynamic>
+        : json;
+    final scores = json['scores'] is Map<String, dynamic>
+        ? json['scores'] as Map<String, dynamic>
+        : json;
+
     List<String> photoList = [];
-    if (json['profileImageUrls'] is List) {
-      photoList = (json['profileImageUrls'] as List).map((e) => e.toString()).toList();
-    } else if (json['profileImages'] is List) {
-      photoList = (json['profileImages'] as List)
+    if (partner['profileImages'] is List) {
+      final sorted = [...(partner['profileImages'] as List)];
+      sorted.sort((a, b) =>
+          ((b is Map && b['isPrimary'] == true) ? 1 : 0) -
+          ((a is Map && a['isPrimary'] == true) ? 1 : 0));
+      photoList = sorted
           .map((img) => (img is Map ? img['url'] : img).toString())
           .toList();
+    } else if (partner['profileImageUrls'] is List) {
+      photoList = (partner['profileImageUrls'] as List).map((e) => e.toString()).toList();
+    } else if (partner['photoUrls'] is List) {
+      photoList = (partner['photoUrls'] as List).map((e) => e.toString()).toList();
     }
+
+    if (photoList.isEmpty && partner['selfieUrl'] != null && partner['selfieUrl'].toString().isNotEmpty) {
+      photoList.add(partner['selfieUrl'].toString());
+    }
+
+    // Resolve relative /uploads/ URLs to absolute URLs using API base domain
+    const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
+    photoList = photoList.map((url) {
+      if (url.startsWith('/uploads/')) {
+        return '$apiBase$url';
+      }
+      return url;
+    }).toList();
 
     if (photoList.isEmpty) {
       photoList = [
@@ -68,45 +95,48 @@ class MatchProfile {
       ];
     }
 
+    final firstName = partner['firstName']?.toString() ?? '';
+    final lastName = partner['lastName']?.toString() ?? '';
+    final fullName = partner['name']?.toString() ??
+        (firstName.isNotEmpty ? '$firstName $lastName'.trim() : 'Candidate');
+
     return MatchProfile(
-      id: json['id']?.toString() ?? '',
-      name: json['name']?.toString() ??
-          (json['firstName'] != null
-              ? '${json['firstName']} ${json['lastName'] ?? ''}'.trim()
-              : 'Candidate'),
-      age: json['age'] is num
-          ? (json['age'] as num).toInt()
-          : (json['dateOfBirth'] != null ? 27 : 26),
-      city: json['city']?.toString() ?? json['residenceCity']?.toString() ?? 'London',
-      country: json['country']?.toString() ?? json['residenceCountry']?.toString() ?? 'United Kingdom',
-      occupation: json['occupation']?.toString() ?? 'Executive',
-      education: json['education']?.toString() ?? 'Master of Science',
-      religion: json['religion']?.toString() ?? 'Christian',
-      culturalBackground: json['culturalBackground']?.toString() ?? 'Heritage',
-      marriageTimeline: json['marriageTimeline']?.toString() ?? '1-2 years',
-      willingToRelocate: json['willingToRelocate']?.toString() ?? 'Yes',
-      childrenPreference: json['childrenPreference']?.toString() ?? 'Open to children',
-      bio: json['bio']?.toString() ?? 'Intentional candidate seeking lifelong partnership.',
-      personalValues: (json['personalValues'] as List?)?.map((e) => e.toString()).toList() ??
+      id: partner['id']?.toString() ?? json['matchId']?.toString() ?? '',
+      name: fullName,
+      age: partner['age'] is num
+          ? (partner['age'] as num).toInt()
+          : (partner['dateOfBirth'] != null ? 27 : 26),
+      city: partner['city']?.toString() ?? partner['residenceCity']?.toString() ?? 'London',
+      country: partner['country']?.toString() ?? partner['residenceCountry']?.toString() ?? 'United Kingdom',
+      occupation: partner['occupation']?.toString() ?? 'Executive',
+      education: partner['education']?.toString() ?? 'University Degree',
+      religion: partner['religion']?.toString() ?? 'Christian',
+      culturalBackground: partner['culturalBackground']?.toString() ?? 'Global Heritage',
+      marriageTimeline: partner['marriageTimeline']?.toString() ?? '1-2 years',
+      willingToRelocate: partner['willingToRelocate']?.toString() ?? 'Yes',
+      childrenPreference: partner['childrenPreference']?.toString() ?? 'Open to children',
+      bio: partner['bio']?.toString() ?? 'Intentional candidate seeking lifelong partnership.',
+      personalValues: (partner['personalValues'] as List?)?.map((e) => e.toString()).toList() ??
           ['Faith', 'Family', 'Integrity'],
-      personalityArchetype: json['personalityArchetype']?.toString() ?? 'The Intentional Builder',
-      attachmentStyle: json['attachmentStyle']?.toString() ?? 'Secure',
-      compatibilityScore: json['compatibilityScore'] is num
-          ? (json['compatibilityScore'] as num).toInt()
+      personalityArchetype: partner['personalityArchetype']?.toString() ?? 'The Intentional Builder',
+      attachmentStyle: partner['attachmentStyle']?.toString() ?? 'Secure',
+      compatibilityScore: (scores['compatibilityScore'] ?? partner['compatibilityScore'] ?? json['compatibilityScore'] ?? 92) is num
+          ? ((scores['compatibilityScore'] ?? partner['compatibilityScore'] ?? json['compatibilityScore'] ?? 92) as num).toInt()
           : 92,
-      emotionalAlignment: json['emotionalAlignment'] is num
-          ? (json['emotionalAlignment'] as num).toInt()
+      emotionalAlignment: (scores['emotionalAlignment'] ?? partner['emotionalAlignment'] ?? 88) is num
+          ? ((scores['emotionalAlignment'] ?? partner['emotionalAlignment'] ?? 88) as num).toInt()
           : 88,
-      valuesAlignment: json['valuesAlignment'] is num
-          ? (json['valuesAlignment'] as num).toInt()
+      valuesAlignment: (scores['valuesAlignment'] ?? partner['valuesAlignment'] ?? 94) is num
+          ? ((scores['valuesAlignment'] ?? partner['valuesAlignment'] ?? 94) as num).toInt()
           : 94,
-      lifestyleCompatibility: json['lifestyleCompatibility'] is num
-          ? (json['lifestyleCompatibility'] as num).toInt()
+      lifestyleCompatibility: (scores['lifestyleCompatibility'] ?? partner['lifestyleCompatibility'] ?? 90) is num
+          ? ((scores['lifestyleCompatibility'] ?? partner['lifestyleCompatibility'] ?? 90) as num).toInt()
           : 90,
       aiExplanation: json['aiExplanation']?.toString() ??
+          partner['aiExplanation']?.toString() ??
           'High emotional safety and mutual vision for permanent family building.',
-      isVerified: json['isVerified'] == true,
-      verificationBadge: json['verificationBadge']?.toString() ?? 'GOLD',
+      isVerified: partner['isVerified'] == true || partner['idVerified'] == true,
+      verificationBadge: partner['verificationBadge']?.toString() ?? 'GOLD',
       photos: photoList,
     );
   }

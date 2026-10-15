@@ -17,9 +17,11 @@ class CandidateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final photo = candidate.photos.isNotEmpty
+    final rawPhoto = candidate.photos.isNotEmpty
         ? candidate.photos.first
         : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800';
+    const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
+    final photo = rawPhoto.startsWith('/uploads/') ? '$apiBase$rawPhoto' : rawPhoto;
 
     return Container(
       decoration: BoxDecoration(

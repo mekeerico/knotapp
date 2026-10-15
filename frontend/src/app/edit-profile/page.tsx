@@ -45,8 +45,8 @@ export default function EditProfile() {
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    if (photos.length >= 6) {
-      alert("Maximum 6 photos allowed.");
+    if (photos.length >= 5) {
+      alert("Maximum 5 photos allowed (1 Primary + 4 Portfolio pictures).");
       return;
     }
     
@@ -77,6 +77,15 @@ export default function EditProfile() {
       setUploading(false);
       e.target.value = '';
     }
+  };
+
+  const makePrimary = (index: number) => {
+    if (index === 0) return;
+    setPhotos(prev => {
+      const selected = prev[index];
+      const rest = prev.filter((_, i) => i !== index);
+      return [selected, ...rest];
+    });
   };
 
   const removePhoto = (index: number) => {
@@ -140,18 +149,27 @@ export default function EditProfile() {
         {/* Photos Section */}
         <section className="glass-card p-6 rounded-[24px] border border-white/10 space-y-4">
           <h2 className="text-sm font-black uppercase tracking-widest text-gray-400">Registry Photos</h2>
-          <p className="text-xs text-gray-500">Upload up to 6 photos. The first photo will be your primary profile picture.</p>
+          <p className="text-xs text-gray-500">Upload up to 5 photos (1 Primary Display Picture + up to 4 Portfolio Pictures). The primary photo will be your display picture on the Match screen.</p>
           
           <div className="grid grid-cols-3 gap-4">
             {photos.map((url, idx) => (
               <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group">
                 <img src={url} alt={`Photo ${idx+1}`} className="w-full h-full object-cover" />
-                {idx === 0 && (
-                  <div className="absolute top-2 left-2 bg-[#D4AF37] px-2 py-0.5 rounded-md text-[8px] font-black uppercase text-black z-10">
+                {idx === 0 ? (
+                  <div className="absolute top-2 left-2 bg-[#D4AF37] px-2 py-0.5 rounded-md text-[8px] font-black uppercase text-black z-10 shadow">
                     Primary
                   </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => makePrimary(idx)}
+                    className="absolute bottom-2 left-2 bg-black/80 hover:bg-[#D4AF37] hover:text-black text-[9px] font-bold uppercase text-white px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                  >
+                    Set Primary
+                  </button>
                 )}
                 <button 
+                  type="button"
                   onClick={() => removePhoto(idx)}
                   className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/80 z-10"
                 >
@@ -160,7 +178,7 @@ export default function EditProfile() {
               </div>
             ))}
             
-            {photos.length < 6 && (
+            {photos.length < 5 && (
               <label className={`aspect-square rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5 transition-all cursor-pointer ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
                 <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
                 <Camera className="w-6 h-6 text-gray-400" />

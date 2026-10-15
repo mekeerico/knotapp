@@ -127,35 +127,44 @@ export default function Dashboard() {
         const matchesData = await matchesRes.json();
         // Normalize image fields for each match
         const normalizedMatches = (Array.isArray(matchesData) ? matchesData : []).map((m: any) => {
-          if (!m.imageUrls || m.imageUrls.length === 0) {
-            if (m.profileImages && m.profileImages.length > 0) {
-              const sorted = [...m.profileImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
-              m.imageUrls = sorted.map((img: any) => resolveImageUrl(img.url));
-            } else if (m.profileImageUrls && m.profileImageUrls.length > 0) {
-              m.imageUrls = m.profileImageUrls.map((u: string) => resolveImageUrl(u));
-            } else if (m.selfieUrl) {
-              m.imageUrls = [resolveImageUrl(m.selfieUrl)];
-            }
-          } else {
-            m.imageUrls = m.imageUrls.map((u: string) => resolveImageUrl(u));
+          const partner = m.partner || {};
+          let rawImages = partner.profileImages || m.profileImages || [];
+          let imageUrls: string[] = [];
+          if (Array.isArray(rawImages) && rawImages.length > 0) {
+            const sorted = [...rawImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+            imageUrls = sorted.map((img: any) => resolveImageUrl(img.url || img));
+          } else if (partner.profileImageUrls?.length > 0) {
+            imageUrls = partner.profileImageUrls.map((u: string) => resolveImageUrl(u));
+          } else if (m.profileImageUrls?.length > 0) {
+            imageUrls = m.profileImageUrls.map((u: string) => resolveImageUrl(u));
+          } else if (partner.selfieUrl) {
+            imageUrls = [resolveImageUrl(partner.selfieUrl)];
+          } else if (m.selfieUrl) {
+            imageUrls = [resolveImageUrl(m.selfieUrl)];
           }
-          if (m.photoUrl) m.photoUrl = resolveImageUrl(m.photoUrl);
-          // Also normalize partner images
-          if (m.partner) {
-            if (!m.partner.photoUrl && !m.partner.imageUrls?.length) {
-              if (m.partner.profileImages?.length > 0) {
-                const sorted = [...m.partner.profileImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
-                m.partner.photoUrl = resolveImageUrl(sorted[0]?.url);
-              } else if (m.partner.profileImageUrls?.length > 0) {
-                m.partner.photoUrl = resolveImageUrl(m.partner.profileImageUrls[0]);
-              } else if (m.partner.selfieUrl) {
-                m.partner.photoUrl = resolveImageUrl(m.partner.selfieUrl);
-              }
-            } else if (m.partner.photoUrl) {
-              m.partner.photoUrl = resolveImageUrl(m.partner.photoUrl);
-            }
-          }
-          return m;
+
+          const primaryPhoto = imageUrls[0] || (partner.photoUrl ? resolveImageUrl(partner.photoUrl) : (m.photoUrl ? resolveImageUrl(m.photoUrl) : ''));
+
+          return {
+            ...partner,
+            ...m,
+            partner: {
+              ...partner,
+              photoUrl: primaryPhoto,
+              imageUrls,
+            },
+            photoUrl: primaryPhoto,
+            imageUrls,
+            firstName: partner.firstName || m.firstName || 'Match',
+            lastName: partner.lastName || m.lastName || '',
+            bio: partner.bio || m.bio || '',
+            occupation: partner.occupation || m.occupation || '',
+            residenceCity: partner.residenceCity || m.residenceCity || '',
+            residenceCountry: partner.residenceCountry || m.residenceCountry || '',
+            archetype: partner.personalityArchetype || m.archetype || '',
+            attachment: partner.attachmentStyle || m.attachment || '',
+            trustScore: partner.trustScore || m.trustScore || 95,
+          };
         });
         setMatches(normalizedMatches);
 
@@ -1384,19 +1393,25 @@ export default function Dashboard() {
               <div className="pt-6 border-t border-white/5 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black">My Photos</h4>
-                  <span className="text-[10px] text-gray-500 font-bold">{userPhotos.length} / 6 Uploaded</span>
+                  <span className="text-[10px] text-gray-500 font-bold">{userPhotos.length} / 5 Uploaded</span>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {userPhotos.map((photo, idx) => (
                     <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group">
                       <img src={photo} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
-                      {idx === primaryPhotoIndex && (
-                        <div className="absolute top-2 left-2 bg-[#D4AF37] px-2 py-0.5 rounded-md text-[8px] font-black uppercase text-black">
+                      {idx === primaryPhotoIndex ? (
+                        <div className="absolute top-2 left-2 bg-[#D4AF37] px-2 py-0.5 rounded-md text-[8px] font-black uppercase text-black z-10">
                           Primary
                         </div>
+                      ) : (
+                        <button
+                          onClick={() => setPrimaryPhotoIndex(idx)}
+                          className="absolute bottom-2 left-2 bg-black/70 hover:bg-[#D4AF37] hover:text-black text-[8px] font-black uppercase text-white px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        >
+                          Set Primary
+                        </button>
                       )}
                       <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-
                         <button onClick={() => {
                           const newPhotos = userPhotos.filter((_, i) => i !== idx);
                           setUserPhotos(newPhotos);
@@ -1408,7 +1423,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                   ))}
-                  {userPhotos.length < 6 && (
+                  {userPhotos.length < 5 && (
                     <button onClick={() => router.push('/edit-profile')} className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 hover:border-[#D4AF37]/50 hover:bg-[#D4AF37]/5 transition-all">
                       <Camera className="w-6 h-6 text-gray-400" />
                       <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Add Photo</span>
