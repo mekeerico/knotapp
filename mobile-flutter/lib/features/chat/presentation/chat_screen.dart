@@ -28,16 +28,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  late final ChatNotifier _chatNotifier;
+
   @override
   void initState() {
     super.initState();
+    _chatNotifier = ref.read(chatProvider.notifier);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(chatProvider.notifier).setActiveMatch(widget.matchId);
+      _chatNotifier.setActiveMatch(widget.matchId);
     });
   }
 
   @override
   void dispose() {
+    _chatNotifier.leaveChat();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -103,6 +107,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<ChatState>(chatProvider, (prev, next) {
+      if (next.errorMessage != null && next.errorMessage != prev?.errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: AppColors.roseGlow,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    });
     final chatState = ref.watch(chatProvider);
     final currentUserId = ref.watch(authProvider).user?.id ?? '';
     final messages = chatState.activeMessages;
@@ -128,31 +143,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // AI Chat Assistant Icebreaker Banner
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppColors.darkSlate,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.borderGold.withOpacity(0.3), width: 0.8),
+            if (messages.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'No messages yet. Say hello to $partnerName.',
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                ),
               ),
-              child: Row(
-                children: [
-                  const Icon(Icons.auto_awesome, color: AppColors.champagneGold, size: 16),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'AI Sentinel: Both profiles prioritize permanent commitment and family traditions. Inquire about favorite childhood traditions.',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.champagneGold,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
 
             // Messages View
             Expanded(

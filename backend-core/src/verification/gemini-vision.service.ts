@@ -20,14 +20,8 @@ export interface GeminiVerificationResult {
 export class GeminiVisionService {
   private readonly logger = new Logger(GeminiVisionService.name);
   
-  // Base64 decoded at runtime to prevent git scanner false-positive revocation
-  private readonly defaultKey = Buffer.from(
-    'QVEuQWI4Uk42S25UVXJ3b3BGb2dSSFVEMXJxREhwQnBtYVV6QVd1SIdNb1pRRUNScXVleEE=',
-    'base64',
-  ).toString('utf-8');
-
   private get apiKey(): string {
-    return process.env.GEMINI_API_KEY || this.defaultKey;
+    return process.env.GEMINI_API_KEY || '';
   }
 
   private readonly baseUrl =
@@ -152,8 +146,8 @@ You must respond ONLY with a raw JSON object (no markdown, no backticks, no extr
           extractedName,
         );
 
-        // If AI or programmatic token match confirms name match
-        const finalNameMatch = Boolean(parsed.nameMatches) || programmaticNameMatch;
+        // Both the AI judgement and the programmatic token check must agree
+        const finalNameMatch = Boolean(parsed.nameMatches) && programmaticNameMatch;
         const finalFaceMatch = Boolean(parsed.faceMatches) && (parsed.faceMatchScore ?? 80) >= 65;
         const finalIsGovId = Boolean(parsed.isGovernmentId);
         const finalIsSelfie = Boolean(parsed.isSelfieValid);
@@ -193,30 +187,13 @@ You must respond ONLY with a raw JSON object (no markdown, no backticks, no extr
       }
     }
 
-    // Resilient fallback if Google API is temporarily unreachable or experiences 503
-    this.logger.warn(
-      `Gemini Vision APIs temporarily unavailable. Engaging high-assurance fallback for candidate "${claimedFullName}".`,
+    // Fail closed: never auto-approve identity when the AI checker could not run.
+    this.logger.error(
+      `Gemini Vision unavailable for candidate "${claimedFullName}". Verification NOT approved.`,
     );
-
-    const hasId = idBuffer && idBuffer.length > 500;
-    const hasSelfie = selfieBuffer && selfieBuffer.length > 500;
-
-    return {
-      isValid: hasId && hasSelfie,
-      documentType: 'NATIONAL_ID_NIN',
-      confidenceScore: hasId && hasSelfie ? 92 : 20,
-      extractedName: claimedFullName,
-      extractedDob: claimedDob || '',
-      faceMatchScore: hasId && hasSelfie ? 90 : 30,
-      livenessScore: hasId && hasSelfie ? 93 : 30,
-      nameMatches: true,
-      faceMatches: hasId && hasSelfie,
-      isGovernmentId: hasId,
-      isSelfieValid: hasSelfie,
-      details: hasId && hasSelfie
-        ? 'Identity and biometric images captured and verified successfully.'
-        : 'Uploaded images were invalid or incomplete. Please upload a clear photo of your ID and selfie.',
-    };
+    throw new Error(
+      'Our identity checker is temporarily busy. Your documents were not rejected — please retry in a few minutes.',
+    );
   }
 
   /**
@@ -228,18 +205,18 @@ You must respond ONLY with a raw JSON object (no markdown, no backticks, no extr
     lastName: string,
     extractedName: string,
   ): boolean {
-    if (!extractedName || extractedName.length < 2) return true; // Give user benefit if OCR was partial
+    if (!extractedName || extractedName.length < 2) return false;
     const lowerExtracted = extractedName.toLowerCase().replace(/[^a-z0-9 ]/g, ' ');
     const f = firstName.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '');
     const l = lastName.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '');
 
     const extractedTokens = lowerExtracted.split(/\s+/).filter(t => t.length > 1);
 
-    const hasFirst = f.length >= 2 && extractedTokens.some(t => t.includes(f) || f.includes(t));
-    const hasLast = l.length >= 2 && extractedTokens.some(t => t.includes(l) || l.includes(t));
+    // Exact token match, any order (handles "SURNAME Firstname Middlename" layouts)
+    const hasFirst = f.length < 2 || extractedTokens.includes(f);
+    const hasLast = l.length < 2 || extractedTokens.includes(l);
 
-    // If either first or last name matches any token on the ID
-    return hasFirst || hasLast;
+    return hasFirst && hasLast;
   }
 
   private cleanJsonResponse(text: string): string {

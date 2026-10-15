@@ -116,7 +116,8 @@ export class VerificationService {
     } catch (err: any) {
       this.logger.error(`Error during Gemini Vision verification: ${err.message}`);
       throw new BadRequestException(
-        'Unable to process identity document. Please ensure your National ID / NIN or Passport is clearly visible and well-lit, and retry.',
+        err.message ||
+          'Unable to process identity document. Please ensure your ID is clearly visible and well-lit, and retry.',
       );
     }
 

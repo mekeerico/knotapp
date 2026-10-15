@@ -31,7 +31,7 @@ if GEMINI_KEY:
         api_key=GEMINI_KEY,
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
     )
-    text_model = "gemini-1.5-flash"
+    text_model = "gemini-3.5-flash"
 elif GROK_API_KEY:
     client = OpenAI(
         api_key=GROK_API_KEY,
@@ -236,20 +236,27 @@ def coach_respond(request: CoachRequest):
         Provide a supportive, wise, emotionally secure, and concise response (max 2-3 sentences, 30-50 words) that guides the user toward relationship maturity, emotional safety, and healthy communication. Keep your tone premium, mature, deeply human, and brief.
         """
         
-        if client:
-            response = client.chat.completions.create(
-                model=text_model,
-                messages=[{"role": "user", "content": prompt}]
-            )
-            return {"response": response.choices[0].message.content.strip()}
-        else:
-            return {
-                "response": "A lasting marriage begins with understanding your core values, honoring mutual boundaries, and cultivating emotional safety together. What aspect of your journey would you like to reflect on today?"
-            }
+        if not client:
+            logger.error("Coach called but no AI client is configured (GEMINI_API_KEY missing).")
+            return {"response": "The AI Coach is not configured right now. Please try again later."}
+
+        last_error = None
+        candidate_models = [text_model] if not text_model.startswith("gemini") else [text_model, "gemini-3.5-flash-lite"]
+        for model_name in candidate_models:
+            try:
+                response = client.chat.completions.create(
+                    model=model_name,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                return {"response": response.choices[0].message.content.strip()}
+            except Exception as model_err:
+                last_error = model_err
+                logger.warning(f"Coach model {model_name} failed: {model_err}")
+        raise last_error
     except Exception as e:
         logger.error(f"Error in coach response: {str(e)}")
         return {
-            "response": "True marital connection thrives when both partners build trust with patience, deep listening, and open vulnerability. How can I best guide your courtship decisions right now?"
+            "response": "I couldn't reach my AI insights just now. Please send your message again in a moment."
         }
 
 @app.post("/moderation/check")
@@ -437,7 +444,7 @@ def verify_onboarding_documents(request: VerifyRequest):
         combined_b64 = base64.b64encode(combined_data).decode('utf-8')
         
         response = gemini_client.chat.completions.create(
-            model="gemini-2.5-flash",
+            model="gemini-3.5-flash",
             messages=[
                 {
                     "role": "user",

@@ -1,11 +1,15 @@
 import { Controller, Get, Query, Param, Post, Body, HttpException, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { MessagesGateway } from './messages.gateway';
 
 @Controller('messages')
 @UseGuards(JwtAuthGuard)
 export class MessagesController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gateway: MessagesGateway,
+  ) {}
 
   @Get('history')
   async getChatHistory(@Query('userAId') userAId: string, @Query('userBId') userBId: string) {
@@ -73,12 +77,21 @@ export class MessagesController {
       }
     }
 
-    return this.prisma.message.create({
-      data: {
-        content: textContent,
-        senderId,
-        receiverId: matchId,
-      }
-    }).catch(() => ({ success: false }));
+    try {
+      const saved = await this.prisma.message.create({
+        data: {
+          content: textContent,
+          senderId,
+          receiverId: matchId,
+        },
+      });
+      this.gateway.notifyNewMessage(saved);
+      return saved;
+    } catch (e: any) {
+      throw new HttpException(
+        { success: false, error: 'SEND_FAILED', message: e.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 }

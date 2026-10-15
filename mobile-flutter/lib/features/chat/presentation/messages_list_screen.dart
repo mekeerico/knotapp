@@ -69,22 +69,13 @@ class MessagesListScreen extends ConsumerWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    candidate.name,
-                                    style: AppTypography.titleMedium.copyWith(fontSize: 15),
-                                  ),
-                                  Text(
-                                    '12:45 PM',
-                                    style: AppTypography.bodySmall.copyWith(fontSize: 11),
-                                  ),
-                                ],
+                              Text(
+                                candidate.name,
+                                style: AppTypography.titleMedium.copyWith(fontSize: 15),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Peace and greetings. I was deeply inspired by your commitment vows...',
+                                'Tap to open conversation',
                                 style: AppTypography.bodySmall.copyWith(
                                   color: AppColors.textMuted,
                                 ),
