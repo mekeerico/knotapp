@@ -234,4 +234,8 @@ export class VerificationService {
       },
     };
   }
+
+  async createDiditSession(userId: string) {
+    return this.diditService.createVerificationSession(userId);
+  }
 }

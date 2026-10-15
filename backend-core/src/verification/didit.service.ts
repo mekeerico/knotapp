@@ -47,11 +47,51 @@ export class DiditService {
     process.env.DIDIT_BASE_URL || 'https://verification.didit.me'
   ).replace(/\/$/, '');
 
+  private readonly workflowId =
+    process.env.DIDIT_WORKFLOW_ID || 'Z6o72wJKSWCrENUZdaCdCg';
+  private readonly verificationUrl =
+    process.env.DIDIT_VERIFICATION_URL || 'https://verify.didit.me/u/Z6o72wJKSWCrENUZdaCdCg';
+
   constructor() {
     if (!this.apiKey) {
       this.logger.warn(
         'DIDIT_API_KEY is not defined. DiditService running in intelligent sandbox verification mode.',
       );
+    }
+  }
+
+  /**
+   * Create a hosted Didit Verification Session for mobile webview / external KYC
+   */
+  async createVerificationSession(userId: string) {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/v3/session/`,
+        {
+          workflow_id: this.workflowId,
+          vendor_data: userId,
+        },
+        {
+          headers: {
+            'X-Api-Key': this.apiKey,
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 20000,
+        },
+      );
+      return {
+        url: response.data?.url || this.verificationUrl,
+        sessionId: response.data?.session_id || response.data?.id,
+      };
+    } catch (err: any) {
+      this.logger.warn(
+        `Didit createVerificationSession warning (${err.response?.status || err.message}). Falling back to configured workflow URL.`,
+      );
+      return {
+        url: this.verificationUrl,
+        sessionId: `knot_fallback_${userId}_${Date.now()}`,
+      };
     }
   }
 

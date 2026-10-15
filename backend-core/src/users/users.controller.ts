@@ -45,6 +45,12 @@ export class UsersController {
     return this.verificationService.verifyIdentity(req.user.id, files as any, body);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('verification-session')
+  async getVerificationSession(@Request() req: any) {
+    return this.verificationService.createDiditSession(req.user.id);
+  }
+
   @Get()
   async getAll() {
     return this.usersService.findAll();
