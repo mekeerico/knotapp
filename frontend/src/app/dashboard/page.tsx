@@ -1643,94 +1643,56 @@ export default function Dashboard() {
               <ShieldCheck className="w-8 h-8" />
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               <h3 className="text-xl font-serif font-black text-white">Didit Sovereign Identity Verification</h3>
-              <p className="text-xs text-gray-400">
-                Authenticate your government document and biometric liveness to unlock the Gold Trust Seal.
+              <p className="text-xs uppercase tracking-widest text-[#D4AF37] font-bold">
+                Completed Exclusively on KNOT Mobile App
               </p>
             </div>
 
-            {diditError && (
-              <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-xs text-red-400 font-semibold text-left">
-                {diditError}
-              </div>
-            )}
+            <p className="text-xs leading-relaxed text-gray-300 text-left">
+              To guarantee 100% cryptographic liveness assurance, prevent synthetic media, and comply with sovereign registry safety, Didit 3D face liveness scanning and official government ID capture are conducted exclusively via the <strong className="text-white">KNOT Mobile App</strong> (iOS & Android).
+            </p>
 
-            <div className="space-y-4 text-left">
-              {/* ID Front Upload */}
-              <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">
-                  1. Government ID Document (Front)
-                </label>
-                <div className="p-3 bg-[#121721] border border-white/10 rounded-xl flex items-center justify-between">
-                  <span className="text-xs text-gray-300 truncate max-w-[200px]">
-                    {diditIdFile ? diditIdFile.name : "Select ID photo / document"}
-                  </span>
-                  <label className="py-1 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-white font-bold cursor-pointer">
-                    Browse
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) setDiditIdFile(file);
-                      }}
-                    />
-                  </label>
+            <div className="bg-[#121721] border border-white/10 rounded-2xl p-4 text-left space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] text-xs font-bold shrink-0 mt-0.5">
+                  1
+                </div>
+                <div className="text-xs text-gray-300">
+                  <span className="font-bold text-white">Open KNOT Mobile App:</span> Launch the mobile application on your iOS or Android smartphone.
                 </div>
               </div>
 
-              {/* Live Selfie Upload */}
-              <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">
-                  2. Live Selfie (Clear Portrait)
-                </label>
-                <div className="p-3 bg-[#121721] border border-white/10 rounded-xl flex items-center justify-between">
-                  <span className="text-xs text-gray-300 truncate max-w-[200px]">
-                    {diditSelfieFile ? diditSelfieFile.name : "Select clear selfie photo"}
-                  </span>
-                  <label className="py-1 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-white font-bold cursor-pointer">
-                    Browse
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) setDiditSelfieFile(file);
-                      }}
-                    />
-                  </label>
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] text-xs font-bold shrink-0 mt-0.5">
+                  2
+                </div>
+                <div className="text-xs text-gray-300">
+                  <span className="font-bold text-white">Sign In:</span> Log in using your registered account credentials.
                 </div>
               </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] text-xs font-bold shrink-0 mt-0.5">
+                  3
+                </div>
+                <div className="text-xs text-gray-300">
+                  <span className="font-bold text-white">Verify in Profile:</span> Navigate to <span className="text-[#D4AF37] font-semibold">Profile &gt; Sovereign Identity Verification</span> to complete the 60-second ID scan and selfie liveness check.
+                </div>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[11px] text-gray-300 text-left">
+              🔒 Once verified on the mobile app, your verified Gold Trust Seal and public visibility will sync automatically to this web dashboard.
             </div>
 
             <div className="pt-2 flex flex-col gap-2">
               <button
-                onClick={handleDiditVerify}
-                disabled={diditLoading || !diditIdFile || !diditSelfieFile}
-                className="w-full py-3.5 rounded-xl text-xs font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] disabled:opacity-50 transition flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                onClick={() => setShowDiditModal(false)}
+                className="w-full py-3.5 rounded-xl text-xs font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] transition flex items-center justify-center gap-2 cursor-pointer shadow-lg"
               >
-                {diditLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Verifying with Didit...
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck className="w-4 h-4" /> Submit to Didit Verification
-                  </>
-                )}
-              </button>
-              <button
-                onClick={() => {
-                  setShowDiditModal(false);
-                  setDiditError("");
-                }}
-                disabled={diditLoading}
-                className="w-full py-2.5 rounded-xl text-xs text-gray-400 hover:text-white"
-              >
-                Cancel
+                <CheckCircle2 className="w-4 h-4" /> I Understand — Proceed on Mobile
               </button>
             </div>
           </div>

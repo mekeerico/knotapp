@@ -26,31 +26,51 @@ final _shellNavigatorCoach = GlobalKey<NavigatorState>();
 final _shellNavigatorMessages = GlobalKey<NavigatorState>();
 final _shellNavigatorProfile = GlobalKey<NavigatorState>();
 
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen<AuthState>(
+      authProvider,
+      (_, _) => notifyListeners(),
+    );
+  }
+
+  String? redirect(BuildContext context, GoRouterState state) {
+    final authState = _ref.read(authProvider);
+    final isAuth = authState.isAuthenticated;
+    final isAuthRoute = state.matchedLocation == '/auth';
+    final isOnboardingRoute = state.matchedLocation == '/onboarding';
+    final isVerificationRoute = state.matchedLocation == '/verification';
+
+    if (!isAuth && !isAuthRoute) {
+      return '/auth';
+    }
+
+    if (isAuth && authState.needsOnboarding && !isOnboardingRoute && !isVerificationRoute) {
+      return '/onboarding';
+    }
+
+    if (isAuth && isAuthRoute) {
+      return authState.needsOnboarding ? '/onboarding' : '/discovery';
+    }
+
+    return null;
+  }
+}
+
+final routerNotifierProvider = Provider<RouterNotifier>((ref) {
+  return RouterNotifier(ref);
+});
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/discovery',
-    redirect: (context, state) {
-      final isAuth = authState.isAuthenticated;
-      final isAuthRoute = state.matchedLocation == '/auth';
-      final isOnboardingRoute = state.matchedLocation == '/onboarding';
-
-      if (!isAuth && !isAuthRoute) {
-        return '/auth';
-      }
-
-      if (isAuth && authState.needsOnboarding && !isOnboardingRoute) {
-        return '/onboarding';
-      }
-
-      if (isAuth && isAuthRoute) {
-        return '/discovery';
-      }
-
-      return null;
-    },
+    refreshListenable: notifier,
+    redirect: notifier.redirect,
     routes: [
       GoRoute(
         path: '/auth',

@@ -273,8 +273,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     }
   }
 
-  Future<void> _completeAndRedirectToAuth({bool diditVerificationCompleted = false}) async {
-    await _saveOnboardingData();
+  Future<void> _completeAndRedirectToAuth({
+    bool diditVerificationCompleted = false,
+    bool shouldSave = true,
+  }) async {
+    if (shouldSave) {
+      await _saveOnboardingData();
+    }
 
     if (!mounted) return;
 
@@ -831,7 +836,44 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
           ),
 
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
+
+          // Accepted Government ID Documents Section
+          Text(
+            'ACCEPTED GOVERNMENT ID DOCUMENTS',
+            style: AppTypography.labelLarge.copyWith(
+              color: AppColors.champagneGold,
+              letterSpacing: 1.2,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildAcceptedDocTile(
+            icon: Icons.flight_takeoff,
+            title: 'International Passport',
+            subtitle: 'Valid passport from any country (photo page)',
+          ),
+          const SizedBox(height: 8),
+          _buildAcceptedDocTile(
+            icon: Icons.directions_car_outlined,
+            title: "Driver's License",
+            subtitle: 'Valid national or state driver license (front & back)',
+          ),
+          const SizedBox(height: 8),
+          _buildAcceptedDocTile(
+            icon: Icons.badge_outlined,
+            title: 'National Identity Card / NIN',
+            subtitle: 'Citizen ID card, NIMC NIN slip, or national card',
+          ),
+          const SizedBox(height: 8),
+          _buildAcceptedDocTile(
+            icon: Icons.how_to_vote_outlined,
+            title: "Voter's Card / Residence Permit",
+            subtitle: 'Official voter ID or permanent resident card',
+          ),
+
+          const SizedBox(height: 24),
 
           // Action 1: Verify Now
           GoldButton(
@@ -841,7 +883,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 : () async {
                     await _saveOnboardingData();
                     if (mounted) {
-                      context.push('/verification');
+                      final verified = await context.push<bool>('/verification');
+                      if (mounted) {
+                        await _completeAndRedirectToAuth(
+                          diditVerificationCompleted: verified ?? true,
+                          shouldSave: false,
+                        );
+                      }
                     }
                   },
           ),
@@ -853,7 +901,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: TextButton(
               onPressed: _isSaving
                   ? null
-                  : () => _completeAndRedirectToAuth(diditVerificationCompleted: false),
+                  : () => _completeAndRedirectToAuth(
+                        diditVerificationCompleted: false,
+                        shouldSave: true,
+                      ),
               child: Text(
                 'Skip for Now & Sign In Later',
                 style: AppTypography.labelLarge.copyWith(
@@ -863,6 +914,51 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAcceptedDocTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.darkCardElevated,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.2), width: 0.8),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: AppColors.champagneGold.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, color: AppColors.champagneGold, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.titleMedium.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 16),
         ],
       ),
     );

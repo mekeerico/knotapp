@@ -122,82 +122,52 @@ class _LivenessScannerOverlayState extends State<LivenessScannerOverlay>
                 ),
         ),
 
-        // Dark Translucent Mask with Cutout
+        // Dark Translucent Mask with True Oval Cutout Hole & Gold Border
         Positioned.fill(
-          child: ColorFiltered(
-            colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.65),
-              BlendMode.srcOut,
-            ),
-            child: Stack(
-              children: [
-                Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.transparent,
-                  ),
-                  child: Center(
-                    child: Container(
-                      width: ovalWidth,
-                      height: ovalHeight,
-                      decoration: const BoxDecoration(
-                        color: Colors.black,
-                        borderRadius: BorderRadius.all(Radius.elliptical(150, 200)),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          child: CustomPaint(
+            painter: _OvalCutoutPainter(
+              ovalWidth: ovalWidth,
+              ovalHeight: ovalHeight,
+              overlayColor: Colors.black.withValues(alpha: 0.65),
+              borderColor: AppColors.champagneGold,
             ),
           ),
         ),
 
-        // Oval Gold Border Guide
+        // Animated Laser Beam Clipped Inside Oval Aperture
         Center(
-          child: Container(
-            width: ovalWidth,
-            height: ovalHeight,
-            decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.elliptical(150, 200)),
-              border: Border.all(
-                color: AppColors.champagneGold,
-                width: 2.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.champagneGold.withOpacity(0.3),
-                  blurRadius: 18,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                // Animated Vertical Laser Beam
-                AnimatedBuilder(
-                  animation: _laserController,
-                  builder: (context, child) {
-                    final topOffset = _laserController.value * (ovalHeight - 20);
-                    return Positioned(
-                      top: topOffset,
-                      left: 10,
-                      right: 10,
-                      child: Container(
-                        height: 3,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.scannerGlowGradient,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.champagneGold.withOpacity(0.8),
-                              blurRadius: 10,
-                              spreadRadius: 2,
-                            ),
-                          ],
+          child: ClipOval(
+            child: SizedBox(
+              width: ovalWidth,
+              height: ovalHeight,
+              child: Stack(
+                children: [
+                  AnimatedBuilder(
+                    animation: _laserController,
+                    builder: (context, child) {
+                      final topOffset = _laserController.value * (ovalHeight - 20);
+                      return Positioned(
+                        top: topOffset,
+                        left: 10,
+                        right: 10,
+                        child: Container(
+                          height: 3,
+                          decoration: BoxDecoration(
+                            gradient: AppColors.scannerGlowGradient,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.champagneGold.withValues(alpha: 0.8),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ],
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -309,5 +279,64 @@ class _LivenessScannerOverlayState extends State<LivenessScannerOverlay>
         ),
       ],
     );
+  }
+}
+
+class _OvalCutoutPainter extends CustomPainter {
+  final double ovalWidth;
+  final double ovalHeight;
+  final Color overlayColor;
+  final Color borderColor;
+
+  _OvalCutoutPainter({
+    required this.ovalWidth,
+    required this.ovalHeight,
+    required this.overlayColor,
+    required this.borderColor,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final ovalRect = Rect.fromCenter(
+      center: center,
+      width: ovalWidth,
+      height: ovalHeight,
+    );
+
+    // 1. Dark overlay outside the oval aperture
+    final backgroundPath = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    final ovalPath = Path()..addOval(ovalRect);
+
+    // Cutout hole: difference ensures the inside is completely transparent
+    final cutoutPath = Path.combine(
+      PathOperation.difference,
+      backgroundPath,
+      ovalPath,
+    );
+
+    final overlayPaint = Paint()
+      ..color = overlayColor
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(cutoutPath, overlayPaint);
+
+    // 2. Gold border around the oval aperture
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0;
+
+    canvas.drawOval(ovalRect, borderPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _OvalCutoutPainter oldDelegate) {
+    return oldDelegate.ovalWidth != ovalWidth ||
+        oldDelegate.ovalHeight != ovalHeight ||
+        oldDelegate.overlayColor != overlayColor ||
+        oldDelegate.borderColor != borderColor;
   }
 }
