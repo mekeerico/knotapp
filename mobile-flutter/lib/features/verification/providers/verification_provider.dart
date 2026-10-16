@@ -6,8 +6,8 @@ import '../../auth/providers/auth_provider.dart';
 import '../models/verification_result.dart';
 
 enum VerificationStep {
-  captureFront,
-  captureBack,
+  captureId,
+  reviewId,
   livenessScan,
   processing,
   success,
@@ -27,16 +27,18 @@ class VerificationState {
   final String? frontImagePath;
   final String? backImagePath;
   final String? selfieImagePath;
+  final String selectedDocumentType;
   final VerificationResult? result;
   final String? errorMessage;
   final bool isSubmitting;
 
   const VerificationState({
-    this.currentStep = VerificationStep.captureFront,
+    this.currentStep = VerificationStep.captureId,
     this.processingPhase = ProcessingPhase.analyzingDocument,
     this.frontImagePath,
     this.backImagePath,
     this.selfieImagePath,
+    this.selectedDocumentType = 'National Identity Card (NIN)',
     this.result,
     this.errorMessage,
     this.isSubmitting = false,
@@ -48,6 +50,7 @@ class VerificationState {
     String? frontImagePath,
     String? backImagePath,
     String? selfieImagePath,
+    String? selectedDocumentType,
     VerificationResult? result,
     String? errorMessage,
     bool? isSubmitting,
@@ -58,6 +61,7 @@ class VerificationState {
       frontImagePath: frontImagePath ?? this.frontImagePath,
       backImagePath: backImagePath ?? this.backImagePath,
       selfieImagePath: selfieImagePath ?? this.selfieImagePath,
+      selectedDocumentType: selectedDocumentType ?? this.selectedDocumentType,
       result: result ?? this.result,
       errorMessage: errorMessage,
       isSubmitting: isSubmitting ?? this.isSubmitting,
@@ -71,10 +75,31 @@ class VerificationNotifier extends StateNotifier<VerificationState> {
 
   VerificationNotifier(this._dio, this._ref) : super(const VerificationState());
 
-  void setFrontImage(String path) {
+  void setSelectedDocumentType(String type) {
+    state = state.copyWith(selectedDocumentType: type);
+  }
+
+  void setIdImage(String path) {
     state = state.copyWith(
       frontImagePath: path,
-      currentStep: VerificationStep.captureBack,
+      currentStep: VerificationStep.reviewId,
+      errorMessage: null,
+    );
+  }
+
+  void setFrontImage(String path) => setIdImage(path);
+
+  void proceedToLiveness() {
+    state = state.copyWith(
+      currentStep: VerificationStep.livenessScan,
+      errorMessage: null,
+    );
+  }
+
+  void retakeId() {
+    state = state.copyWith(
+      frontImagePath: null,
+      currentStep: VerificationStep.captureId,
       errorMessage: null,
     );
   }
@@ -82,7 +107,7 @@ class VerificationNotifier extends StateNotifier<VerificationState> {
   void setBackImage(String? path) {
     state = state.copyWith(
       backImagePath: path,
-      currentStep: VerificationStep.livenessScan,
+      currentStep: VerificationStep.reviewId,
       errorMessage: null,
     );
   }
@@ -131,6 +156,9 @@ class VerificationNotifier extends StateNotifier<VerificationState> {
       state = state.copyWith(processingPhase: ProcessingPhase.runningFaceMatch);
 
       final formData = FormData();
+      formData.fields.add(
+        MapEntry('documentType', state.selectedDocumentType),
+      );
       formData.files.add(
         MapEntry(
           'idFront',

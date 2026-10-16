@@ -151,7 +151,7 @@ class ProfileScreen extends ConsumerWidget {
               // Profile Actions Menu
               _buildMenuItem(
                 context,
-                title: 'Edit Profile',
+                title: 'Edit Your Profile',
                 icon: Icons.edit_note,
                 onTap: () => context.push('/edit-profile'),
               ),

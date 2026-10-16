@@ -257,7 +257,7 @@ export class DiditService {
     const hasEnoughData = front && front.length > 500;
     return {
       isValid: hasEnoughData,
-      documentType: 'PASSPORT',
+      documentType: 'NATIONAL_ID_NIN',
       confidenceScore: hasEnoughData ? 96 : 20,
       extractedData: {
         fullName: 'Verified Sovereign Candidate',

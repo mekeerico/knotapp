@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -46,23 +47,18 @@ class DiditVerificationScreen extends ConsumerWidget {
     VerificationNotifier notifier,
   ) {
     switch (state.currentStep) {
-      case VerificationStep.captureFront:
+      case VerificationStep.captureId:
         return CameraViewfinder(
-          title: 'Government ID (Front)',
-          hintText: 'Ensure all 4 corners and photo are visible',
+          title: 'Government ID',
+          hintText: 'Ensure all 4 corners, photo, and ID number are visible',
           isDocumentMode: true,
-          onImageCaptured: (path) => notifier.setFrontImage(path),
+          selectedDocumentType: state.selectedDocumentType,
+          onDocumentTypeSelected: (type) => notifier.setSelectedDocumentType(type),
+          onImageCaptured: (path) => notifier.setIdImage(path),
         );
 
-      case VerificationStep.captureBack:
-        return CameraViewfinder(
-          title: 'Government ID (Back)',
-          hintText: 'Barcode / MRZ zone must be sharply focused',
-          isDocumentMode: true,
-          onImageCaptured: (path) => notifier.setBackImage(path),
-          onSecondaryAction: () => notifier.skipBackImage(),
-          secondaryActionText: 'Skip (Passports)',
-        );
+      case VerificationStep.reviewId:
+        return _buildIdReviewScreen(context, state, notifier);
 
       case VerificationStep.livenessScan:
         return LivenessScannerOverlay(
@@ -80,6 +76,166 @@ class DiditVerificationScreen extends ConsumerWidget {
       case VerificationStep.failed:
         return _buildFailureView(context, state, notifier);
     }
+  }
+
+  Widget _buildIdReviewScreen(
+    BuildContext context,
+    VerificationState state,
+    VerificationNotifier notifier,
+  ) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Status Icon & Title
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.champagneGold.withValues(alpha: 0.15),
+                border: Border.all(color: AppColors.champagneGold, width: 1.5),
+              ),
+              child: const Icon(Icons.check_circle_outline, color: AppColors.champagneGold, size: 30),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'DOCUMENT CAPTURED',
+              style: AppTypography.headingLarge.copyWith(fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.darkSlate,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.borderGold, width: 1),
+              ),
+              child: Text(
+                state.selectedDocumentType,
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.champagneGold,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Captured ID Document Preview Card
+            GlassCard(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      height: 220,
+                      width: double.infinity,
+                      color: AppColors.obsidianBlack,
+                      child: state.frontImagePath != null && File(state.frontImagePath!).existsSync()
+                          ? Image.file(
+                              File(state.frontImagePath!),
+                              fit: BoxFit.cover,
+                            )
+                          : const Center(
+                              child: Icon(Icons.badge, size: 70, color: AppColors.champagneGold),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.verified, size: 16, color: Color(0xFF10B981)),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Document image loaded and legible',
+                        style: AppTypography.bodySmall.copyWith(color: const Color(0xFF10B981)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Interactive Next Step Explanatory Card
+            GlassCard(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.champagneGold.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.face_retouching_natural, color: AppColors.champagneGold, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'NEXT STEP: LIVE SELFIE',
+                          style: AppTypography.titleMedium.copyWith(fontSize: 13, color: AppColors.champagneGold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'You will now take a quick live camera selfie. Our AI biometric engine will match your face with the photo on this ID.',
+                          style: AppTypography.bodySmall.copyWith(color: AppColors.textPure, height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            // Action Buttons
+            GoldButton(
+              text: 'Continue to Live Selfie',
+              onPressed: () => notifier.proceedToLiveness(),
+            ),
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: () => notifier.retakeId(),
+              icon: const Icon(Icons.refresh, size: 16, color: AppColors.champagneGold),
+              label: Text(
+                'Retake / Re-upload ID',
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.champagneGold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDocumentClass(String raw) {
+    final val = raw.toUpperCase().trim();
+    if (val.contains('NIN') || val.contains('NATIONAL') || val.contains('NIMC')) {
+      return 'National Identity Card (NIN)';
+    }
+    if (val.contains('PASS') || val.contains('PASSPORT')) {
+      return 'International Passport';
+    }
+    if (val.contains('DRIV') || val.contains('LICENSE')) {
+      return "Driver's License";
+    }
+    if (val.contains('VOTE') || val.contains('PVC')) {
+      return "Voter's Card (PVC)";
+    }
+    if (val.contains('RESID')) {
+      return 'Residence Permit';
+    }
+    return raw;
   }
 
   Widget _buildSuccessCelebration(
@@ -167,9 +323,9 @@ class DiditVerificationScreen extends ConsumerWidget {
                     children: [
                       Text('Document Class', style: AppTypography.bodySmall),
                       Text(
-                        result?.documentType ?? 'GOVERNMENT_ID',
+                        _formatDocumentClass(result?.documentType ?? state.selectedDocumentType),
                         style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textPure,
+                          color: AppColors.champagneGold,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

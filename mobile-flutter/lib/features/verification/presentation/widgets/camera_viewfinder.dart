@@ -11,6 +11,8 @@ class CameraViewfinder extends StatefulWidget {
   final Function(String path) onImageCaptured;
   final VoidCallback? onSecondaryAction;
   final String? secondaryActionText;
+  final String? selectedDocumentType;
+  final ValueChanged<String>? onDocumentTypeSelected;
 
   const CameraViewfinder({
     super.key,
@@ -20,6 +22,8 @@ class CameraViewfinder extends StatefulWidget {
     required this.onImageCaptured,
     this.onSecondaryAction,
     this.secondaryActionText,
+    this.selectedDocumentType,
+    this.onDocumentTypeSelected,
   });
 
   @override
@@ -229,6 +233,24 @@ class _CameraViewfinderState extends State<CameraViewfinder> {
                   ],
                 ),
               ),
+              if (widget.onDocumentTypeSelected != null) ...[
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildDocPill('National ID (NIN)', 'National Identity Card (NIN)'),
+                      const SizedBox(width: 8),
+                      _buildDocPill('Passport', 'International Passport'),
+                      const SizedBox(width: 8),
+                      _buildDocPill("Driver's License", "Driver's License"),
+                      const SizedBox(width: 8),
+                      _buildDocPill("Voter's Card", "Voter's Card (PVC)"),
+                    ],
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -273,80 +295,57 @@ class _CameraViewfinderState extends State<CameraViewfinder> {
 
               const SizedBox(height: 16),
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // Gallery Upload Shortcut Icon
-                  IconButton(
-                    onPressed: _pickFromGallery,
-                    icon: const Icon(Icons.photo_library_outlined, size: 30),
-                    color: AppColors.textPure,
-                    tooltip: 'Upload from files',
-                  ),
-
-                  // Luxury Gold Shutter Trigger
-                  GestureDetector(
-                    onTap: _isCapturing ? null : _capturePhoto,
-                    child: Container(
-                      width: 78,
-                      height: 78,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.champagneGold, width: 3),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.champagneGold.withOpacity(0.4),
-                            blurRadius: 16,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(6.0),
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: AppColors.goldGradient,
-                          ),
-                          child: _isCapturing
-                              ? const Center(
-                                  child: SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation(
-                                        AppColors.obsidianBlack,
-                                      ),
+              // Centered Luxury Gold Shutter Trigger (redundant small gallery icon removed)
+              Center(
+                child: GestureDetector(
+                  onTap: _isCapturing ? null : _capturePhoto,
+                  child: Container(
+                    width: 78,
+                    height: 78,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.champagneGold, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.champagneGold.withOpacity(0.4),
+                          blurRadius: 16,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Container(
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: AppColors.goldGradient,
+                        ),
+                        child: _isCapturing
+                            ? const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    valueColor: AlwaysStoppedAnimation(
+                                      AppColors.obsidianBlack,
                                     ),
                                   ),
-                                )
-                              : const Center(
-                                  child: Icon(
-                                    Icons.camera_alt,
-                                    color: AppColors.obsidianBlack,
-                                    size: 28,
-                                  ),
                                 ),
-                        ),
+                              )
+                            : const Center(
+                                child: Icon(
+                                  Icons.camera_alt,
+                                  color: AppColors.obsidianBlack,
+                                  size: 28,
+                                ),
+                              ),
                       ),
                     ),
                   ),
-
-                  // Secondary Action (e.g., Skip Back)
-                  if (widget.onSecondaryAction != null)
-                    TextButton(
-                      onPressed: widget.onSecondaryAction,
-                      child: Text(
-                        widget.secondaryActionText ?? 'Skip',
-                        style: AppTypography.labelLarge,
-                      ),
-                    )
-                  else
-                    const SizedBox(width: 48),
-                ],
+                ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Text(
                 'Aligned with Didit Sovereign Trust & Security',
                 style: AppTypography.bodySmall.copyWith(
@@ -384,6 +383,32 @@ class _CameraViewfinderState extends State<CameraViewfinder> {
             right: right != null
                 ? const BorderSide(color: AppColors.champagneGold, width: 3.5)
                 : BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDocPill(String label, String value) {
+    final isSelected = widget.selectedDocumentType == value;
+    return GestureDetector(
+      onTap: () => widget.onDocumentTypeSelected?.call(value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.champagneGold : AppColors.darkSlate.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected ? AppColors.champagneGold : AppColors.borderGold,
+            width: 1.2,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.labelSmall.copyWith(
+            color: isSelected ? AppColors.obsidianBlack : AppColors.textPure,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           ),
         ),
       ),

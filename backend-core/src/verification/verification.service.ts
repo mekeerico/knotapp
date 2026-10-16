@@ -52,6 +52,7 @@ export class VerificationService {
       selfie?: string;
       idUrl?: string;
       selfieUrl?: string;
+      documentType?: string;
     },
   ) {
     let idFront = files?.idFront?.[0];
@@ -159,7 +160,9 @@ export class VerificationService {
       this.logger.warn(`Didit provider notice: ${e.message}`);
     }
 
-    const docType = diditDocResult?.documentType || geminiResult.documentType || 'GOVERNMENT_ID';
+    // Prioritize user selected document type if supplied, then Gemini Vision AI recognition, then Didit provider
+    const rawDocType = body?.documentType || geminiResult.documentType || diditDocResult?.documentType || 'GOVERNMENT_ID';
+    const docType = this.formatDocumentClass(rawDocType);
     const compositeScore = Math.max(90, Math.round(
       geminiResult.confidenceScore * 0.4 +
       geminiResult.livenessScore * 0.3 +
@@ -227,5 +230,25 @@ export class VerificationService {
 
   async createDiditSession(userId: string) {
     return this.diditService.createVerificationSession(userId);
+  }
+
+  private formatDocumentClass(raw: string): string {
+    const val = (raw || '').toUpperCase().trim();
+    if (val.includes('NIN') || val.includes('NATIONAL') || val.includes('NIMC')) {
+      return 'National Identity Card (NIN)';
+    }
+    if (val.includes('PASS') || val.includes('PASSPORT')) {
+      return 'International Passport';
+    }
+    if (val.includes('DRIV') || val.includes('LICENSE')) {
+      return "Driver's License";
+    }
+    if (val.includes('VOTE') || val.includes('PVC')) {
+      return "Voter's Card (PVC)";
+    }
+    if (val.includes('RESID')) {
+      return 'Residence Permit';
+    }
+    return 'Government ID';
   }
 }
