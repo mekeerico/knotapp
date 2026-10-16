@@ -108,7 +108,9 @@ class CandidateCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          '${candidate.compatibilityScore}% ALIGNED',
+                          candidate.compatibilityScore >= 80
+                              ? '${candidate.compatibilityScore}% ALIGNED'
+                              : '${candidate.compatibilityScore}% CLOSEST MATCH',
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.champagneGold,
                             fontWeight: FontWeight.bold,

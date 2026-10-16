@@ -20,32 +20,38 @@ export class MatchesService {
 
     // Strictly enforce opposite-sex matching only (Male <-> Female)
     const userGender = user.gender?.toLowerCase() || '';
-    const targetGender = userGender === 'female' ? 'Male' : 'Female';
+    const targetGender = userGender === 'female' ? 'Male' : (user.preferredGender || 'Female');
 
-    let candidates = await this.prisma.user.findMany({
+    // Step 1: Query verified opposite-sex candidates first
+    const verifiedCandidates = await this.prisma.user.findMany({
       where: {
         id: { not: userId },
         isVerified: true,
         gender: { equals: targetGender, mode: 'insensitive' },
       },
-      take: 10,
+      take: 20,
       include: { profileImages: true },
     });
 
-    if (candidates.length === 0) {
-      candidates = await this.prisma.user.findMany({
+    // Step 2: If verified pool is small, supplement with unverified opposite-sex candidates
+    // so the user's Matches screen is NEVER left empty as long as opposite-sex candidates exist in registry!
+    const allCandidates = [...verifiedCandidates];
+    if (allCandidates.length < 15) {
+      const remainingNeeded = 15 - allCandidates.length;
+      const unverifiedCandidates = await this.prisma.user.findMany({
         where: {
-          id: { not: userId },
+          id: { notIn: [userId, ...allCandidates.map(c => c.id)] },
           gender: { equals: targetGender, mode: 'insensitive' },
         },
-        take: 10,
+        take: remainingNeeded,
         include: { profileImages: true },
       });
+      allCandidates.push(...unverifiedCandidates);
     }
 
     const matchesList: any[] = [];
 
-    for (const cand of candidates) {
+    for (const cand of allCandidates) {
       // Check if we already have calculated their compatibility
       let match = await this.prisma.match.findUnique({
         where: {
@@ -76,6 +82,13 @@ export class MatchesService {
       }
 
       const partner = cand;
+      const isClosestAvailable = match.compatibilityScore < 80;
+      let explanation = match.aiExplanation;
+
+      if (isClosestAvailable) {
+        explanation = `Closest Available Alignment: ${partner.firstName} is currently your closest matching partner in the registry while we search for your exact marriage timeline & preference alignment. ${explanation} Your recommendations will continuously update as closer candidates join.`;
+      }
+
       matchesList.push({
         matchId: match.id,
         partner: {
@@ -99,10 +112,14 @@ export class MatchesService {
           valuesAlignment: match.valuesAlignment,
           lifestyleCompatibility: match.lifestyleCompatibility,
         },
-        aiExplanation: match.aiExplanation,
+        aiExplanation: explanation,
         status: match.status,
+        isClosestAvailable,
       });
     }
+
+    // Sort by compatibilityScore descending so the highest/closest matches are always presented first
+    matchesList.sort((a, b) => b.scores.compatibilityScore - a.scores.compatibilityScore);
 
     return matchesList;
   }
