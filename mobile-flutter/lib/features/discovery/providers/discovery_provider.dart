@@ -66,7 +66,7 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     _dio.post(ApiEndpoints.matchAction, data: {
       'partnerId': candidate.id,
       'action': 'like',
-    }).catchError((_) {});
+    }).then((_) {}, onError: (_) {});
 
     state = state.copyWith(
       candidates: state.candidates.where((c) => c.id != candidate.id).toList(),
@@ -79,7 +79,7 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     _dio.post(ApiEndpoints.matchAction, data: {
       'partnerId': candidate.id,
       'action': 'pass',
-    }).catchError((_) {});
+    }).then((_) {}, onError: (_) {});
 
     state = state.copyWith(
       candidates: state.candidates.where((c) => c.id != candidate.id).toList(),
