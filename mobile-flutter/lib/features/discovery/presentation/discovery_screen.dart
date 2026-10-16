@@ -9,6 +9,7 @@ import '../../../core/widgets/gold_button.dart';
 import '../../../core/widgets/knot_app_bar.dart';
 import '../models/match_profile.dart';
 import '../providers/discovery_provider.dart';
+import '../../auth/providers/auth_provider.dart';
 import 'widgets/candidate_card.dart';
 
 class DiscoveryScreen extends ConsumerStatefulWidget {
@@ -31,6 +32,8 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(discoveryProvider);
     final notifier = ref.read(discoveryProvider.notifier);
+
+    final authState = ref.watch(authProvider);
 
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
@@ -58,7 +61,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                     ),
                   )
                 : state.candidates.isEmpty
-                    ? _buildEmptyRegistry(notifier)
+                    ? _buildEmptyRegistry(notifier, authState.user?.gender)
                     : Column(
                         children: [
                           Expanded(
@@ -166,27 +169,68 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
     );
   }
 
-  Widget _buildEmptyRegistry(DiscoveryNotifier notifier) {
+  Widget _buildEmptyRegistry(DiscoveryNotifier notifier, String? userGender) {
+    final gender = userGender?.trim().toLowerCase() ?? '';
+    final targetCohort = gender == 'male'
+        ? 'eligible ladies'
+        : (gender == 'female' ? 'eligible gentlemen' : 'verified candidates');
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(28.0),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: GlassCard(
-          padding: const EdgeInsets.all(28),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.workspace_premium, size: 64, color: AppColors.champagneGold.withOpacity(0.8)),
-              const SizedBox(height: 20),
-              Text('Registry Refreshed', style: AppTypography.headingLarge),
-              const SizedBox(height: 10),
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.champagneGold.withOpacity(0.12),
+                  border: Border.all(color: AppColors.champagneGold.withOpacity(0.4), width: 1.5),
+                ),
+                child: const Icon(Icons.explore_outlined, size: 36, color: AppColors.champagneGold),
+              ),
+              const SizedBox(height: 22),
               Text(
-                'You have reviewed all available verified candidates matching your marital criteria.',
-                style: AppTypography.bodyMedium,
+                'Curating Sovereign Matches',
+                style: AppTypography.headingLarge,
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'The Knot Registry is actively scanning for verified $targetCohort who align with your matrimonial values and marital vision.',
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppColors.darkSlate.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.borderGold),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.hourglass_top_rounded, size: 16, color: AppColors.champagneGold),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'New profiles appear immediately upon biometric onboarding.',
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.textSubtle),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 24),
               GoldButton(
-                text: 'Load Next Candidates',
+                text: 'Check for New Candidates',
                 onPressed: () => notifier.loadCandidates(),
               ),
             ],
