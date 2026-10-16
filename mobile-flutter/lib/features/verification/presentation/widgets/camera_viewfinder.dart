@@ -234,21 +234,18 @@ class _CameraViewfinderState extends State<CameraViewfinder> {
                 ),
               ),
               if (widget.onDocumentTypeSelected != null) ...[
-                const SizedBox(height: 12),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildDocPill('National ID (NIN)', 'National Identity Card (NIN)'),
-                      const SizedBox(width: 8),
-                      _buildDocPill('Passport', 'International Passport'),
-                      const SizedBox(width: 8),
-                      _buildDocPill("Driver's License", "Driver's License"),
-                      const SizedBox(width: 8),
-                      _buildDocPill("Voter's Card", "Voter's Card (PVC)"),
-                    ],
-                  ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    _buildDocPill('National ID (NIN)', 'National Identity Card (NIN)'),
+                    _buildDocPill("Int'l Passport", "Int'l Passport"),
+                    _buildDocPill("Driver's License", "Driver's License"),
+                    _buildDocPill('Residence / State ID', 'Residence Permit / State ID'),
+                    _buildDocPill("Voter's Card", "Voter's Card (PVC)"),
+                  ],
                 ),
               ],
             ],
@@ -394,19 +391,20 @@ class _CameraViewfinderState extends State<CameraViewfinder> {
     return GestureDetector(
       onTap: () => widget.onDocumentTypeSelected?.call(value),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.champagneGold : AppColors.darkSlate.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isSelected ? AppColors.champagneGold : AppColors.borderGold,
-            width: 1.2,
+            width: 1.0,
           ),
         ),
         child: Text(
           label,
           style: AppTypography.labelSmall.copyWith(
+            fontSize: 10.5,
             color: isSelected ? AppColors.obsidianBlack : AppColors.textPure,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
           ),

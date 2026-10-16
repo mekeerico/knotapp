@@ -238,7 +238,7 @@ export class VerificationService {
       return 'National Identity Card (NIN)';
     }
     if (val.includes('PASS') || val.includes('PASSPORT')) {
-      return 'International Passport';
+      return "Int'l Passport";
     }
     if (val.includes('DRIV') || val.includes('LICENSE')) {
       return "Driver's License";
@@ -246,8 +246,8 @@ export class VerificationService {
     if (val.includes('VOTE') || val.includes('PVC')) {
       return "Voter's Card (PVC)";
     }
-    if (val.includes('RESID')) {
-      return 'Residence Permit';
+    if (val.includes('RESID') || val.includes('STATE') || val.includes('PR') || val.includes('PERMIT')) {
+      return 'Residence Permit / State ID';
     }
     return 'Government ID';
   }

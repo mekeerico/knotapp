@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import '../../../core/services/revenue_cat_service.dart';
+import '../../../core/services/currency_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/glass_card.dart';
@@ -47,17 +48,24 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
     if (tier == 0) {
       return packages.firstWhere(
-        (p) => p.identifier.toLowerCase().contains('premium') || p.storeProduct.identifier.contains('premium'),
+        (p) =>
+            p.storeProduct.identifier.toLowerCase().contains('knot_premium') ||
+            p.identifier.toLowerCase().contains('premium'),
         orElse: () => packages[0],
       );
     } else if (tier == 1) {
       return packages.firstWhere(
-        (p) => p.identifier.toLowerCase().contains('elite') || p.storeProduct.identifier.contains('elite'),
+        (p) =>
+            p.storeProduct.identifier.toLowerCase().contains('knot__elite') ||
+            p.storeProduct.identifier.toLowerCase().contains('elite') ||
+            p.identifier.toLowerCase().contains('elite'),
         orElse: () => packages.length > 1 ? packages[1] : packages[0],
       );
     } else {
       return packages.firstWhere(
-        (p) => p.identifier.toLowerCase().contains('executive') || p.storeProduct.identifier.contains('executive'),
+        (p) =>
+            p.storeProduct.identifier.toLowerCase().contains('knot_executive') ||
+            p.identifier.toLowerCase().contains('executive'),
         orElse: () => packages.length > 2 ? packages[2] : packages.last,
       );
     }
@@ -167,13 +175,22 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userCountry = ref.watch(authProvider).user?.residenceCountry;
+
     final pkg0 = _getPackageForTier(0);
     final pkg1 = _getPackageForTier(1);
     final pkg2 = _getPackageForTier(2);
 
-    final price0 = pkg0?.storeProduct.priceString ?? '\$29 / mo';
-    final price1 = pkg1?.storeProduct.priceString ?? '\$69 / mo';
-    final price2 = pkg2?.storeProduct.priceString ?? '\$149 / mo';
+    final price0 = pkg0?.storeProduct.priceString ??
+        CurrencyService.formatTierPrice('Premium', userCountry);
+    final price1 = pkg1?.storeProduct.priceString ??
+        CurrencyService.formatTierPrice('Elite', userCountry);
+    final price2 = pkg2?.storeProduct.priceString ??
+        CurrencyService.formatTierPrice('Executive', userCountry);
+
+    final sub0 = CurrencyService.getSettlementSubtitle('Premium', userCountry);
+    final sub1 = CurrencyService.getSettlementSubtitle('Elite', userCountry);
+    final sub2 = CurrencyService.getSettlementSubtitle('Executive', userCountry);
 
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
@@ -223,6 +240,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 index: 0,
                 title: 'PREMIUM REGISTRY',
                 price: price0,
+                settlementSubtitle: sub0,
                 description: 'Standard access to verified candidates and daily recommendations.',
                 features: const [
                   'Browse verified marriage profiles',
@@ -237,6 +255,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 index: 1,
                 title: 'ELITE SOVEREIGN',
                 price: price1,
+                settlementSubtitle: sub1,
                 description: 'Unlimited messaging and prioritized placement in verified candidate feeds.',
                 features: const [
                   'Unlimited direct conversations',
@@ -253,6 +272,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 index: 2,
                 title: 'EXECUTIVE VOWS',
                 price: price2,
+                settlementSubtitle: sub2,
                 description: 'Private concierge matchmaking with personalized marital guidance.',
                 features: const [
                   'All Elite Sovereign privileges',
@@ -279,7 +299,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 ),
               const SizedBox(height: 14),
               Text(
-                'Secured via Google Play / App Store In-App Purchases. Cancel anytime.',
+                'Displayed in your local currency. All subscriptions are billed securely via Google Play in USD (\$). Cancel anytime.',
                 style: AppTypography.bodySmall.copyWith(fontSize: 11, color: AppColors.textSubtle),
                 textAlign: TextAlign.center,
               ),
@@ -295,6 +315,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     required int index,
     required String title,
     required String price,
+    String? settlementSubtitle,
     required String description,
     required List<String> features,
     bool isPopular = false,
@@ -354,6 +375,17 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                 color: AppColors.champagneGold,
               ),
             ),
+            if (settlementSubtitle != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                settlementSubtitle,
+                style: AppTypography.bodySmall.copyWith(
+                  fontSize: 10.5,
+                  color: AppColors.champagneGold.withValues(alpha: 0.8),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
             const SizedBox(height: 6),
             Text(description, style: AppTypography.bodySmall),
             const SizedBox(height: 14),

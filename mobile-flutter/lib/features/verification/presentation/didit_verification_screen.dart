@@ -224,7 +224,7 @@ class DiditVerificationScreen extends ConsumerWidget {
       return 'National Identity Card (NIN)';
     }
     if (val.contains('PASS') || val.contains('PASSPORT')) {
-      return 'International Passport';
+      return "Int'l Passport";
     }
     if (val.contains('DRIV') || val.contains('LICENSE')) {
       return "Driver's License";
@@ -232,8 +232,8 @@ class DiditVerificationScreen extends ConsumerWidget {
     if (val.contains('VOTE') || val.contains('PVC')) {
       return "Voter's Card (PVC)";
     }
-    if (val.contains('RESID')) {
-      return 'Residence Permit';
+    if (val.contains('RESID') || val.contains('STATE') || val.contains('PR') || val.contains('PERMIT')) {
+      return 'Residence Permit / State ID';
     }
     return raw;
   }

@@ -86,7 +86,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'WHERE COMPATIBILITY BECOMES COMMITMENT',
+                  'WHERE TRUE RELATIONSHIP LEADS TO VOW',
                   style: AppTypography.bodySmall.copyWith(
                     letterSpacing: 2.0,
                     color: AppColors.champagneGold,
