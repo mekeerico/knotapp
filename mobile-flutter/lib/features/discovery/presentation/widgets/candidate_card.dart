@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/knot_image.dart';
 import '../../../../core/widgets/verified_badge.dart';
 import '../../models/match_profile.dart';
 
@@ -17,47 +18,36 @@ class CandidateCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final rawPhoto = candidate.photos.isNotEmpty
+    final photo = candidate.photos.isNotEmpty
         ? candidate.photos.first
         : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800';
-    const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
-    final photo = rawPhoto.startsWith('/uploads/') ? '$apiBase$rawPhoto' : rawPhoto;
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.55),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          children: [
-            // High-Resolution Background Photo
-            Positioned.fill(
-              child: CachedNetworkImage(
-                imageUrl: photo,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: AppColors.darkSlate,
-                  child: const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation(AppColors.champagneGold),
-                    ),
-                  ),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: AppColors.darkSlate,
-                  child: const Icon(Icons.person, size: 80, color: AppColors.textSubtle),
+    return GestureDetector(
+      onTap: onDetailsTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.55),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              // High-Resolution Background Photo
+              Positioned.fill(
+                child: KnotImage(
+                  imageUrl: photo,
+                  fit: BoxFit.cover,
+                  borderRadius: BorderRadius.circular(24),
                 ),
               ),
-            ),
 
             // Deep Vignette Gradient Scrim
             Positioned.fill(

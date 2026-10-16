@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/gold_button.dart';
+import '../../../core/widgets/knot_image.dart';
 import '../../../core/widgets/knot_app_bar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -46,11 +47,12 @@ class ProfileScreen extends ConsumerWidget {
                                 blurRadius: 16,
                               ),
                             ],
-                            image: DecorationImage(
-                              image: NetworkImage(user?.primaryPhoto ??
-                                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800'),
-                              fit: BoxFit.cover,
-                            ),
+                          ),
+                          child: KnotImage(
+                            imageUrl: user?.primaryPhoto,
+                            width: 96,
+                            height: 96,
+                            isCircle: true,
                           ),
                         ),
                         if (isVerified)

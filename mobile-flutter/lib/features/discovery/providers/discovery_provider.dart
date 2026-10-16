@@ -62,17 +62,33 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
   }
 
   void likeCandidate(MatchProfile candidate) {
-    // Check if celebration match modal should appear
-    final isMatch = candidate.compatibilityScore >= 90;
+    // Send like action to backend
+    _dio.post(ApiEndpoints.matchAction, data: {
+      'partnerId': candidate.id,
+      'action': 'like',
+    }).catchError((_) {});
+
     state = state.copyWith(
       candidates: state.candidates.where((c) => c.id != candidate.id).toList(),
-      matchedCandidate: isMatch ? candidate : null,
+      matchedCandidate: candidate,
     );
   }
 
   void passCandidate(MatchProfile candidate) {
+    // Send pass action to backend
+    _dio.post(ApiEndpoints.matchAction, data: {
+      'partnerId': candidate.id,
+      'action': 'pass',
+    }).catchError((_) {});
+
     state = state.copyWith(
       candidates: state.candidates.where((c) => c.id != candidate.id).toList(),
+    );
+  }
+
+  void onDeckEmpty() {
+    state = state.copyWith(
+      candidates: const [],
     );
   }
 

@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/gold_button.dart';
+import '../../../core/widgets/knot_image.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../models/match_profile.dart';
 
@@ -39,8 +40,8 @@ class ProfileDetailScreen extends StatelessWidget {
               background: Stack(
                 fit: StackFit.expand,
                 children: [
-                  CachedNetworkImage(
-                    imageUrl: profile.photos.first,
+                  KnotImage(
+                    imageUrl: profile.photos.isNotEmpty ? profile.photos.first : '',
                     fit: BoxFit.cover,
                   ),
                   Container(

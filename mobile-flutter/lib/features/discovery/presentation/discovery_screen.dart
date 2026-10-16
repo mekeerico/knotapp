@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/gold_button.dart';
+import '../../../core/widgets/knot_image.dart';
 import '../../../core/widgets/knot_app_bar.dart';
 import '../models/match_profile.dart';
 import '../providers/discovery_provider.dart';
@@ -68,9 +69,18 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               child: CardSwiper(
+                                key: ValueKey('deck_${state.candidates.length}'),
                                 controller: _swiperController,
                                 cardsCount: state.candidates.length,
+                                numberOfCardsDisplayed: state.candidates.length > 1 ? 2 : 1,
+                                isLoop: false,
+                                onEnd: () {
+                                  notifier.onDeckEmpty();
+                                },
                                 cardBuilder: (context, index, percentX, percentY) {
+                                  if (index < 0 || index >= state.candidates.length) {
+                                    return const SizedBox.shrink();
+                                  }
                                   final candidate = state.candidates[index];
                                   return CandidateCard(
                                     candidate: candidate,
@@ -80,11 +90,13 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                   );
                                 },
                                 onSwipe: (previousIndex, currentIndex, direction) {
-                                  final candidate = state.candidates[previousIndex];
-                                  if (direction == CardSwiperDirection.right) {
-                                    notifier.likeCandidate(candidate);
-                                  } else {
-                                    notifier.passCandidate(candidate);
+                                  if (previousIndex >= 0 && previousIndex < state.candidates.length) {
+                                    final candidate = state.candidates[previousIndex];
+                                    if (direction == CardSwiperDirection.right) {
+                                      notifier.likeCandidate(candidate);
+                                    } else {
+                                      notifier.passCandidate(candidate);
+                                    }
                                   }
                                   return true;
                                 },
@@ -99,32 +111,40 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // Pass Button
+                                // Pass Button (X)
                                 _buildActionButton(
                                   icon: Icons.close,
                                   color: AppColors.textSubtle,
-                                  onTap: () => _swiperController.swipe(CardSwiperDirection.left),
+                                  onTap: () {
+                                    if (state.candidates.isNotEmpty) {
+                                      _swiperController.swipe(CardSwiperDirection.left);
+                                    }
+                                  },
                                 ),
                                 const SizedBox(width: 24),
 
-                                // Vow / Superlike Button
+                                // View Details & Compatibility Button
                                 _buildActionButton(
                                   icon: Icons.star,
                                   color: AppColors.champagneGold,
                                   size: 64,
                                   onTap: () {
                                     if (state.candidates.isNotEmpty) {
-                                      notifier.likeCandidate(state.candidates.first);
+                                      context.push('/profile-detail', extra: state.candidates.first);
                                     }
                                   },
                                 ),
                                 const SizedBox(width: 24),
 
-                                // Like Button
+                                // Like & Connect Button (Red Heart)
                                 _buildActionButton(
                                   icon: Icons.favorite,
                                   color: AppColors.roseGlow,
-                                  onTap: () => _swiperController.swipe(CardSwiperDirection.right),
+                                  onTap: () {
+                                    if (state.candidates.isNotEmpty) {
+                                      notifier.likeCandidate(state.candidates.first);
+                                    }
+                                  },
                                 ),
                               ],
                             ),
@@ -245,6 +265,8 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
     MatchProfile candidate,
     DiscoveryNotifier notifier,
   ) {
+    final photo = candidate.photos.isNotEmpty ? candidate.photos.first : '';
+
     return Positioned.fill(
       child: Container(
         color: Colors.black.withOpacity(0.85),
@@ -255,8 +277,44 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.favorite, size: 56, color: AppColors.roseGlow),
-                const SizedBox(height: 16),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      width: 96,
+                      height: 96,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.champagneGold, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.roseGlow.withOpacity(0.35),
+                            blurRadius: 20,
+                          ),
+                        ],
+                      ),
+                      child: KnotImage(
+                        imageUrl: photo,
+                        width: 96,
+                        height: 96,
+                        isCircle: true,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: const BoxDecoration(
+                          color: AppColors.obsidianBlack,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.favorite, size: 20, color: AppColors.roseGlow),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
                 Text('MUTUAL ALIGNMENT', style: AppTypography.displayMedium.copyWith(fontSize: 22)),
                 const SizedBox(height: 8),
                 Text(
@@ -266,12 +324,25 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                 ),
                 const SizedBox(height: 24),
                 GoldButton(
-                  text: 'Open Conversation',
+                  text: 'View Full Profile & Details',
+                  onPressed: () {
+                    notifier.dismissMatchModal();
+                    context.push('/profile-detail', extra: candidate);
+                  },
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                    side: const BorderSide(color: AppColors.borderGold),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  ),
                   onPressed: () {
                     final id = candidate.id;
                     notifier.dismissMatchModal();
                     context.push('/chat/$id');
                   },
+                  child: Text('Open Conversation', style: AppTypography.buttonText.copyWith(color: AppColors.champagneGold)),
                 ),
                 const SizedBox(height: 12),
                 TextButton(

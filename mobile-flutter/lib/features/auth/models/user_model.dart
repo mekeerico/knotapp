@@ -136,16 +136,22 @@ class UserModel {
   }
 
   String get primaryPhoto {
-    String? raw;
-    if (profileImageUrls.isNotEmpty) {
-      raw = profileImageUrls.first;
-    }
-    if (raw != null && raw.isNotEmpty) {
-      if (raw.startsWith('/uploads/')) {
-        const baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
-        return '$baseUrl$raw';
+    for (final raw in profileImageUrls) {
+      if (raw.isNotEmpty) {
+        if (raw.startsWith('/uploads/')) {
+          const baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
+          return '$baseUrl$raw';
+        }
+        return raw;
       }
-      return raw;
+    }
+    if (selfieUrl != null && selfieUrl!.isNotEmpty) {
+      final s = selfieUrl!;
+      if (s.startsWith('/uploads/')) {
+        const baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
+        return '$baseUrl$s';
+      }
+      return s;
     }
     return 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800';
   }
@@ -153,11 +159,19 @@ class UserModel {
   factory UserModel.fromJson(Map<String, dynamic> json) {
     List<String> images = [];
     if (json['profileImages'] is List) {
-      images = (json['profileImages'] as List)
+      final sorted = [...(json['profileImages'] as List)];
+      sorted.sort((a, b) =>
+          ((b is Map && b['isPrimary'] == true) ? 1 : 0) -
+          ((a is Map && a['isPrimary'] == true) ? 1 : 0));
+      images = sorted
           .map((img) => (img is Map ? img['url'] : img).toString())
           .toList();
     } else if (json['profileImageUrls'] is List) {
       images = (json['profileImageUrls'] as List).map((e) => e.toString()).toList();
+    }
+
+    if (images.isEmpty && json['selfieUrl'] != null && json['selfieUrl'].toString().isNotEmpty) {
+      images = [json['selfieUrl'].toString()];
     }
 
     return UserModel(
