@@ -56,11 +56,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
-  void _fillDemoCandidate() {
-    _emailController.text = 'candidate@knot.com';
-    _passwordController.text = 'Password123!';
-  }
-
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -213,19 +208,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         text: _isSignUp ? 'Create Marriage Account' : 'Authenticate',
                         isLoading: isLoading,
                         onPressed: _handleSubmit,
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Demo Quick Access
-                      TextButton(
-                        onPressed: _fillDemoCandidate,
-                        child: Text(
-                          'Fill Demo Candidate Credentials',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.champagneGold,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
                       ),
                     ],
                   ),

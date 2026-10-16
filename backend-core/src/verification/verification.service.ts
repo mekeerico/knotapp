@@ -176,17 +176,7 @@ export class VerificationService {
     fs.writeFileSync(path.join(uploadsDir, selfieFilename), selfie.buffer);
     const selfieUrl = `/uploads/${selfieFilename}`;
 
-    // Ensure the candidate has a primary image record in DB so it immediately displays on Match cards
-    const existingImages = await this.prisma.image.findMany({ where: { userId } });
-    if (existingImages.length === 0) {
-      await this.prisma.image.create({
-        data: {
-          userId,
-          url: selfieUrl,
-          isPrimary: true,
-        },
-      });
-    }
+    // Verification selfie is strictly saved for KYC audit/verification records, NEVER as a public profile display photo
 
     // Update user record in PostgreSQL via Prisma
     const updatedUser = await this.prisma.user.update({

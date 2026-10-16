@@ -139,8 +139,6 @@ class UserModel {
     String? raw;
     if (profileImageUrls.isNotEmpty) {
       raw = profileImageUrls.first;
-    } else if (selfieUrl != null && selfieUrl!.isNotEmpty) {
-      raw = selfieUrl;
     }
     if (raw != null && raw.isNotEmpty) {
       if (raw.startsWith('/uploads/')) {

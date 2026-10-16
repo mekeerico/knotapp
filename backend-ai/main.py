@@ -31,7 +31,7 @@ if GEMINI_KEY:
         api_key=GEMINI_KEY,
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
     )
-    text_model = "gemini-3.5-flash"
+    text_model = "gemini-3.5-flash-lite"
 elif GROK_API_KEY:
     client = OpenAI(
         api_key=GROK_API_KEY,
@@ -214,26 +214,28 @@ def extract_interview_data(request: InterviewExtractRequest):
 @app.post("/coach/respond")
 def coach_respond(request: CoachRequest):
     try:
-        history = "\n".join([f"{m.get('role', 'unknown')}: {m.get('text', '')}" for m in request.conversation_history])
-        profile_json = json.dumps(
-            request.user_profile if isinstance(request.user_profile, dict) else request.user_profile.dict(),
-            indent=2
-        )
+        # Take only the last 6 messages to keep processing lightweight and instantaneous
+        recent_history = request.conversation_history[-6:]
+        history = "\n".join([f"{m.get('role', 'unknown')}: {m.get('text', '')}" for m in recent_history])
+        
+        p = request.user_profile if isinstance(request.user_profile, dict) else (request.user_profile.dict() if hasattr(request.user_profile, 'dict') else {})
+        condensed_profile = {
+            "name": f"{p.get('firstName', '')} {p.get('lastName', '')}".strip() or "Candidate",
+            "gender": p.get('gender', ''),
+            "occupation": p.get('occupation', ''),
+            "religion": p.get('religion', ''),
+            "values": p.get('personalValues', []),
+            "marriageTimeline": p.get('marriageTimeline', ''),
+        }
         
         prompt = f"""
-        You are KNOT's Elite AI Relationship Coach—an empathetic, highly intelligent, warm, and sophisticated marital therapist and behavioral science expert.
-        The user is serious about commitment and needs your professional guidance.
-
-        USER PROFILE:
-        {profile_json}
-
-        COACHING CONVERSATION HISTORY:
+        You are KNOT's Elite AI Relationship Coach—an empathetic, highly intelligent, warm marital therapist and behavioral science expert.
+        USER: {json.dumps(condensed_profile)}
+        RECENT CHAT:
         {history}
+        NEW MESSAGE: "{request.current_message}"
 
-        USER'S CURRENT MESSAGE:
-        "{request.current_message}"
-
-        Provide a supportive, wise, emotionally secure, and concise response (max 2-3 sentences, 30-50 words) that guides the user toward relationship maturity, emotional safety, and healthy communication. Keep your tone premium, mature, deeply human, and brief.
+        Respond with a warm, supportive, emotionally secure, and concise marital guidance response (2-3 sentences, 35-55 words).
         """
         
         if not client:
@@ -241,12 +243,14 @@ def coach_respond(request: CoachRequest):
             return {"response": "The AI Coach is not configured right now. Please try again later."}
 
         last_error = None
-        candidate_models = [text_model] if not text_model.startswith("gemini") else [text_model, "gemini-3.5-flash-lite"]
+        candidate_models = ["gemini-3.5-flash-lite", "gemini-3.5-flash"] if text_model.startswith("gemini") else [text_model]
         for model_name in candidate_models:
             try:
                 response = client.chat.completions.create(
                     model=model_name,
-                    messages=[{"role": "user", "content": prompt}]
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=120,
+                    temperature=0.6,
                 )
                 return {"response": response.choices[0].message.content.strip()}
             except Exception as model_err:

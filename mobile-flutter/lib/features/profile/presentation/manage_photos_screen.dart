@@ -30,8 +30,6 @@ class _ManagePhotosScreenState extends ConsumerState<ManagePhotosScreen> {
     final existing = user?.profileImageUrls ?? [];
     if (existing.isNotEmpty) {
       _photos = List.from(existing);
-    } else if (user?.selfieUrl != null && user!.selfieUrl!.isNotEmpty) {
-      _photos = [user.selfieUrl!];
     } else {
       _photos = [];
     }

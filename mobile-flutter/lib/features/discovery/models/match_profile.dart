@@ -76,9 +76,6 @@ class MatchProfile {
       photoList = (partner['photoUrls'] as List).map((e) => e.toString()).toList();
     }
 
-    if (photoList.isEmpty && partner['selfieUrl'] != null && partner['selfieUrl'].toString().isNotEmpty) {
-      photoList.add(partner['selfieUrl'].toString());
-    }
 
     // Resolve relative /uploads/ URLs to absolute URLs using API base domain
     const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');

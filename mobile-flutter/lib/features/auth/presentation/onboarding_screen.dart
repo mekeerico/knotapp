@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/data/location_data.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -18,9 +21,14 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _currentStep = 0;
-  static const int _totalSteps = 10; // Steps 0 to 8 = Forms, Step 9 = Optional Didit Verification
+  static const int _totalSteps = 11; // Steps 0 to 8 = Forms, Step 9 = Profile Picture/Selfie, Step 10 = Verification
   bool _isMovingForward = true;
   bool _isSaving = false;
+
+  // Profile Picture (Step 9)
+  String? _profilePhotoPath;
+  String? _profilePhotoDataUrl;
+  final ImagePicker _picker = ImagePicker();
 
   // Controllers - Screen 1: Legal Identity
   final _firstNameController = TextEditingController();
@@ -210,11 +218,43 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       }
     }
 
+    // Screen 10 Validation: Match Display Profile Photo (Step 9)
+    if (_currentStep == 9) {
+      if (_profilePhotoDataUrl == null) {
+        _showError('Please upload a photo or snap a portrait selfie for your match profile.');
+        return;
+      }
+    }
+
     if (_currentStep < _totalSteps - 1) {
       setState(() {
         _isMovingForward = true;
         _currentStep++;
       });
+    }
+  }
+
+  Future<void> _pickProfilePhoto(ImageSource source) async {
+    try {
+      final XFile? file = await _picker.pickImage(
+        source: source,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 85,
+        preferredCameraDevice: CameraDevice.front,
+      );
+
+      if (file != null) {
+        final bytes = await file.readAsBytes();
+        final dataUrl = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        setState(() {
+          _profilePhotoPath = file.path;
+          _profilePhotoDataUrl = dataUrl;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error capturing profile photo: $e');
+      _showError('Could not access camera or gallery.');
     }
   }
 
@@ -355,6 +395,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       'seriousnessLevel': 98,
     };
 
+    if (_profilePhotoDataUrl != null) {
+      updateData['profileImageUrls'] = [_profilePhotoDataUrl!];
+    }
+
     try {
       await ref.read(authProvider.notifier).updateProfile(updateData);
     } catch (e) {
@@ -400,8 +444,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
-        title: _currentStep < 9
-            ? 'ONBOARDING (${_currentStep + 1}/9)'
+        title: _currentStep < 10
+            ? 'ONBOARDING (${_currentStep + 1}/10)'
             : 'IDENTITY VERIFICATION',
         leading: _currentStep > 0
             ? IconButton(
@@ -451,9 +495,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const SizedBox(height: 28),
 
               // Bottom Button Bar
-              if (_currentStep < 9)
+              if (_currentStep < 10)
                 GoldButton(
-                  text: _currentStep == 8 ? 'Continue to Verification' : 'Continue',
+                  text: _currentStep == 9 ? 'Continue to Verification' : 'Continue',
                   onPressed: _nextStep,
                 ),
               const SizedBox(height: 24),
@@ -485,6 +529,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       case 8:
         return _buildMarriageIntentionsStep();
       case 9:
+        return _buildProfilePhotoStep();
+      case 10:
         return _buildVerificationStep();
       default:
         return const SizedBox.shrink();
@@ -1127,7 +1173,152 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   // ==========================================
-  // SCREEN 10: DIDIT VERIFICATION (OPTIONAL)
+  // SCREEN 10: PROFILE DISPLAY PICTURE / SELFIE
+  // ==========================================
+  Widget _buildProfilePhotoStep() {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.champagneGold.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.account_circle_outlined, color: AppColors.champagneGold, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text('MATCH DISPLAY PICTURE', style: AppTypography.headingMedium),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Upload a portrait photo or snap a selfie. This photo will be shown to your prospective marriage candidates on the Matches screen.',
+            style: AppTypography.bodySmall,
+          ),
+          const SizedBox(height: 28),
+
+          // Circular Avatar Preview
+          Center(
+            child: Stack(
+              children: [
+                Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.darkCardElevated,
+                    border: Border.all(color: AppColors.champagneGold, width: 2.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.champagneGold.withValues(alpha: 0.25),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                    image: _profilePhotoPath != null
+                        ? DecorationImage(
+                            image: FileImage(File(_profilePhotoPath!)),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: _profilePhotoPath == null
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_a_photo_outlined,
+                                size: 40,
+                                color: AppColors.champagneGold.withValues(alpha: 0.7),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Tap to add',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.textMuted,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : null,
+                ),
+                if (_profilePhotoPath != null)
+                  Positioned(
+                    bottom: 4,
+                    right: 4,
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.champagneGold,
+                      ),
+                      child: const Icon(
+                        Icons.check,
+                        color: AppColors.obsidianBlack,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
+
+          // Two Action Buttons: Take Selfie vs Choose from Gallery
+          GoldButton(
+            text: _profilePhotoPath != null ? 'Retake Portrait Selfie' : 'Take Portrait Selfie',
+            onPressed: () => _pickProfilePhoto(ImageSource.camera),
+          ),
+          const SizedBox(height: 12),
+          GoldButton(
+            text: _profilePhotoPath != null ? 'Choose from Gallery' : 'Upload from Gallery',
+            isSecondary: true,
+            onPressed: () => _pickProfilePhoto(ImageSource.gallery),
+          ),
+          const SizedBox(height: 20),
+
+          // Privacy Assurance Banner
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.darkCardElevated,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.borderSubtle, width: 0.8),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.lock_outline, color: AppColors.champagneGold, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Your verification documents and ID selfie are kept strictly confidential for verification only. Only this display photo will be shown to your matches.',
+                    style: AppTypography.bodySmall.copyWith(
+                      fontSize: 11.5,
+                      color: AppColors.textMuted,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // SCREEN 11: DIDIT VERIFICATION (OPTIONAL)
   // ==========================================
   Widget _buildVerificationStep() {
     return GlassCard(

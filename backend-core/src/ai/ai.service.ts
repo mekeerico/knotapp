@@ -50,11 +50,15 @@ export class AIService {
     currentMessage: string,
   ): Promise<string> {
     try {
-      const response = await axios.post(`${this.aiServiceUrl}/coach/respond`, {
-        conversation_history: conversationHistory,
-        user_profile: userProfile,
-        current_message: currentMessage,
-      });
+      const response = await axios.post(
+        `${this.aiServiceUrl}/coach/respond`,
+        {
+          conversation_history: conversationHistory,
+          user_profile: userProfile,
+          current_message: currentMessage,
+        },
+        { timeout: 15000 },
+      );
       return response.data.response;
     } catch (error) {
       this.logger.error(`Error from AI coach: ${error.message}`);

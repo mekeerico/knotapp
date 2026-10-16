@@ -110,12 +110,21 @@ class ProfileScreen extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            isVerified ? 'DIDIT GOLD TRUST SEAL' : 'UNVERIFIED PROFILE',
-                            style: AppTypography.titleMedium.copyWith(
-                              color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
-                              fontSize: 14,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                isVerified ? 'VERIFIED PROFILE' : 'UNVERIFIED PROFILE',
+                                style: AppTypography.titleMedium.copyWith(
+                                  color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              if (isVerified) ...[
+                                const SizedBox(width: 6),
+                                const VerifiedBadge(size: 18),
+                              ],
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -142,31 +151,33 @@ class ProfileScreen extends ConsumerWidget {
               // Profile Actions Menu
               _buildMenuItem(
                 context,
-                title: 'Edit Personal & Vow Preferences',
+                title: 'Edit Profile',
                 icon: Icons.edit_note,
                 onTap: () => context.push('/edit-profile'),
               ),
               const SizedBox(height: 12),
               _buildMenuItem(
                 context,
-                title: 'Manage Candidate Photos',
+                title: 'Manage Photos',
                 icon: Icons.photo_library_outlined,
                 onTap: () => context.push('/manage-photos'),
               ),
               const SizedBox(height: 12),
               _buildMenuItem(
                 context,
-                title: 'Sovereign VIP Tiers',
+                title: 'Upgrade',
                 icon: Icons.workspace_premium,
                 onTap: () => context.push('/paywall'),
               ),
-              const SizedBox(height: 12),
-              _buildMenuItem(
-                context,
-                title: 'Identity Biometric Center (Didit)',
-                icon: Icons.fingerprint,
-                onTap: () => context.push('/verification'),
-              ),
+              if (!isVerified) ...[
+                const SizedBox(height: 12),
+                _buildMenuItem(
+                  context,
+                  title: 'Verify',
+                  icon: Icons.verified_user_outlined,
+                  onTap: () => context.push('/verification'),
+                ),
+              ],
               const SizedBox(height: 24),
 
               // Sign Out Button
