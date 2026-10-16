@@ -158,7 +158,7 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               _buildMenuItem(
                 context,
-                title: 'Manage Photos',
+                title: 'Manage Your Photos',
                 icon: Icons.photo_library_outlined,
                 onTap: () => context.push('/manage-photos'),
               ),
@@ -173,7 +173,7 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 12),
                 _buildMenuItem(
                   context,
-                  title: 'Verify',
+                  title: 'Verify Your Identity',
                   icon: Icons.verified_user_outlined,
                   onTap: () => context.push('/verification'),
                 ),
@@ -208,17 +208,25 @@ class ProfileScreen extends ConsumerWidget {
     return GlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       onTap: onTap,
-      child: Row(
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          Icon(icon, color: AppColors.champagneGold, size: 22),
-          const SizedBox(width: 14),
-          Expanded(
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Icon(icon, color: AppColors.champagneGold, size: 22),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
               title,
+              textAlign: TextAlign.center,
               style: AppTypography.titleMedium.copyWith(fontSize: 14),
             ),
           ),
-          const Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textSubtle),
+          const Align(
+            alignment: Alignment.centerRight,
+            child: Icon(Icons.arrow_forward_ios, size: 14, color: AppColors.textSubtle),
+          ),
         ],
       ),
     );

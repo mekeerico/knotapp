@@ -89,9 +89,17 @@ class _LivenessScannerOverlayState extends State<LivenessScannerOverlay>
       }
     } catch (e) {
       debugPrint('Selfie capture error: $e');
-      final XFile? file = await _picker.pickImage(source: ImageSource.gallery);
-      if (file != null) {
-        widget.onSelfieCaptured(file.path);
+      // Strictly live camera only - no gallery uploads permitted for biometric verification
+      try {
+        final XFile? file = await _picker.pickImage(
+          source: ImageSource.camera,
+          preferredCameraDevice: CameraDevice.front,
+        );
+        if (file != null) {
+          widget.onSelfieCaptured(file.path);
+        }
+      } catch (inner) {
+        debugPrint('Camera fallback error: $inner');
       }
     } finally {
       if (mounted) setState(() => _isScanning = false);
@@ -100,20 +108,16 @@ class _LivenessScannerOverlayState extends State<LivenessScannerOverlay>
 
   Future<void> _pickSelfieFromNative() async {
     try {
+      // Strictly live camera capture - no gallery uploads permitted
       final XFile? file = await _picker.pickImage(
         source: ImageSource.camera,
         preferredCameraDevice: CameraDevice.front,
       );
       if (file != null) {
         widget.onSelfieCaptured(file.path);
-        return;
-      }
-      final XFile? galleryFile = await _picker.pickImage(source: ImageSource.gallery);
-      if (galleryFile != null) {
-        widget.onSelfieCaptured(galleryFile.path);
       }
     } catch (e) {
-      debugPrint('Native selfie picker error: $e');
+      debugPrint('Native front camera picker error: $e');
     }
   }
 
@@ -282,7 +286,7 @@ class _LivenessScannerOverlayState extends State<LivenessScannerOverlay>
                       const Icon(Icons.camera_front_outlined, color: AppColors.champagneGold, size: 18),
                       const SizedBox(width: 8),
                       Text(
-                        'Take Selfie via Phone Camera / Gallery',
+                        'Open Native Front Camera',
                         style: AppTypography.labelLarge.copyWith(
                           color: AppColors.champagneGold,
                           fontSize: 12,
@@ -342,7 +346,7 @@ class _LivenessScannerOverlayState extends State<LivenessScannerOverlay>
               ),
               const SizedBox(height: 12),
               Text(
-                'Didit 1:1 Biometric Liveness Verification',
+                'Didit 1:1 Live Biometric Scan · Live Camera Only',
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textSubtle,
                 ),
