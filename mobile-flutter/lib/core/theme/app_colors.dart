@@ -13,16 +13,20 @@ class AppColors {
   static const Color goldDark = Color(0xFFAA820A);
   static const Color roseGlow = Color(0xFFE11D48);
   static const Color emeraldVerified = Color(0xFF10B981);
+  static const Color emeraldSuccess = Color(0xFF10B981);
+  static const Color royalPurple = Color(0xFF2D1B4E);
   
   // Borders & Glows
   static const Color borderSubtle = Color(0xFF232D3F);
   static const Color borderGold = Color(0x33D4AF37); // 20% opacity
   static const Color borderGoldStrong = Color(0x66D4AF37); // 40% opacity
   static const Color borderGlass = Color(0x1AFFFFFF); // 10% white
+  static const Color glassBorder = Color(0x1AFFFFFF); // 10% white
   
   // Text Colors
   static const Color textPure = Color(0xFFF8FAFC);
   static const Color textMuted = Color(0xFF94A3B8);
+  static const Color textSecondary = Color(0xFF94A3B8);
   static const Color textSubtle = Color(0xFF64748B);
   static const Color textGold = Color(0xFFD4AF37);
 

@@ -8,17 +8,38 @@ import '../../../core/widgets/gold_button.dart';
 import '../providers/auth_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
-  const AuthScreen({super.key});
+  final bool initialSignUp;
+
+  const AuthScreen({
+    super.key,
+    this.initialSignUp = false,
+  });
 
   @override
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
-  bool _isSignUp = false;
+  late bool _isSignUp;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _isSignUp = widget.initialSignUp;
+  }
+
+  @override
+  void didUpdateWidget(covariant AuthScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialSignUp != widget.initialSignUp) {
+      setState(() {
+        _isSignUp = widget.initialSignUp;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -161,7 +182,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppColors.roseGlow.withOpacity(0.12),
+                            color: AppColors.roseGlow.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: AppColors.roseGlow, width: 0.8),
                           ),
@@ -213,7 +234,26 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+
+                // Link to revisit the Welcome / Landing Experience anytime
+                TextButton.icon(
+                  onPressed: () => context.go('/welcome?preview=true'),
+                  icon: const Icon(
+                    Icons.auto_awesome_outlined,
+                    size: 15,
+                    color: AppColors.champagneGold,
+                  ),
+                  label: Text(
+                    'Explore KNOT • How It Works & Trust Architecture',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.champagneGold,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
 
                 Text(
                   'Protected by Didit Sovereign KYC & Biometric Identity Verification.',

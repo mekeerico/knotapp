@@ -3,6 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 class SecureStorageService {
   static const String tokenKey = 'knot_token';
   static const String userIdKey = 'knot_user_id';
+  static const String hasSeenWelcomeKey = 'knot_has_seen_welcome';
 
   final FlutterSecureStorage _storage;
 
@@ -28,7 +29,17 @@ class SecureStorageService {
     return await _storage.read(key: userIdKey);
   }
 
+  Future<void> markWelcomeSeen() async {
+    await _storage.write(key: hasSeenWelcomeKey, value: 'true');
+  }
+
+  Future<bool> hasSeenWelcome() async {
+    final val = await _storage.read(key: hasSeenWelcomeKey);
+    return val == 'true';
+  }
+
   Future<void> clearAll() async {
-    await _storage.deleteAll();
+    await _storage.delete(key: tokenKey);
+    await _storage.delete(key: userIdKey);
   }
 }

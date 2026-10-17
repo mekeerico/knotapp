@@ -88,7 +88,16 @@ class AuthRepository {
     }
   }
 
+  Future<bool> hasSeenWelcome() async {
+    return await _storage.hasSeenWelcome();
+  }
+
+  Future<void> markWelcomeSeen() async {
+    await _storage.markWelcomeSeen();
+  }
+
   Future<void> logout() async {
+    await _storage.markWelcomeSeen();
     await _storage.clearAll();
   }
 }

@@ -16,11 +16,13 @@ class AuthState {
   final AuthStatus status;
   final UserModel? user;
   final String? errorMessage;
+  final bool hasSeenWelcome;
 
   const AuthState({
     this.status = AuthStatus.initial,
     this.user,
     this.errorMessage,
+    this.hasSeenWelcome = false,
   });
 
   bool get isAuthenticated => status == AuthStatus.authenticated && user != null;
@@ -32,11 +34,13 @@ class AuthState {
     AuthStatus? status,
     UserModel? user,
     String? errorMessage,
+    bool? hasSeenWelcome,
   }) {
     return AuthState(
       status: status ?? this.status,
       user: user ?? this.user,
       errorMessage: errorMessage,
+      hasSeenWelcome: hasSeenWelcome ?? this.hasSeenWelcome,
     );
   }
 }
@@ -50,20 +54,40 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> checkAuth() async {
     state = state.copyWith(status: AuthStatus.loading);
+    final seenWelcome = await _repo.hasSeenWelcome();
     try {
       final user = await _repo.getProfile();
-      state = state.copyWith(status: AuthStatus.authenticated, user: user);
+      await _repo.markWelcomeSeen();
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+        hasSeenWelcome: true,
+      );
       RevenueCatService.logIn(user.id);
     } catch (_) {
-      state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        user: null,
+        hasSeenWelcome: seenWelcome,
+      );
     }
+  }
+
+  Future<void> completeWelcome() async {
+    await _repo.markWelcomeSeen();
+    state = state.copyWith(hasSeenWelcome: true);
   }
 
   Future<bool> login(String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
       final user = await _repo.login(email, password);
-      state = state.copyWith(status: AuthStatus.authenticated, user: user);
+      await _repo.markWelcomeSeen();
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+        hasSeenWelcome: true,
+      );
       RevenueCatService.logIn(user.id);
       return true;
     } catch (e) {
@@ -79,7 +103,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
       final user = await _repo.register(email, password);
-      state = state.copyWith(status: AuthStatus.authenticated, user: user);
+      await _repo.markWelcomeSeen();
+      state = state.copyWith(
+        status: AuthStatus.authenticated,
+        user: user,
+        hasSeenWelcome: true,
+      );
       RevenueCatService.logIn(user.id);
       return true;
     } catch (e) {
@@ -102,14 +131,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   void setUser(UserModel user) {
-    state = state.copyWith(status: AuthStatus.authenticated, user: user);
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      user: user,
+      hasSeenWelcome: true,
+    );
     RevenueCatService.logIn(user.id);
   }
 
   Future<void> logout() async {
     await _repo.logout();
     await RevenueCatService.logOut();
-    state = const AuthState(status: AuthStatus.unauthenticated);
+    state = const AuthState(
+      status: AuthStatus.unauthenticated,
+      hasSeenWelcome: true,
+    );
   }
 }
 

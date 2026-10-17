@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
+import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/discovery/models/match_profile.dart';
 import '../../features/discovery/presentation/discovery_screen.dart';
@@ -40,18 +41,30 @@ class RouterNotifier extends ChangeNotifier {
     final authState = _ref.read(authProvider);
     final isAuth = authState.isAuthenticated;
     final isAuthRoute = state.matchedLocation == '/auth';
+    final isWelcomeRoute = state.matchedLocation == '/welcome';
+    final isPreviewWelcome = state.uri.queryParameters['preview'] == 'true';
     final isOnboardingRoute = state.matchedLocation == '/onboarding';
     final isVerificationRoute = state.matchedLocation == '/verification';
 
-    if (!isAuth && !isAuthRoute) {
-      return '/auth';
+    if (!isAuth) {
+      if (isWelcomeRoute) {
+        // Returning users who already completed welcome go directly to /auth unless explicitly previewing
+        if (authState.hasSeenWelcome && !isPreviewWelcome) {
+          return '/auth';
+        }
+        return null;
+      }
+      if (isAuthRoute) {
+        return null;
+      }
+      return authState.hasSeenWelcome ? '/auth' : '/welcome';
     }
 
     if (isAuth && authState.needsOnboarding && !isOnboardingRoute && !isVerificationRoute) {
       return '/onboarding';
     }
 
-    if (isAuth && isAuthRoute) {
+    if (isAuth && (isAuthRoute || isWelcomeRoute)) {
       return authState.needsOnboarding ? '/onboarding' : '/discovery';
     }
 
@@ -73,8 +86,15 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: notifier.redirect,
     routes: [
       GoRoute(
+        path: '/welcome',
+        builder: (context, state) => const WelcomeScreen(),
+      ),
+      GoRoute(
         path: '/auth',
-        builder: (context, state) => const AuthScreen(),
+        builder: (context, state) {
+          final isRegister = state.uri.queryParameters['mode'] == 'register';
+          return AuthScreen(initialSignUp: isRegister);
+        },
       ),
       GoRoute(
         path: '/onboarding',
