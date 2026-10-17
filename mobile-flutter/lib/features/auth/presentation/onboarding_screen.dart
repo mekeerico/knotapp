@@ -315,12 +315,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ? _religionCustomController.text.trim()
         : _religionSelect;
 
-    final finalResState = _residenceState.isNotEmpty
-        ? _residenceState
+    final resStateList = KnotLocationData.statesFor(_residenceCountry);
+    final finalResState = resStateList.isNotEmpty
+        ? (resStateList.contains(_residenceState) ? _residenceState : resStateList.first)
         : _residenceStateCustomController.text.trim();
 
-    final finalOriginState = _originState.isNotEmpty
-        ? _originState
+    final originStateList = KnotLocationData.statesFor(_originCountry);
+    final finalOriginState = originStateList.isNotEmpty
+        ? (originStateList.contains(_originState) ? _originState : originStateList.first)
         : _originStateCustomController.text.trim();
 
     final languages = List<String>.from(_selectedLanguages);
@@ -762,7 +764,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   // SCREEN 5: LOCATION (CURRENT RESIDENCE)
   // ==========================================
   Widget _buildLocationStep() {
-    final List<String> residenceStates = KnotLocationData.statesByCountry[_residenceCountry] ?? const <String>[];
+    final List<String> residenceStates = KnotLocationData.statesFor(_residenceCountry);
 
     return GlassCard(
       child: Column(
@@ -779,7 +781,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           _buildDropdownField(
             label: 'Country of Residence',
             value: _residenceCountry,
-            items: KnotLocationData.countries,
+            items: KnotLocationData.allCountries,
             onChanged: (val) {
               if (val != null) {
                 setState(() {
@@ -827,7 +829,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   // SCREEN 6: HERITAGE & ORIGIN
   // ==========================================
   Widget _buildHeritageStep() {
-    final List<String> originStates = KnotLocationData.statesByCountry[_originCountry] ?? const <String>[];
+    final List<String> originStates = KnotLocationData.statesFor(_originCountry);
 
     return GlassCard(
       child: Column(
@@ -844,7 +846,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           _buildDropdownField(
             label: 'Country of Heritage / Origin',
             value: _originCountry,
-            items: KnotLocationData.countries,
+            items: KnotLocationData.allCountries,
             onChanged: (val) {
               if (val != null) {
                 setState(() {
@@ -950,7 +952,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final List<String> prefResStates = <String>[
       'Any State/Province/Region',
       'Enter State/Province/Region',
-      ...(KnotLocationData.statesByCountry[_prefResCountry] ?? const <String>[]),
+      ...KnotLocationData.statesFor(_prefResCountry),
     ];
 
     return GlassCard(
@@ -967,7 +969,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           _buildDropdownField(
             label: 'Preferred Partner Country of Residence',
             value: _prefResCountry,
-            items: ['Any Country', 'Enter Choice Country', ...KnotLocationData.countries],
+            items: ['Any Country', 'Enter Choice Country', ...KnotLocationData.allCountries],
             onChanged: (val) {
               if (val != null) {
                 setState(() {
@@ -1006,7 +1008,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           _buildDropdownField(
             label: 'Preferred Partner Heritage Country',
             value: _prefOriCountry,
-            items: ['Any Country', 'Enter Choice Country', ...KnotLocationData.countries],
+            items: ['Any Country', 'Enter Choice Country', ...KnotLocationData.allCountries],
             onChanged: (val) {
               if (val != null) setState(() => _prefOriCountry = val);
             },

@@ -402,19 +402,33 @@ export default function AdminDashboard() {
                   {users.map(user => {
                     const displayName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || 'User';
                     const avatarInitials = encodeURIComponent(displayName);
+                    const fallbackAvatar = `https://ui-avatars.com/api/?name=${avatarInitials}&background=1A202C&color=D4AF37&size=80`;
+                    const primaryProfileImg = Array.isArray(user.profileImages)
+                      ? (user.profileImages.find((img: any) => img?.isPrimary && img?.url)?.url || user.profileImages[0]?.url)
+                      : undefined;
                     const userPhoto = (
-                      user.profileImages?.[0]?.url ||
+                      primaryProfileImg ||
                       user.profileImageUrls?.[0] ||
-                      user.selfieUrl ||
                       user.photoUrl ||
-                      `https://ui-avatars.com/api/?name=${avatarInitials}&background=1A202C&color=D4AF37&size=80`
+                      user.selfieUrl ||
+                      fallbackAvatar
                     );
                     return (
                     <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/10">
-                            <img src={userPhoto} alt={displayName} className="w-full h-full object-cover" />
+                          <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/10 bg-[#1A202C]">
+                            <img
+                              src={userPhoto}
+                              alt={displayName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.currentTarget;
+                                if (target.src !== fallbackAvatar) {
+                                  target.src = fallbackAvatar;
+                                }
+                              }}
+                            />
                           </div>
                           <div>
                             <div className="font-bold text-white text-sm flex items-center gap-2">

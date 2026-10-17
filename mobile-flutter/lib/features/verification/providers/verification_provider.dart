@@ -202,12 +202,10 @@ class VerificationNotifier extends StateNotifier<VerificationState> {
       final result = VerificationResult.fromJson(response.data);
 
       if (result.success) {
-        // Update auth state with verified user
-        if (result.user != null) {
+        // Refresh full profile from backend so profileImageUrls and all onboarding fields stay intact
+        await _ref.read(authProvider.notifier).checkAuth();
+        if (_ref.read(authProvider).user == null && result.user != null) {
           _ref.read(authProvider.notifier).setUser(result.user!);
-        } else {
-          // Refresh profile
-          await _ref.read(authProvider.notifier).checkAuth();
         }
 
         state = state.copyWith(

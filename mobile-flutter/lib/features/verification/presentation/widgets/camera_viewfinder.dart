@@ -158,199 +158,201 @@ class _CameraViewfinderState extends State<CameraViewfinder> {
           ),
         ),
 
-        // Document Cutout Frame with Golden Corners
-        Center(
-          child: Container(
-            width: size.width * 0.88,
-            height: size.width * 0.88 * 0.63, // ID card aspect ratio (85.60 mm × 53.98 mm)
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: AppColors.champagneGold.withOpacity(0.6),
-                width: 1.5,
-              ),
-            ),
-            child: Stack(
+        // Responsive Foreground Layout (No Overlap between Header, Pills, Cutout Frame, and Shutter)
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Column(
               children: [
-                // Corner Brackets
-                _buildCorner(top: 0, left: 0),
-                _buildCorner(top: 0, right: 0),
-                _buildCorner(bottom: 0, left: 0),
-                _buildCorner(bottom: 0, right: 0),
-
-                // Center Watermark Guide
-                Center(
-                  child: Opacity(
-                    opacity: 0.15,
-                    child: Icon(
-                      Icons.credit_card,
-                      size: 110,
-                      color: AppColors.champagneGold,
-                    ),
-                  ),
+                // Top Header Info & Document Type Pills
+                Text(
+                  widget.title,
+                  style: AppTypography.headingLarge.copyWith(color: AppColors.textPure),
+                  textAlign: TextAlign.center,
                 ),
-              ],
-            ),
-          ),
-        ),
-
-        // Top Header Info
-        Positioned(
-          top: 50,
-          left: 20,
-          right: 20,
-          child: Column(
-            children: [
-              Text(
-                widget.title,
-                style: AppTypography.headingLarge.copyWith(color: AppColors.textPure),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.obsidianBlack.withOpacity(0.75),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.borderGold, width: 0.8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.wb_sunny_outlined,
-                      size: 14,
-                      color: AppColors.champagneGold,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      widget.hintText,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.champagneGold,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (widget.onDocumentTypeSelected != null) ...[
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  alignment: WrapAlignment.center,
-                  children: [
-                    _buildDocPill('National ID (NIN)', 'National Identity Card (NIN)'),
-                    _buildDocPill("Int'l Passport", "Int'l Passport"),
-                    _buildDocPill("Driver's License", "Driver's License"),
-                    _buildDocPill('Residence / State ID', 'Residence Permit / State ID'),
-                    _buildDocPill("Voter's Card", "Voter's Card (PVC)"),
-                  ],
-                ),
-              ],
-            ],
-          ),
-        ),
-
-        // Bottom Capture Controls
-        Positioned(
-          bottom: 30,
-          left: 20,
-          right: 20,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Prominent Upload from Files / Gallery Button
-              GestureDetector(
-                onTap: _pickFromGallery,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.darkCardElevated.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: AppColors.champagneGold.withValues(alpha: 0.5),
-                      width: 1.2,
-                    ),
+                    color: AppColors.obsidianBlack.withValues(alpha: 0.82),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.borderGold, width: 0.8),
                   ),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Icon(Icons.file_upload_outlined, color: AppColors.champagneGold, size: 20),
+                      const Icon(
+                        Icons.wb_sunny_outlined,
+                        size: 15,
+                        color: AppColors.champagneGold,
+                      ),
                       const SizedBox(width: 8),
-                      Text(
-                        'Upload ID from Gallery / Files',
-                        style: AppTypography.labelLarge.copyWith(
-                          color: AppColors.champagneGold,
-                          fontWeight: FontWeight.bold,
+                      Flexible(
+                        child: Text(
+                          widget.hintText,
+                          textAlign: TextAlign.center,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.champagneGold,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                            height: 1.3,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ),
+                if (widget.onDocumentTypeSelected != null) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      _buildDocPill('National ID (NIN)', 'National Identity Card (NIN)'),
+                      _buildDocPill("Int'l Passport", "Int'l Passport"),
+                      _buildDocPill("Driver's License", "Driver's License"),
+                      _buildDocPill('Residence / State ID', 'Residence Permit / State ID'),
+                      _buildDocPill("Voter's Card", "Voter's Card (PVC)"),
+                    ],
+                  ),
+                ],
 
-              const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
-              // Centered Luxury Gold Shutter Trigger (redundant small gallery icon removed)
-              Center(
-                child: GestureDetector(
-                  onTap: _isCapturing ? null : _capturePhoto,
-                  child: Container(
-                    width: 78,
-                    height: 78,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.champagneGold, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.champagneGold.withOpacity(0.4),
-                          blurRadius: 16,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
+                // Document Cutout Frame with Golden Corners (Expanded so it adapts to available height)
+                Expanded(
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: 1.58, // ID card aspect ratio (85.60 mm × 53.98 mm)
                       child: Container(
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: AppColors.goldGradient,
+                        width: size.width * 0.88,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppColors.champagneGold.withValues(alpha: 0.6),
+                            width: 1.5,
+                          ),
                         ),
-                        child: _isCapturing
-                            ? const Center(
-                                child: SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    valueColor: AlwaysStoppedAnimation(
-                                      AppColors.obsidianBlack,
-                                    ),
-                                  ),
-                                ),
-                              )
-                            : const Center(
+                        child: Stack(
+                          children: [
+                            _buildCorner(top: 0, left: 0),
+                            _buildCorner(top: 0, right: 0),
+                            _buildCorner(bottom: 0, left: 0),
+                            _buildCorner(bottom: 0, right: 0),
+                            Center(
+                              child: Opacity(
+                                opacity: 0.15,
                                 child: Icon(
-                                  Icons.camera_alt,
-                                  color: AppColors.obsidianBlack,
-                                  size: 28,
+                                  Icons.credit_card,
+                                  size: 96,
+                                  color: AppColors.champagneGold,
                                 ),
                               ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Aligned with Didit Sovereign Trust & Security',
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSubtle,
-                  fontSize: 11,
+
+                const SizedBox(height: 12),
+
+                // Bottom Capture Controls
+                GestureDetector(
+                  onTap: _pickFromGallery,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
+                    decoration: BoxDecoration(
+                      color: AppColors.darkCardElevated.withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: AppColors.champagneGold.withValues(alpha: 0.5),
+                        width: 1.2,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.file_upload_outlined, color: AppColors.champagneGold, size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Upload ID from Gallery / Files',
+                          style: AppTypography.labelLarge.copyWith(
+                            color: AppColors.champagneGold,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 14),
+
+                // Centered Luxury Gold Shutter Trigger
+                Center(
+                  child: GestureDetector(
+                    onTap: _isCapturing ? null : _capturePhoto,
+                    child: Container(
+                      width: 74,
+                      height: 74,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppColors.champagneGold, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.champagneGold.withValues(alpha: 0.4),
+                            blurRadius: 16,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: Container(
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: AppColors.goldGradient,
+                          ),
+                          child: _isCapturing
+                              ? const Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor: AlwaysStoppedAnimation(
+                                        AppColors.obsidianBlack,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              : const Center(
+                                  child: Icon(
+                                    Icons.camera_alt,
+                                    color: AppColors.obsidianBlack,
+                                    size: 28,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Aligned with Didit Sovereign Trust & Security',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSubtle,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

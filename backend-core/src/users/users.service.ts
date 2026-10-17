@@ -56,7 +56,7 @@ export class UsersService {
     }
 
     return this.prisma.$transaction(async (tx) => {
-      const updatedUser = await tx.user.update({
+      await tx.user.update({
         where: { id },
         data,
       });
@@ -69,28 +69,36 @@ export class UsersService {
             fs.mkdirSync(uploadsDir, { recursive: true });
           }
 
-          const processedUrls = dto.profileImageUrls.map((rawUrl: string, index: number) => {
-            if (rawUrl.startsWith('data:image') || (rawUrl.length > 500 && !rawUrl.startsWith('http'))) {
-              try {
-                const base64Data = rawUrl.includes('base64,') ? rawUrl.split('base64,')[1] : rawUrl;
-                const buffer = Buffer.from(base64Data, 'base64');
-                const filename = `photo_${id}_${Date.now()}_${index}.jpg`;
-                fs.writeFileSync(path.join(uploadsDir, filename), buffer);
-                return `/uploads/${filename}`;
-              } catch (e) {
-                return rawUrl;
+          const processedUrls = dto.profileImageUrls
+            .map((rawUrl: string, index: number) => {
+              if (!rawUrl || typeof rawUrl !== 'string') return '';
+              const trimmed = rawUrl.trim();
+              if (trimmed.startsWith('data:image')) {
+                // Also write a backup copy to disk while keeping the persistent data URL in PostgreSQL
+                try {
+                  const base64Data = trimmed.includes('base64,') ? trimmed.split('base64,')[1] : trimmed;
+                  const buffer = Buffer.from(base64Data, 'base64');
+                  const filename = `photo_${id}_${Date.now()}_${index}.jpg`;
+                  fs.writeFileSync(path.join(uploadsDir, filename), buffer);
+                } catch (_) {}
+                return trimmed;
               }
-            }
-            return rawUrl;
-          });
+              if (trimmed.length > 500 && !trimmed.startsWith('http') && !trimmed.startsWith('/uploads/')) {
+                return `data:image/jpeg;base64,${trimmed}`;
+              }
+              return trimmed;
+            })
+            .filter((u: string) => u.length > 0);
 
-          await tx.image.createMany({
-            data: processedUrls.map((url: string, index: number) => ({
-              userId: id,
-              url,
-              isPrimary: index === 0,
-            })),
-          });
+          if (processedUrls.length > 0) {
+            await tx.image.createMany({
+              data: processedUrls.map((url: string, index: number) => ({
+                userId: id,
+                url,
+                isPrimary: index === 0,
+              })),
+            });
+          }
         }
       }
 

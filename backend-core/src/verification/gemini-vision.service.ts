@@ -4,9 +4,18 @@ import axios from 'axios';
 export interface GeminiVerificationResult {
   isValid: boolean;
   documentType: string;
+  selectedDocumentCategory: string;
+  documentTypeMatches: boolean;
   confidenceScore: number;
   extractedName: string;
+  extractedIdNumber: string;
+  hasValidIdNumber: boolean;
   extractedDob: string;
+  hasExpiryDate: boolean;
+  extractedExpiryDate: string;
+  isExpired: boolean;
+  estimatedSelfieAge: number;
+  ageMatches: boolean;
   faceMatchScore: number;
   livenessScore: number;
   nameMatches: boolean;
@@ -19,7 +28,7 @@ export interface GeminiVerificationResult {
 @Injectable()
 export class GeminiVisionService {
   private readonly logger = new Logger(GeminiVisionService.name);
-  
+
   private get apiKey(): string {
     return process.env.GEMINI_API_KEY || '';
   }
@@ -28,7 +37,55 @@ export class GeminiVisionService {
     'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 
   /**
-   * Verify government ID, live selfie, face matching, and name consistency using Gemini Vision AI
+   * Normalize human-readable or raw document type strings into canonical categories:
+   * NATIONAL_ID_NIN | INTERNATIONAL_PASSPORT | DRIVERS_LICENSE | VOTERS_CARD | RESIDENCE_PERMIT | UNKNOWN
+   */
+  normalizeDocumentCategory(raw?: string): string {
+    const val = (raw || '').toUpperCase().trim();
+    if (!val) return '';
+    if (val.includes('NIN') || val.includes('NATIONAL') || val.includes('NIMC')) {
+      return 'NATIONAL_ID_NIN';
+    }
+    if (val.includes('PASS')) {
+      return 'INTERNATIONAL_PASSPORT';
+    }
+    if (val.includes('DRIV') || val.includes('LICEN')) {
+      return 'DRIVERS_LICENSE';
+    }
+    if (val.includes('VOTE') || val.includes('PVC') || val.includes('INEC')) {
+      return 'VOTERS_CARD';
+    }
+    if (val.includes('RESID') || val.includes('STATE') || val.includes('PERMIT')) {
+      return 'RESIDENCE_PERMIT';
+    }
+    return 'UNKNOWN';
+  }
+
+  humanDocumentLabel(category: string): string {
+    switch (category) {
+      case 'NATIONAL_ID_NIN':
+        return 'National ID (NIN)';
+      case 'INTERNATIONAL_PASSPORT':
+        return "International Passport";
+      case 'DRIVERS_LICENSE':
+        return "Driver's License";
+      case 'VOTERS_CARD':
+        return "Voter's Card (PVC)";
+      case 'RESIDENCE_PERMIT':
+        return 'Residence Permit / State ID';
+      default:
+        return 'Unrecognized Document';
+    }
+  }
+
+  /**
+   * Multi-factor AI Vision KYC check:
+   * 1. Document Type Recognition & Match against user-selected document type
+   * 2. Official ID / Document Number extraction & legibility check
+   * 3. Expiration Date extraction & strict non-expired enforcement
+   * 4. Strict Legal Name verification against onboarding profile
+   * 5. 1:1 Biometric Face Match between ID portrait and live selfie
+   * 6. Age / Date of Birth consistency between ID, profile DOB, and live selfie
    */
   async verifyWithGeminiVision(
     idBuffer: Buffer,
@@ -36,72 +93,108 @@ export class GeminiVisionService {
     claimedFirstName: string,
     claimedLastName: string,
     claimedDob?: string,
+    selectedDocumentType?: string,
   ): Promise<GeminiVerificationResult> {
     const idBase64 = idBuffer.toString('base64');
     const selfieBase64 = selfieBuffer.toString('base64');
     const claimedFullName = `${claimedFirstName} ${claimedLastName}`.trim();
+    const expectedCategory = this.normalizeDocumentCategory(selectedDocumentType);
+    const todayIso = new Date().toISOString().split('T')[0];
 
     const prompt = `
-You are KNOT Sovereign Registry's Lead AI Fraud Prevention & Identity Verification Officer.
-Your mandate is strict: authenticate legitimate marriage candidates and firmly REJECT fraudulent, spoofed, or mismatched submissions.
+You are KNOT Sovereign Registry's Lead AI Fraud Prevention & Biometric Identity Verification Officer.
+Today's Current Date (ISO): "${todayIso}".
 
 Candidate's Claimed Profile Name: "${claimedFirstName} ${claimedLastName}".
 Candidate's Claimed Date of Birth: "${claimedDob || 'Not specified'}".
+Candidate's Selected Document Type in App: "${selectedDocumentType || 'Not specified'}" (Canonical Category: "${expectedCategory || 'ANY'}").
 
 You are provided with two images:
-Image 1: The candidate's uploaded Government-issued ID document.
-Image 2: The candidate's live biometric selfie.
+- Image 1: The candidate's uploaded Government ID document.
+- Image 2: The candidate's live biometric selfie.
 
-CRITICAL DOCUMENT VERIFICATION RULES:
-1. SPECIALIZED RECOGNITION FOR NIGERIAN NATIONAL ID (NIN) & AFRICAN/GLOBAL DOCUMENTS:
-   - You MUST fully recognize and accept Nigerian National Identification Number (NIN) documents in ALL official formats:
-     a) NIMC National Identity Card (plastic card with coat of arms, photo, NIN, names).
-     b) NIMC National Identification Number Slip (NINS / NIN Slip, green/blue header, "FEDERAL REPUBLIC OF NIGERIA", "NATIONAL IDENTITY MANAGEMENT COMMISSION", Surname, First Name, Middle Name, 11-digit NIN number, Tracking ID, and photo).
-     c) Federal Republic of Nigeria Driver's License (FRSC).
-     d) Nigerian International Passport.
-     e) Independent National Electoral Commission (INEC) Voter's Card (PVC).
-   - Also accept all legitimate International Passports, National ID Cards, Driver's Licenses, and Residence Permits from ALL sovereign countries.
-   - REJECT only if Image 1 is completely unreadable, a blank paper, a cartoon, an animal/object, a meme, or a handwritten note.
+PERFORM ALL 6 MANDATORY VERIFICATION CHECKS STRICTLY:
 
-2. BIOMETRIC 1:1 FACE MATCH:
-   - Compare the face in Image 2 (live selfie) with the portrait photograph on Image 1 (ID/NIN).
-   - Account for standard variations in lighting, selfie angle, expression, or slight age difference.
-   - If they are clearly the same human being, set "faceMatches": true.
-   - If the faces belong to two clearly different individuals, set "faceMatches": false and "isValid": false.
+1. EXACT DOCUMENT CLASSIFICATION & SELECTED TYPE MATCH:
+   - Identify what type of document Image 1 ACTUALLY is and set "documentType" to EXACTLY ONE of:
+     * "NATIONAL_ID_NIN" — National Identity Card (NIMC plastic card) OR NIMC National Identification Number (NIN) Slip (with 11-digit NIN, Tracking ID, coat of arms).
+     * "INTERNATIONAL_PASSPORT" — International Passport bio-data page (with Passport No., Date of Issue, Date of Expiry, and MRZ lines starting with P<).
+     * "DRIVERS_LICENSE" — Official Driver's License (FRSC or national/state driver's license).
+     * "VOTERS_CARD" — Official Voter's Card / INEC Permanent Voter's Card (PVC) with VIN.
+     * "RESIDENCE_PERMIT" — Official Residence Permit, Green Card, Biometric Residence Permit, or State ID Card.
+     * "UNKNOWN" — If Image 1 is not one of the 5 official government ID categories above (e.g., bank card, student ID, utility bill, random photo, screenshot, unreadable image).
+   - Compare "documentType" with the Candidate's Selected Document Category ("${expectedCategory}").
+   - If "${expectedCategory}" is specified and "documentType" !== "${expectedCategory}", you MUST set "documentTypeMatches": false and "isValid": false. (For example, if the user selected NATIONAL_ID_NIN or VOTERS_CARD, and uploaded an INTERNATIONAL_PASSPORT or DRIVERS_LICENSE, that is a mismatch and MUST be rejected!).
 
-3. STRICT LEGAL NAME VERIFICATION:
-   - Read the official Surname/Last Name and First/Given Name printed on Image 1 (ID/NIN).
-   - Check if they correspond to the candidate's registered name ("${claimedFirstName} ${claimedLastName}").
-   - ACCEPT standard name permutations:
-     a) Surname first or Lastname first (e.g., Nigerian documents typically list "SURNAME: [LastName], FIRST NAME: [FirstName]").
-     b) Middle names included on the ID that the candidate omitted in their profile (e.g. ID has "Meke Eric Chukwudi" while profile is "Eric Meke").
-     c) Minor spelling or typographical differences.
-   - REJECT if the name on the ID belongs to an entirely different person (e.g. ID name is "Oluwaseun Adeyemi" but profile is "Emeka Okafor").
+2. OFFICIAL ID / DOCUMENT NUMBER EXTRACTION ("extractedIdNumber" & "hasValidIdNumber"):
+   - Locate and transcribe the official ID number printed on Image 1:
+     * For NATIONAL_ID_NIN: 11-digit NIN (or national ID number).
+     * For INTERNATIONAL_PASSPORT: Passport Number (e.g. A01234567 / B12345678).
+     * For DRIVERS_LICENSE: License Number.
+     * For VOTERS_CARD: Voter Identification Number (VIN).
+     * For RESIDENCE_PERMIT: Permit / Card Number.
+   - If the ID number is missing, covered, or unreadable, set "hasValidIdNumber": false and "isValid": false.
 
-You must respond ONLY with a raw JSON object (no markdown, no backticks, no extra text) with this exact schema:
+3. EXPIRATION DATE VERIFICATION ("hasExpiryDate", "extractedExpiryDate", "isExpired"):
+   - Carefully inspect Image 1 for ANY expiration date ("Date of Expiry", "Expiry Date", "Valid Until", "EXP", AND for Passports also check the 2nd MRZ line where positions 22-27 encode YYMMDD expiry date).
+   - Transcribe the expiration date in strict "YYYY-MM-DD" format into "extractedExpiryDate".
+   - Note:
+     * INTERNATIONAL_PASSPORT, DRIVERS_LICENSE, and RESIDENCE_PERMIT ALWAYS have an expiration date ("hasExpiryDate": true).
+     * Nigerian NIN Slips and INEC Voter's Cards (PVC) generally do NOT have an expiration date ("hasExpiryDate": false, "extractedExpiryDate": "", "isExpired": false).
+   - Compare "extractedExpiryDate" against Today's Date ("${todayIso}"):
+     * If "extractedExpiryDate" is earlier than "${todayIso}" (OR earlier than 2025-10-17 in case of any calendar reference), the document is EXPIRED! You MUST set "isExpired": true and "isValid": false!
+     * For an INTERNATIONAL_PASSPORT or DRIVERS_LICENSE, if the expiration date is cut off, blurred, or cannot be read, set "isExpired": true and "isValid": false.
+
+4. STRICT LEGAL NAME VERIFICATION ("extractedName" & "nameMatches"):
+   - Transcribe the full legal name printed on Image 1 into "extractedName".
+   - Verify whether it matches "${claimedFirstName} ${claimedLastName}" (allowing Surname-first or Firstname-first order and additional middle names on the ID).
+   - If the name on the ID belongs to a different person, set "nameMatches": false and "isValid": false.
+
+5. STRICT 1:1 BIOMETRIC FACE MATCH ("faceMatches" & "faceMatchScore"):
+   - Compare the portrait photograph on the ID document (Image 1) with the live selfie (Image 2).
+   - Examine facial bone structure, eye spacing, nose shape, mouth, ears, and gender.
+   - Only if you are confident both images show the EXACT SAME human being, set "faceMatches": true and provide a "faceMatchScore" >= 75.
+   - If they appear to be different people, set "faceMatches": false, "faceMatchScore" < 60, and "isValid": false.
+
+6. AGE & DATE OF BIRTH CONSISTENCY ("extractedDob", "estimatedSelfieAge", "ageMatches"):
+   - Read the Date of Birth on the ID into "extractedDob" (in "YYYY-MM-DD" format if visible).
+   - Estimate the visual age of the person in the live selfie (Image 2) as an integer in "estimatedSelfieAge".
+   - Check that:
+     a) The person in the selfie looks reasonably close in age to the person born on "extractedDob" (within ~12 years).
+     b) If the candidate's claimed profile DOB ("${claimedDob || ''}") is provided and valid, the birth year on the ID must match the claimed birth year (within ±1 year).
+   - If the ID's DOB/age conflicts with the profile DOB or the selfie person's apparent age, set "ageMatches": false and "isValid": false.
+
+Respond ONLY with a raw JSON object (no markdown, no backticks) matching this exact schema:
 {
-  "isValid": boolean, // true ONLY if all checks pass. false if ANY check fails.
-  "documentType": string, // "NATIONAL_ID_NIN", "INTERNATIONAL_PASSPORT", "DRIVERS_LICENSE", "VOTERS_CARD", "RESIDENCE_PERMIT", or "UNKNOWN"
-  "confidenceScore": number, // 0 to 100
-  "extractedName": string, // The exact full name as printed on the ID document
-  "extractedDob": string, // DOB from the ID or empty string if not visible
-  "faceMatchScore": number, // 0 to 100 estimated face similarity
-  "livenessScore": number, // 0 to 100
-  "nameMatches": boolean, // true if the name on the ID corresponds to the claimed candidate name
-  "faceMatches": boolean, // true if the selfie face matches the ID photo
-  "isGovernmentId": boolean, // true if Image 1 is a valid government ID or NIN
-  "isSelfieValid": boolean, // true if Image 2 is a valid selfie
-  "details": string // Clear explanation of your findings. If failed, specify why.
+  "isValid": boolean,
+  "documentType": "NATIONAL_ID_NIN" | "INTERNATIONAL_PASSPORT" | "DRIVERS_LICENSE" | "VOTERS_CARD" | "RESIDENCE_PERMIT" | "UNKNOWN",
+  "documentTypeMatches": boolean,
+  "confidenceScore": number,
+  "extractedName": string,
+  "extractedIdNumber": string,
+  "hasValidIdNumber": boolean,
+  "extractedDob": string,
+  "hasExpiryDate": boolean,
+  "extractedExpiryDate": string,
+  "isExpired": boolean,
+  "estimatedSelfieAge": number,
+  "ageMatches": boolean,
+  "faceMatchScore": number,
+  "livenessScore": number,
+  "nameMatches": boolean,
+  "faceMatches": boolean,
+  "isGovernmentId": boolean,
+  "isSelfieValid": boolean,
+  "details": string
 }
 `;
 
-    // Try primary model gemini-3.5-flash first, then fallback to gemini-3.5-flash-lite
     const modelsToTry = ['gemini-3.5-flash', 'gemini-3.5-flash-lite'];
 
     for (const model of modelsToTry) {
       try {
         this.logger.log(
-          `Invoking Gemini Vision AI (${model}) for candidate "${claimedFullName}"`,
+          `Invoking Gemini Vision AI (${model}) for "${claimedFullName}", expectedDoc="${expectedCategory}"`,
         );
 
         const response = await axios.post(
@@ -124,7 +217,7 @@ You must respond ONLY with a raw JSON object (no markdown, no backticks, no extr
                 ],
               },
             ],
-            temperature: 0.1,
+            temperature: 0.0,
           },
           {
             headers: {
@@ -139,36 +232,84 @@ You must respond ONLY with a raw JSON object (no markdown, no backticks, no extr
         const cleanJson = this.cleanJsonResponse(rawContent);
         const parsed = JSON.parse(cleanJson);
 
+        const detectedDocType = this.normalizeDocumentCategory(parsed.documentType) || 'UNKNOWN';
         const extractedName = (parsed.extractedName || '').trim();
+        const extractedIdNumber = (parsed.extractedIdNumber || '').trim();
+        const extractedDob = (parsed.extractedDob || '').trim();
+        const extractedExpiryDate = (parsed.extractedExpiryDate || '').trim();
+
         const programmaticNameMatch = this.checkNameConsistency(
           claimedFirstName,
           claimedLastName,
           extractedName,
         );
 
-        // Both the AI judgement and the programmatic token check must agree
+        // 1. Government ID check
+        const finalIsGovId = Boolean(parsed.isGovernmentId) && detectedDocType !== 'UNKNOWN';
+
+        // 2. Document type matches user selection
+        const finalDocTypeMatches =
+          !expectedCategory ||
+          expectedCategory === 'UNKNOWN' ||
+          (detectedDocType === expectedCategory && Boolean(parsed.documentTypeMatches ?? true));
+
+        // 3. Valid ID number check
+        const finalHasIdNumber =
+          Boolean(parsed.hasValidIdNumber) && extractedIdNumber.replace(/[^a-zA-Z0-9]/g, '').length >= 5;
+
+        // 4. Expiration check (programmatic + AI)
+        const requiresExpiry =
+          detectedDocType === 'INTERNATIONAL_PASSPORT' ||
+          detectedDocType === 'DRIVERS_LICENSE';
+        const programmaticExpired = this.isDateExpired(extractedExpiryDate);
+        const missingRequiredExpiry = requiresExpiry && !extractedExpiryDate;
+        const finalIsExpired =
+          Boolean(parsed.isExpired) || programmaticExpired || missingRequiredExpiry;
+
+        // 5. Name match
         const finalNameMatch = Boolean(parsed.nameMatches) && programmaticNameMatch;
-        const finalFaceMatch = Boolean(parsed.faceMatches) && (parsed.faceMatchScore ?? 80) >= 65;
-        const finalIsGovId = Boolean(parsed.isGovernmentId);
+
+        // 6. Face match (strict >= 75%)
+        const faceScore = typeof parsed.faceMatchScore === 'number' ? parsed.faceMatchScore : 0;
+        const finalFaceMatch = Boolean(parsed.faceMatches) && faceScore >= 75;
+
+        // 7. Age & DOB match
+        const programmaticDobMatch = this.checkDobConsistency(claimedDob, extractedDob);
+        const finalAgeMatch = Boolean(parsed.ageMatches ?? true) && programmaticDobMatch;
+
+        // 8. Selfie validity
         const finalIsSelfie = Boolean(parsed.isSelfieValid);
 
         const finalIsValid =
           finalIsGovId &&
+          finalDocTypeMatches &&
+          finalHasIdNumber &&
+          !finalIsExpired &&
           finalIsSelfie &&
           finalNameMatch &&
-          finalFaceMatch;
+          finalFaceMatch &&
+          finalAgeMatch;
 
         this.logger.log(
-          `Gemini Vision (${model}) Result for "${claimedFullName}": Valid=${finalIsValid}, ExtractedName="${extractedName}", NameMatch=${finalNameMatch}, FaceMatch=${finalFaceMatch}`,
+          `Gemini Vision (${model}) for "${claimedFullName}": Valid=${finalIsValid}, Selected=${expectedCategory}, Detected=${detectedDocType}, DocMatch=${finalDocTypeMatches}, IDNo="${extractedIdNumber}", Expiry="${extractedExpiryDate}", Expired=${finalIsExpired}, NameMatch=${finalNameMatch}, FaceMatch=${finalFaceMatch} (${faceScore}%), AgeMatch=${finalAgeMatch}`,
         );
 
         return {
           isValid: finalIsValid,
-          documentType: parsed.documentType || 'NATIONAL_ID_NIN',
+          documentType: detectedDocType,
+          selectedDocumentCategory: expectedCategory,
+          documentTypeMatches: finalDocTypeMatches,
           confidenceScore: parsed.confidenceScore || (finalIsValid ? 96 : 30),
-          extractedName: extractedName || claimedFullName,
-          extractedDob: parsed.extractedDob || '',
-          faceMatchScore: parsed.faceMatchScore || (finalFaceMatch ? 92 : 35),
+          extractedName,
+          extractedIdNumber,
+          hasValidIdNumber: finalHasIdNumber,
+          extractedDob,
+          hasExpiryDate: Boolean(parsed.hasExpiryDate) || Boolean(extractedExpiryDate),
+          extractedExpiryDate,
+          isExpired: finalIsExpired,
+          estimatedSelfieAge: parsed.estimatedSelfieAge || 0,
+          ageMatches: finalAgeMatch,
+          faceMatchScore: faceScore,
           livenessScore: parsed.livenessScore || (finalIsSelfie ? 95 : 35),
           nameMatches: finalNameMatch,
           faceMatches: finalFaceMatch,
@@ -177,8 +318,8 @@ You must respond ONLY with a raw JSON object (no markdown, no backticks, no extr
           details:
             parsed.details ||
             (finalIsValid
-              ? 'Identity document and biometric match successfully verified.'
-              : 'Document verification failed legal name or facial match requirements.'),
+              ? 'Identity document, ID number, expiration date, age, and biometric face match verified.'
+              : 'Document verification failed one or more security checks.'),
         };
       } catch (err: any) {
         this.logger.warn(
@@ -187,13 +328,61 @@ You must respond ONLY with a raw JSON object (no markdown, no backticks, no extr
       }
     }
 
-    // Fail closed: never auto-approve identity when the AI checker could not run.
     this.logger.error(
       `Gemini Vision unavailable for candidate "${claimedFullName}". Verification NOT approved.`,
     );
     throw new Error(
       'Our identity checker is temporarily busy. Your documents were not rejected — please retry in a few minutes.',
     );
+  }
+
+  /**
+   * Programmatically verify if an extracted date string is expired.
+   */
+  private isDateExpired(dateStr: string): boolean {
+    if (!dateStr) return false;
+    const cleaned = dateStr.trim();
+    const parsed = new Date(cleaned);
+    if (!isNaN(parsed.getTime())) {
+      const now = new Date();
+      // Compare against end of the expiry day
+      const expiryEndOfDay = new Date(
+        parsed.getFullYear(),
+        parsed.getMonth(),
+        parsed.getDate(),
+        23,
+        59,
+        59,
+      );
+      if (expiryEndOfDay.getTime() < now.getTime()) {
+        return true;
+      }
+    }
+    // Fallback year check if format is non-standard (e.g. "12 AUG 2023")
+    const yearMatch = cleaned.match(/\b(19\d{2}|20\d{2})\b/);
+    if (yearMatch) {
+      const expYear = parseInt(yearMatch[1], 10);
+      const currentYear = new Date().getFullYear();
+      if (expYear < currentYear) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Check that the birth year on the ID matches the candidate's claimed DOB (within ±1 year).
+   */
+  private checkDobConsistency(claimedDob?: string, extractedDob?: string): boolean {
+    if (!claimedDob || !extractedDob) return true;
+    const claimedYearMatch = claimedDob.match(/\b(19\d{2}|20\d{2})\b/);
+    const extractedYearMatch = extractedDob.match(/\b(19\d{2}|20\d{2})\b/);
+    if (claimedYearMatch && extractedYearMatch) {
+      const cYear = parseInt(claimedYearMatch[1], 10);
+      const eYear = parseInt(extractedYearMatch[1], 10);
+      return Math.abs(cYear - eYear) <= 1;
+    }
+    return true;
   }
 
   /**
@@ -212,7 +401,6 @@ You must respond ONLY with a raw JSON object (no markdown, no backticks, no extr
 
     const extractedTokens = lowerExtracted.split(/\s+/).filter(t => t.length > 1);
 
-    // Exact token match, any order (handles "SURNAME Firstname Middlename" layouts)
     const hasFirst = f.length < 2 || extractedTokens.includes(f);
     const hasLast = l.length < 2 || extractedTokens.includes(l);
 

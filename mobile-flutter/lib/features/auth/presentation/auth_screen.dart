@@ -84,13 +84,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
-                  'WHERE TRUE RELATIONSHIP LEADS TO VOW',
-                  style: AppTypography.bodySmall.copyWith(
-                    letterSpacing: 2.0,
+                  'True Relationship Leads to Vow',
+                  style: AppTypography.headingMedium.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.4,
                     color: AppColors.champagneGold,
-                    fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
                 ),

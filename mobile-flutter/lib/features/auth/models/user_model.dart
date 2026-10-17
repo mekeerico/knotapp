@@ -164,14 +164,18 @@ class UserModel {
           ((b is Map && b['isPrimary'] == true) ? 1 : 0) -
           ((a is Map && a['isPrimary'] == true) ? 1 : 0));
       images = sorted
-          .map((img) => (img is Map ? img['url'] : img).toString())
+          .map((img) => (img is Map ? (img['url'] ?? '') : img).toString().trim())
+          .where((url) => url.isNotEmpty)
           .toList();
     } else if (json['profileImageUrls'] is List) {
-      images = (json['profileImageUrls'] as List).map((e) => e.toString()).toList();
+      images = (json['profileImageUrls'] as List)
+          .map((e) => e.toString().trim())
+          .where((url) => url.isNotEmpty)
+          .toList();
     }
 
-    if (images.isEmpty && json['selfieUrl'] != null && json['selfieUrl'].toString().isNotEmpty) {
-      images = [json['selfieUrl'].toString()];
+    if (images.isEmpty && json['selfieUrl'] != null && json['selfieUrl'].toString().trim().isNotEmpty) {
+      images = [json['selfieUrl'].toString().trim()];
     }
 
     return UserModel(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/data/location_data.dart';
 import 'core/router/app_router.dart';
 import 'core/services/revenue_cat_service.dart';
 import 'core/theme/app_colors.dart';
@@ -28,6 +29,9 @@ void main() async {
 
   // Initialize RevenueCat In-App Purchases
   await RevenueCatService.init();
+
+  // Load full world country -> state/province/region dataset
+  await KnotLocationData.load();
 
   runApp(
     const ProviderScope(

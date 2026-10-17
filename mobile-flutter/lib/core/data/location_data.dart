@@ -1,7 +1,41 @@
 /// Curated global location and onboarding options data for KNOT Mobile.
 library;
 
+import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
+
 class KnotLocationData {
+  /// Full world dataset (country -> states/provinces/regions) loaded from
+  /// `assets/data/states_by_country.json` at app start-up.
+  static Map<String, List<String>> _worldStates = const {};
+  static List<String> _allCountries = countries;
+
+  /// Loads the bundled world states dataset. Safe to call multiple times.
+  static Future<void> load() async {
+    if (_worldStates.isNotEmpty) return;
+    try {
+      final raw = await rootBundle.loadString('assets/data/states_by_country.json');
+      final decoded = json.decode(raw) as Map<String, dynamic>;
+      _worldStates = decoded.map(
+        (k, v) => MapEntry(k, List<String>.from(v as List)),
+      );
+      final merged = <String>{...countries, ..._worldStates.keys}.toList()
+        ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+      _allCountries = merged;
+    } catch (_) {
+      // Fall back to curated data only.
+    }
+  }
+
+  /// Every selectable country (curated + full world dataset).
+  static List<String> get allCountries => _allCountries;
+
+  /// States / provinces / regions for [country]. Curated lists take priority
+  /// so values already saved on existing profiles keep matching.
+  static List<String> statesFor(String country) {
+    return statesByCountry[country] ?? _worldStates[country] ?? const <String>[];
+  }
+
   static const List<String> countries = [
     'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Argentina', 'Armenia', 'Australia',
     'Austria', 'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium',

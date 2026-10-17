@@ -27,7 +27,10 @@ export class AdminController {
         maritalStatus: true,
         isSuspended: true,
         isVerified: true,
-        profileImages: { select: { url: true, isPrimary: true } },
+        profileImages: {
+          select: { url: true, isPrimary: true },
+          orderBy: { isPrimary: 'desc' },
+        },
         selfieUrl: true,
       },
       orderBy: { email: 'asc' } // No createdAt currently in User, so order by email

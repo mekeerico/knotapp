@@ -104,7 +104,7 @@ export class VerificationService {
 
     this.logger.log(`Beginning identity verification for user ${userId} ("${user.firstName} ${user.lastName}")`);
 
-    // Step 1: Run Gemini AI Vision Multi-Factor Verification (Strict Name Match, ID Validity & Biometrics)
+    // Step 1: Run Gemini AI Vision Multi-Factor Verification
     let geminiResult;
     try {
       geminiResult = await this.geminiVisionService.verifyWithGeminiVision(
@@ -113,6 +113,7 @@ export class VerificationService {
         user.firstName,
         user.lastName,
         user.dateOfBirth,
+        body?.documentType,
       );
     } catch (err: any) {
       this.logger.error(`Error during Gemini Vision verification: ${err.message}`);
@@ -124,7 +125,40 @@ export class VerificationService {
 
     if (!geminiResult.isGovernmentId) {
       throw new BadRequestException(
-        'Document verification failed: The uploaded file was not recognized as a valid government ID (Passport, Driver\'s License, National ID / NIN, Voter\'s Card, or Residence Permit). Please upload a clear photo of an official ID.',
+        'Document verification failed: The uploaded file was not recognized as an official government ID (National ID / NIN, International Passport, Driver\'s License, Voter\'s Card, or Residence Permit). Please upload a clear photo of an official ID.',
+      );
+    }
+
+    if (!geminiResult.documentTypeMatches) {
+      const selectedLabel = this.geminiVisionService.humanDocumentLabel(
+        geminiResult.selectedDocumentCategory,
+      );
+      const detectedLabel = this.geminiVisionService.humanDocumentLabel(
+        geminiResult.documentType,
+      );
+      throw new BadRequestException(
+        `Document type mismatch: You selected "${selectedLabel}", but the uploaded document was identified as "${detectedLabel}". Please select "${detectedLabel}" or upload a valid "${selectedLabel}".`,
+      );
+    }
+
+    if (!geminiResult.hasValidIdNumber) {
+      const detectedLabel = this.geminiVisionService.humanDocumentLabel(
+        geminiResult.documentType,
+      );
+      throw new BadRequestException(
+        `Unreadable ID number: Could not verify a valid official ID / Document Number on your ${detectedLabel}. Please ensure all 4 corners and the ID number are clearly visible.`,
+      );
+    }
+
+    if (geminiResult.isExpired) {
+      const detectedLabel = this.geminiVisionService.humanDocumentLabel(
+        geminiResult.documentType,
+      );
+      const expiryInfo = geminiResult.extractedExpiryDate
+        ? ` (Expired on ${geminiResult.extractedExpiryDate})`
+        : ' (Expiration date unreadable or expired)';
+      throw new BadRequestException(
+        `Expired document rejected: Your ${detectedLabel}${expiryInfo} is no longer valid. Please upload a current, non-expired government ID.`,
       );
     }
 
@@ -141,9 +175,16 @@ export class VerificationService {
       );
     }
 
-    if (!geminiResult.faceMatches || geminiResult.faceMatchScore < 60) {
+    if (!geminiResult.faceMatches || geminiResult.faceMatchScore < 75) {
       throw new BadRequestException(
-        `Biometric mismatch: The face in the live selfie does not match the portrait photo on the identity document (Similarity: ${geminiResult.faceMatchScore}%). Please ensure you are uploading your own legitimate ID.`,
+        `Biometric face mismatch: The person in the live selfie does not match the portrait photograph on the uploaded ID (Similarity: ${geminiResult.faceMatchScore}%). Please upload your own ID and take a clear live selfie.`,
+      );
+    }
+
+    if (!geminiResult.ageMatches) {
+      const dobNotice = geminiResult.extractedDob ? ` (ID DOB: ${geminiResult.extractedDob})` : '';
+      throw new BadRequestException(
+        `Age / Date of Birth mismatch: The age or date of birth on the ID${dobNotice} does not match your registered profile or live selfie appearance. ${geminiResult.details || ''}`.trim(),
       );
     }
 
@@ -160,8 +201,8 @@ export class VerificationService {
       this.logger.warn(`Didit provider notice: ${e.message}`);
     }
 
-    // Prioritize user selected document type if supplied, then Gemini Vision AI recognition, then Didit provider
-    const rawDocType = body?.documentType || geminiResult.documentType || diditDocResult?.documentType || 'GOVERNMENT_ID';
+    // Use the AI-verified document type
+    const rawDocType = geminiResult.documentType || body?.documentType || diditDocResult?.documentType || 'GOVERNMENT_ID';
     const docType = this.formatDocumentClass(rawDocType);
     const compositeScore = Math.max(90, Math.round(
       geminiResult.confidenceScore * 0.4 +
@@ -181,7 +222,7 @@ export class VerificationService {
 
     // Verification selfie is strictly saved for KYC audit/verification records, NEVER as a public profile display photo
 
-    // Update user record in PostgreSQL via Prisma
+    // Update user record in PostgreSQL via Prisma (include profileImages so client state stays complete)
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
       data: {
@@ -195,7 +236,10 @@ export class VerificationService {
         idDocType: docType,
         trustScore: Math.min(100, 95 + Math.floor(Math.random() * 5)),
       },
+      include: { profileImages: true },
     });
+
+    const { passwordHash, ...sanitizedUser } = updatedUser as any;
 
     this.logger.log(`User ${userId} successfully verified with GOLD badge and score ${compositeScore}% via Gemini Vision`);
 
@@ -208,6 +252,8 @@ export class VerificationService {
       ocrData: {
         fullName: geminiResult.extractedName,
         dateOfBirth: geminiResult.extractedDob,
+        idNumber: geminiResult.extractedIdNumber,
+        expiryDate: geminiResult.extractedExpiryDate,
       },
       metrics: {
         documentConfidence: geminiResult.confidenceScore,
@@ -215,16 +261,7 @@ export class VerificationService {
         faceMatchScore: geminiResult.faceMatchScore,
       },
       message: 'Identity verified successfully. Gold Trust Badge granted.',
-      user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
-        isVerified: updatedUser.isVerified,
-        verificationBadge: updatedUser.verificationBadge,
-        trustScore: updatedUser.trustScore,
-        selfieUrl: updatedUser.selfieUrl,
-      },
+      user: sanitizedUser,
     };
   }
 
