@@ -17,11 +17,13 @@ export const metadata: Metadata = {
   description: "KNOT is a premium, AI-powered relationship intelligence platform for verified serious singles seeking marriage and long-term commitment. No games. No fakes. Just real connections.",
   icons: {
     icon: [
-      { url: "/favicon.png", type: "image/png" },
+      { url: "/knot-icon.png?v=3", sizes: "192x192", type: "image/png" },
+      { url: "/favicon.png?v=3", sizes: "64x64", type: "image/png" },
+      { url: "/favicon.ico?v=3", sizes: "32x32", type: "image/x-icon" },
     ],
-    shortcut: ["/favicon.png"],
+    shortcut: ["/knot-icon.png?v=3"],
     apple: [
-      { url: "/favicon.png", type: "image/png" },
+      { url: "/knot-icon.png?v=3", sizes: "192x192", type: "image/png" },
     ],
   },
 };
@@ -34,6 +36,10 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <head>
+        <link rel="icon" type="image/png" sizes="192x192" href="/knot-icon.png?v=3" />
+        <link rel="icon" type="image/png" sizes="64x64" href="/favicon.png?v=3" />
+        <link rel="shortcut icon" href="/favicon.ico?v=3" />
+        <link rel="apple-touch-icon" href="/knot-icon.png?v=3" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
