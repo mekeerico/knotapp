@@ -13,11 +13,17 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "KNOT | Where Compatibility Becomes Commitment",
+  title: "KNOT | True Relationship Leads to Vow",
   description: "KNOT is a premium, AI-powered relationship intelligence platform for verified serious singles seeking marriage and long-term commitment. No games. No fakes. Just real connections.",
   icons: {
-    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="85">💍</text></svg>',
-  }
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    shortcut: ["/favicon.png"],
+    apple: [
+      { url: "/favicon.png", type: "image/png" },
+    ],
+  },
 };
 
 export default function RootLayout({
