@@ -24,7 +24,6 @@ export default function Home() {
             <Link href="#features" className="hover:text-[#D4AF37] transition-colors">Platform</Link>
             <Link href="#trust" className="hover:text-[#D4AF37] transition-colors">Trust Architecture</Link>
             <Link href="#coach" className="hover:text-[#D4AF37] transition-colors">AI Coach</Link>
-            <Link href="#pricing" className="hover:text-[#D4AF37] transition-colors">Elite Tiers</Link>
           </nav>
           <div className="flex items-center gap-3 md:gap-4">
             <Link href="/login" className="text-sm font-semibold hover:text-[#D4AF37] transition-colors">
@@ -303,107 +302,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing/Monetization */}
-      <section id="pricing" className="py-24 relative">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
-            <h2 className="text-4xl md:text-5xl font-serif font-black text-white">Select Your Registry Tier</h2>
-            <p className="text-gray-400">Intelligent compatibility matching designed specifically for serious, marriage-oriented individuals.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {/* Free / Essential */}
-            <div className="p-7 rounded-[28px] glass-card flex flex-col justify-between border border-white/5">
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-lg font-bold text-gray-300">Knot Essential</h4>
-                  <div className="text-3xl font-serif font-black text-white mt-2">Free</div>
-                  <p className="text-[11px] text-gray-500 mt-1">Standard Registry Access</p>
-                </div>
-                <ul className="space-y-3 text-xs text-gray-400">
-                  <li className="flex items-center gap-2"><span className="text-white font-semibold">✔ 3 AI-Curated Matches/Day</span></li>
-                  <li className="flex items-center gap-2">✔ Biometric Identity Verification</li>
-                  <li className="flex items-center gap-2">✔ Basic Compatibility Score</li>
-                  <li className="flex items-center gap-2">✔ Real-time Messaging</li>
-                </ul>
-              </div>
-              <Link href="/onboarding" className="w-full mt-8 py-3 rounded-full text-xs font-bold bg-white/5 border border-white/10 text-[#F5F5F1] text-center hover:bg-white/10 transition-all">
-                Access Free Tier
-              </Link>
-            </div>
-
-            {/* Premium */}
-            <div className="p-7 rounded-[28px] glass-card flex flex-col justify-between border border-[#D4AF37]/30 relative shadow-2xl shadow-[#D4AF37]/5">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#2D1B4E] text-[#D4AF37] border border-[#D4AF37]/30 font-black text-[9px] uppercase tracking-widest px-4 py-1 rounded-full whitespace-nowrap">
-                Most Popular
-              </div>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-lg font-bold text-[#D4AF37]">Knot Premium</h4>
-                  <div className="text-3xl font-serif font-black text-white mt-2">$14.99<span className="text-xs font-sans text-gray-400">/mo</span></div>
-                  <p className="text-[11px] text-gray-500 mt-1">$12.00/mo (~₦19,200) in Africa</p>
-                </div>
-                <ul className="space-y-3 text-xs text-gray-300">
-                  <li className="flex items-center gap-2 text-[#D4AF37] font-semibold">✔ 15 AI-Curated Matches/Day</li>
-                  <li className="flex items-center gap-2">✔ Unlimited Intentional Messaging</li>
-                  <li className="flex items-center gap-2">✔ 24/7 AI Relationship Coach</li>
-                  <li className="flex items-center gap-2">✔ Detailed Compatibility Breakdowns</li>
-                  <li className="flex items-center gap-2">✔ Advanced Alignment Filters</li>
-                </ul>
-              </div>
-              <Link href="/onboarding" className="w-full mt-8 py-3 rounded-full text-xs font-black bg-[#D4AF37] text-[#0A0E14] text-center hover:opacity-90 transition-all">
-                Upgrade to Premium
-              </Link>
-            </div>
-
-            {/* Elite */}
-            <div className="p-7 rounded-[28px] glass-card flex flex-col justify-between border border-[#D4AF37]/50 relative lg:scale-105 shadow-2xl shadow-[#D4AF37]/10 bg-[#D4AF37]/[0.03]">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#D4AF37] text-black font-black text-[9px] uppercase tracking-widest px-4 py-1 rounded-full whitespace-nowrap">
-                Elite Sovereign
-              </div>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-lg font-bold text-white">Knot Elite</h4>
-                  <div className="text-3xl font-serif font-black text-[#D4AF37] mt-2">$39.99<span className="text-xs font-sans text-gray-400">/mo</span></div>
-                  <p className="text-[11px] text-gray-500 mt-1">$25.00/mo (~₦40,000) in Africa</p>
-                </div>
-                <ul className="space-y-3 text-xs text-gray-300">
-                  <li className="flex items-center gap-2 text-[#D4AF37] font-semibold">✔ 25 Elite Matches/Day</li>
-                  <li className="flex items-center gap-2">✔ Deep Emotional Compatibility Map</li>
-                  <li className="flex items-center gap-2">✔ Highest Trust Seal Visibility</li>
-                  <li className="flex items-center gap-2">✔ Invisible & Incognito Browsing</li>
-                  <li className="flex items-center gap-2">✔ Priority Matchmaking Placement</li>
-                </ul>
-              </div>
-              <Link href="/onboarding" className="w-full mt-8 py-3 rounded-full text-xs font-black rose-glow-btn text-white text-center">
-                Select Elite
-              </Link>
-            </div>
-
-            {/* Executive */}
-            <div className="p-7 rounded-[28px] glass-card flex flex-col justify-between border border-white/10 bg-black/40">
-              <div className="space-y-6">
-                <div>
-                  <h4 className="text-lg font-bold text-white">Knot Executive</h4>
-                  <div className="text-3xl font-serif font-black text-white mt-2">$199<span className="text-xs font-sans text-gray-400">/mo</span></div>
-                  <p className="text-[11px] text-gray-500 mt-1">VIP Concierge Vows</p>
-                </div>
-                <ul className="space-y-3 text-xs text-gray-400">
-                  <li className="flex items-center gap-2 text-white font-semibold">✔ Unlimited Concierge Matches</li>
-                  <li className="flex items-center gap-2">✔ 1-on-1 Human Matchmaker Consults</li>
-                  <li className="flex items-center gap-2">✔ Private Relationship Advisors</li>
-                  <li className="flex items-center gap-2">✔ White-Glove Vetting & Onboarding</li>
-                  <li className="flex items-center gap-2">✔ Bespoke Psychological Reviews</li>
-                </ul>
-              </div>
-              <Link href="/login" className="w-full mt-8 py-3 rounded-full text-xs font-bold bg-white text-black text-center hover:bg-gray-200 transition-all">
-                Apply for Executive
-              </Link>
             </div>
           </div>
         </div>
