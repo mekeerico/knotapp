@@ -41,7 +41,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
           <div className="lg:col-span-7 space-y-8 text-left">
             <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] sm:text-xs font-semibold tracking-wider text-[#D4AF37] uppercase">
-              <Sparkles className="w-3.5 h-3.5" /> FRAUD-PROOF | AI MATCHMAKING | HIGH-TRUST
+              <Sparkles className="w-3.5 h-3.5" /> ANTI-FRAUD | AI MATCHMAKING | HIGH-TRUST
             </div>
             <h1 className="text-3xl sm:text-5xl md:text-7xl font-serif font-black text-[#F5F5F1] leading-tight">
               Where Compatibility <br />

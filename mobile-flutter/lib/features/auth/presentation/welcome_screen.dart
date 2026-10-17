@@ -6,6 +6,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/gold_button.dart';
+import '../../../core/widgets/verified_badge.dart';
 import '../providers/auth_provider.dart';
 
 class _ShowcaseCandidate {
@@ -281,7 +282,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
-                  'FRAUD-PROOF  •  AI MATCHMAKING  •  HIGH-TRUST',
+                  'ANTI-FRAUD  |  AI MATCHMAKING  |  HIGH-TRUST',
                   style: AppTypography.labelSmall.copyWith(
                     color: AppColors.champagneGold,
                     fontSize: 9.5,
@@ -395,210 +396,231 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        SizedBox(
-          height: 555,
-          child: _buildCinematicCandidateCard(_featuredCandidate),
-        ),
+        _buildCinematicCandidateCard(_featuredCandidate),
       ],
     );
   }
 
   Widget _buildCinematicCandidateCard(_ShowcaseCandidate candidate) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF11151E),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: AppColors.champagneGold.withValues(alpha: 0.28),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.65),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // High-Resolution Studio Portrait Container
-          Expanded(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Live Discovery-Style Candidate Card with the exact Male Studio Portrait
+        GestureDetector(
+          onTap: () => _navigateToAuth(isRegister: true),
+          child: Container(
+            height: 460,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: AppColors.champagneGold.withValues(alpha: 0.45),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  blurRadius: 24,
+                  spreadRadius: 4,
+                  offset: const Offset(0, 12),
+                ),
+              ],
+            ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(27),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
+                  // 1. Exact Male Studio Portrait Image
                   Image.asset(
                     candidate.assetPath,
                     fit: BoxFit.cover,
                     alignment: Alignment.topCenter,
                   ),
 
-                  // Subtle cinematic dark vignette at bottom for text legibility
+                  // 2. Dark Gradient Overlay for Text Readability (Matches CandidateCard)
                   Container(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withValues(alpha: 0.15),
+                          Colors.black.withValues(alpha: 0.25),
                           Colors.transparent,
-                          Colors.black.withValues(alpha: 0.55),
-                          Colors.black.withValues(alpha: 0.92),
+                          Colors.black.withValues(alpha: 0.65),
+                          Colors.black.withValues(alpha: 0.95),
                         ],
-                        stops: const [0.0, 0.35, 0.72, 1.0],
+                        stops: const [0.0, 0.35, 0.7, 1.0],
                       ),
                     ),
                   ),
 
-                  // Top-Left ID & Selfie Verified Badge
+                  // 3. Top Row: Match Score Pill & Gold Verified Badge (Matches CandidateCard)
                   Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.68),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppColors.emeraldVerified.withValues(alpha: 0.45),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.verified_user,
-                            color: AppColors.emeraldVerified,
-                            size: 13,
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            'ID & Selfie Verified',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.emeraldVerified,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 10.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Top-Right Gold TRUST 97% Pill Badge (Matches User Reference Image)
-                  Positioned(
-                    top: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-                      decoration: BoxDecoration(
-                        gradient: AppColors.goldGradient,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.4),
-                            blurRadius: 8,
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.shield,
-                            color: AppColors.obsidianBlack,
-                            size: 12,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            candidate.trustScore,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.obsidianBlack,
-                              fontWeight: FontWeight.w900,
-                              fontSize: 10,
-                              letterSpacing: 0.6,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Bottom Overlay: Candidate Name, Verified Tick, Role & Match Score
-                  Positioned(
-                    left: 14,
-                    right: 14,
-                    bottom: 14,
+                    top: 18,
+                    left: 18,
+                    right: 18,
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        // Closest Match Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.obsidianBlack.withValues(alpha: 0.8),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: AppColors.champagneGold,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      candidate.nameAge,
-                                      style: AppTypography.headingLarge.copyWith(
-                                        color: AppColors.textPure,
-                                        fontSize: 24,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.all(3),
-                                    decoration: const BoxDecoration(
-                                      color: AppColors.champagneGold,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.check,
-                                      size: 11,
-                                      color: AppColors.obsidianBlack,
-                                    ),
-                                  ),
-                                ],
+                              const Icon(
+                                Icons.favorite,
+                                color: AppColors.roseGlow,
+                                size: 14,
                               ),
-                              const SizedBox(height: 3),
+                              const SizedBox(width: 6),
                               Text(
-                                candidate.roleLocation,
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 12,
+                                '96% CLOSEST MATCH',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: AppColors.champagneGold,
+                                  fontWeight: FontWeight.w800,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(width: 8),
+
+                        // Sovereign Gold Verified Badge
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
-                            color: AppColors.champagneGold.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: AppColors.champagneGold.withValues(alpha: 0.5),
-                            ),
+                            color: AppColors.obsidianBlack.withValues(alpha: 0.8),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppColors.glassBorder),
                           ),
-                          child: Text(
-                            candidate.matchScore,
-                            style: AppTypography.labelSmall.copyWith(
+                          child: const VerifiedBadge(
+                            size: 16,
+                            showLabel: true,
+                            label: 'GOLD',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // 4. Bottom Profile Details Overlay (Matches CandidateCard)
+                  Positioned(
+                    bottom: 24,
+                    left: 20,
+                    right: 20,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Full-Width Name, Age & Verified Badge
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                'MICHAEL, 30',
+                                style: AppTypography.headingLarge.copyWith(
+                                  fontSize: 24,
+                                  color: AppColors.textPure,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const VerifiedBadge(size: 20),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+
+                        // Occupation Row
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.work_outline,
+                              size: 15,
                               color: AppColors.champagneGold,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 10.5,
                             ),
-                          ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Principal Engineer',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+
+                        // Location Row
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 15,
+                              color: AppColors.textMuted,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'San Francisco, USA',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+
+                        // Archetype & Marriage Timeline Chips
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _buildMiniChip(
+                              'The Strategic Visionary',
+                              Icons.psychology_outlined,
+                            ),
+                            _buildMiniChip(
+                              'Within 18 months',
+                              Icons.access_time,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Tap to view full compatibility hint
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'View Psychological Compatibility & Vows',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.champagneGold,
+                                fontSize: 11,
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 13,
+                              color: AppColors.champagneGold,
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -607,126 +629,129 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+        ),
+        const SizedBox(height: 16),
 
-          // Verified Trait Pills
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: candidate.traits.map((trait) {
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.glassBorder),
-                ),
-                child: Text(
-                  trait,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 10),
-
-          // "Why You Matched" AI Explanation Box
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppColors.glassBorder),
+        // 5. Current Discovery Action Buttons Row (X, Star, Love)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildDiscoveryActionButton(
+              icon: Icons.close,
+              color: AppColors.textSubtle,
+              size: 52,
+              onTap: () => _navigateToAuth(isRegister: false),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'WHY YOU MATCHED (AI COMPATIBILITY)',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.champagneGold,
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  candidate.whyMatched,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 11.5,
-                    height: 1.4,
-                  ),
-                ),
-              ],
+            _buildDiscoveryActionButton(
+              icon: Icons.star,
+              color: AppColors.champagneGold,
+              size: 64,
+              onTap: () => _navigateToAuth(isRegister: true),
             ),
-          ),
-          const SizedBox(height: 10),
+            _buildDiscoveryActionButton(
+              icon: Icons.favorite,
+              color: AppColors.roseGlow,
+              size: 52,
+              onTap: () => _navigateToAuth(isRegister: true),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
 
-          // Preview Action Row (Pass / Connect) matching reference screenshot
-          Row(
+        // 6. "Why You Matched" AI Explanation Box
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.glassBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => _navigateToAuth(isRegister: false),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 11),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.glassBorder),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Pass',
-                      style: AppTypography.labelLarge.copyWith(
-                        color: AppColors.textPure,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
+              Text(
+                'WHY YOU MATCHED (AI COMPATIBILITY)',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.champagneGold,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.1,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () => _navigateToAuth(isRegister: true),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 11),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFE11D48), Color(0xFF9333EA)],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    alignment: Alignment.center,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Connect',
-                          style: AppTypography.labelLarge.copyWith(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        const Icon(Icons.favorite_border, color: Colors.white, size: 14),
-                      ],
-                    ),
-                  ),
+              const SizedBox(height: 4),
+              Text(
+                candidate.whyMatched,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 11.5,
+                  height: 1.4,
                 ),
               ),
             ],
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMiniChip(String text, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: AppColors.champagneGold),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textPure,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDiscoveryActionButton({
+    required IconData icon,
+    required Color color,
+    required double size,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.darkSlate,
+          border: Border.all(
+            color: color.withValues(alpha: 0.4),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.25),
+              blurRadius: 14,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Icon(
+          icon,
+          color: color,
+          size: size * 0.45,
+        ),
       ),
     );
   }
@@ -1156,7 +1181,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
       child: Column(
         children: [
           Text(
-            'KNOT. — True Relationship Leads to Vow',
+            'KNOT. — Where True Relationship Leads to Vow',
             style: AppTypography.labelLarge.copyWith(
               color: AppColors.champagneGold,
               fontSize: 12,

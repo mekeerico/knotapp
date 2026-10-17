@@ -107,11 +107,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'True Relationship Leads to Vow',
+                  'Where True Relationship Leads to Vow',
                   style: AppTypography.headingMedium.copyWith(
-                    fontSize: 16,
+                    fontSize: 15.5,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: 1.4,
+                    letterSpacing: 1.2,
                     color: AppColors.champagneGold,
                   ),
                   textAlign: TextAlign.center,
