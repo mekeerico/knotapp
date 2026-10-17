@@ -71,6 +71,17 @@ class RevenueCatService {
     }
   }
 
+  /// Fetches current customer info and active entitlements from RevenueCat
+  static Future<CustomerInfo?> getCustomerInfo() async {
+    if (!_initialized) await init();
+    try {
+      return await Purchases.getCustomerInfo();
+    } catch (e) {
+      debugPrint('[RevenueCat] Error fetching customer info: $e');
+      return null;
+    }
+  }
+
   /// Initiates native In-App Purchase for the chosen package
   static Future<CustomerInfo?> purchasePackage(Package package) async {
     if (!_initialized) await init();
