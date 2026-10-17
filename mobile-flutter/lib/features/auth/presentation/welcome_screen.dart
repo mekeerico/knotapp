@@ -16,7 +16,6 @@ class _ShowcaseCandidate {
   final String matchScore;
   final List<String> traits;
   final String whyMatched;
-  final String genderLabel;
 
   const _ShowcaseCandidate({
     required this.nameAge,
@@ -26,7 +25,6 @@ class _ShowcaseCandidate {
     required this.matchScore,
     required this.traits,
     required this.whyMatched,
-    required this.genderLabel,
   });
 }
 
@@ -39,60 +37,21 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   final ScrollController _scrollController = ScrollController();
-  final PageController _candidateController = PageController();
-  int _activeCandidateIndex = 0;
 
   Timer? _initialDelayTimer;
   Timer? _autoScrollTimer;
-  Timer? _candidateCycleTimer;
   bool _userTookOverScroll = false;
 
-  static const List<_ShowcaseCandidate> _candidates = [
-    _ShowcaseCandidate(
-      genderLabel: 'Gentleman • Michael',
-      nameAge: 'Michael, 30',
-      roleLocation: 'Principal Engineer • San Francisco, USA',
-      assetPath: 'assets/images/welcome_male.jpg',
-      trustScore: 'TRUST 97%',
-      matchScore: '96% Match Score',
-      traits: ['✔ Family-Oriented', '✔ Secure Attachment', '✔ Marriage-Focused'],
-      whyMatched:
-          '"You both prioritize family traditions, share a calm conflict-resolution style, and seek marriage within 1–2 years."',
-    ),
-    _ShowcaseCandidate(
-      genderLabel: 'Lady • Sophia',
-      nameAge: 'Sophia, 27',
-      roleLocation: 'Pediatric Specialist • London, UK',
-      assetPath: 'assets/images/welcome_female.jpg',
-      trustScore: 'TRUST 98%',
-      matchScore: '97% Match Score',
-      traits: ['✔ Covenant-Minded', '✔ Empathetic Listener', '✔ Faith & Legacy'],
-      whyMatched:
-          '"Both of you value intentional communication, financial transparency, and building a warm, faith-grounded home."',
-    ),
-    _ShowcaseCandidate(
-      genderLabel: 'Gentleman • Gabriel',
-      nameAge: 'Gabriel, 29',
-      roleLocation: 'Senior Architect • Toronto, Canada',
-      assetPath: 'assets/images/welcome_gabriel.jpg',
-      trustScore: 'TRUST 96%',
-      matchScore: '95% Match Score',
-      traits: ['✔ Intentional Leader', '✔ High Emotional IQ', '✔ Ready for Vows'],
-      whyMatched:
-          '"Strong alignment on career-family balance, shared cultural heritage appreciation, and long-term stewardship."',
-    ),
-    _ShowcaseCandidate(
-      genderLabel: 'Lady • Amara',
-      nameAge: 'Amara, 28',
-      roleLocation: 'Corporate Counsel • Lagos & Houston',
-      assetPath: 'assets/images/welcome_female_dark.jpg',
-      trustScore: 'TRUST 99%',
-      matchScore: '98% Match Score',
-      traits: ['✔ Purpose-Driven', '✔ Family First', '✔ Verified Sovereign'],
-      whyMatched:
-          '"Exceptional compatibility across core spiritual values, family closeness, and shared vision for raising children."',
-    ),
-  ];
+  static const _ShowcaseCandidate _featuredCandidate = _ShowcaseCandidate(
+    nameAge: 'Michael, 30',
+    roleLocation: 'Engineer • San Francisco, USA',
+    assetPath: 'assets/images/welcome_male.jpg',
+    trustScore: 'TRUST 97%',
+    matchScore: '96% Match Score',
+    traits: ['✔ Family-Oriented', '✔ Secure Attachment', '✔ Marriage-Focused'],
+    whyMatched:
+        '"You both prioritize family traditions, share a calm conflict-resolution style, and seek marriage within 1–2 years."',
+  );
 
   @override
   void initState() {
@@ -101,7 +60,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   }
 
   void _startGentleAutoScroll() {
-    // Wait briefly after launch so the user takes in the hero headline, then begin a gentle upward glide
+    // Wait briefly after launch so the user takes in the hero headline, then begin a gentle downward scroll
     _initialDelayTimer = Timer(const Duration(milliseconds: 1400), () {
       if (!mounted || _userTookOverScroll) return;
 
@@ -121,20 +80,6 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           (currentOffset + 0.65).clamp(0.0, maxExtent),
         );
       });
-
-      // Also gently cycle through Verified Male & Female candidate cards every 4.2s until user touches
-      _candidateCycleTimer = Timer.periodic(const Duration(milliseconds: 4200), (timer) {
-        if (!mounted || _userTookOverScroll || !_candidateController.hasClients) {
-          timer.cancel();
-          return;
-        }
-        final nextIdx = (_activeCandidateIndex + 1) % _candidates.length;
-        _candidateController.animateToPage(
-          nextIdx,
-          duration: const Duration(milliseconds: 550),
-          curve: Curves.easeInOutCubic,
-        );
-      });
     });
   }
 
@@ -143,16 +88,13 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     _userTookOverScroll = true;
     _initialDelayTimer?.cancel();
     _autoScrollTimer?.cancel();
-    _candidateCycleTimer?.cancel();
   }
 
   @override
   void dispose() {
     _initialDelayTimer?.cancel();
     _autoScrollTimer?.cancel();
-    _candidateCycleTimer?.cancel();
     _scrollController.dispose();
-    _candidateController.dispose();
     super.dispose();
   }
 
@@ -198,7 +140,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 _buildTopNavbar(),
 
                 // Scrollable Multi-Section Editorial Landing Content
-                // Gently auto-scrolls on launch and immediately yields control on touch
+                // Gently auto-scrolls vertically on launch and immediately yields control on touch
                 Expanded(
                   child: Listener(
                     onPointerDown: (_) => _stopAutoScrollOnUserTouch(),
@@ -444,107 +386,18 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'SOVEREIGN VERIFIED PROFILES',
-              style: AppTypography.labelSmall.copyWith(
-                color: AppColors.champagneGold,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 1.4,
-              ),
-            ),
-            Text(
-              'Swipe or tap to preview',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSubtle,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-
-        // Candidate Switcher Pills (Male & Female realistic portraits)
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: List.generate(_candidates.length, (index) {
-              final isSelected = _activeCandidateIndex == index;
-              final item = _candidates[index];
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() => _activeCandidateIndex = index);
-                    _candidateController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 320),
-                      curve: Curves.easeOutCubic,
-                    );
-                  },
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppColors.champagneGold.withValues(alpha: 0.18)
-                          : Colors.white.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.champagneGold
-                            : AppColors.glassBorder,
-                      ),
-                    ),
-                    child: Text(
-                      item.genderLabel,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isSelected ? AppColors.champagneGold : AppColors.textSecondary,
-                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }),
+        Text(
+          'SOVEREIGN VERIFIED PROFILE',
+          style: AppTypography.labelSmall.copyWith(
+            color: AppColors.champagneGold,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.4,
           ),
         ),
-        const SizedBox(height: 14),
-
-        // Cinematic Candidate Card Carousel
+        const SizedBox(height: 12),
         SizedBox(
           height: 555,
-          child: PageView.builder(
-            controller: _candidateController,
-            itemCount: _candidates.length,
-            onPageChanged: (idx) => setState(() => _activeCandidateIndex = idx),
-            itemBuilder: (context, index) {
-              final candidate = _candidates[index];
-              return _buildCinematicCandidateCard(candidate);
-            },
-          ),
-        ),
-
-        const SizedBox(height: 12),
-        // Page Indicator Dots
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(_candidates.length, (index) {
-            final isSelected = _activeCandidateIndex == index;
-            return AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: isSelected ? 22 : 7,
-              height: 7,
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.champagneGold : Colors.white24,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            );
-          }),
+          child: _buildCinematicCandidateCard(_featuredCandidate),
         ),
       ],
     );
@@ -816,19 +669,12 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           ),
           const SizedBox(height: 10),
 
-          // Interactive Preview Action Row (Pass / Connect)
+          // Preview Action Row (Pass / Connect) matching reference screenshot
           Row(
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () {
-                    final nextIdx = (_activeCandidateIndex + 1) % _candidates.length;
-                    _candidateController.animateToPage(
-                      nextIdx,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutCubic,
-                    );
-                  },
+                  onTap: () => _navigateToAuth(isRegister: false),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 11),
                     decoration: BoxDecoration(
@@ -838,9 +684,9 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      'Next Profile',
+                      'Pass',
                       style: AppTypography.labelLarge.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppColors.textPure,
                         fontSize: 12,
                       ),
                     ),
