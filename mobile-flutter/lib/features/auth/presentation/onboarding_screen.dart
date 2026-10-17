@@ -38,8 +38,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String _gender = 'Female';
   DateTime? _selectedDob;
 
-  // Controllers - Screen 3: Vocation & Faith
+  // Controllers - Screen 3: Vocation, Education & Faith
   final _occupationController = TextEditingController();
+  String _educationSelect = "Bachelor's Degree (B.Sc. / B.A. / LL.B)";
+  final _educationCustomController = TextEditingController();
   String _religionSelect = 'Christian';
   final _religionCustomController = TextEditingController();
 
@@ -104,6 +106,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _occupationController.dispose();
+    _educationCustomController.dispose();
     _religionCustomController.dispose();
     _otherLanguageController.dispose();
     _residenceStateCustomController.dispose();
@@ -156,10 +159,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       }
     }
 
-    // Screen 3 Validation: Vocation & Faith
+    // Screen 3 Validation: Vocation, Education & Faith
     if (_currentStep == 2) {
       if (_occupationController.text.trim().isEmpty) {
         _showError('Please enter your occupation.');
+        return;
+      }
+      if (_educationSelect == 'Other' && _educationCustomController.text.trim().isEmpty) {
+        _showError('Please specify your highest educational qualification.');
         return;
       }
       if (_religionSelect == 'Other' && _religionCustomController.text.trim().isEmpty) {
@@ -315,6 +322,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ? _religionCustomController.text.trim()
         : _religionSelect;
 
+    final finalEducation = _educationSelect == 'Other'
+        ? _educationCustomController.text.trim()
+        : _educationSelect;
+
     final resStateList = KnotLocationData.statesFor(_residenceCountry);
     final finalResState = resStateList.isNotEmpty
         ? (resStateList.contains(_residenceState) ? _residenceState : resStateList.first)
@@ -363,6 +374,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       'preferredGender': preferredGender,
       'dateOfBirth': _formattedDob,
       'occupation': _occupationController.text.trim(),
+      'education': finalEducation,
       'religion': finalReligion,
       'languagesSpoken': languages,
       // Residence
@@ -665,17 +677,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   // ==========================================
-  // SCREEN 3: VOCATION & FAITH
+  // SCREEN 3: VOCATION, EDUCATION & FAITH
   // ==========================================
   Widget _buildVocationAndFaithStep() {
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('VOCATION & FAITH', style: AppTypography.headingLarge),
+          Text('VOCATION, EDUCATION & FAITH', style: AppTypography.headingLarge),
           const SizedBox(height: 6),
           Text(
-            'Your professional career and spiritual core.',
+            'Your professional career, highest educational qualification, and spiritual core.',
             style: AppTypography.bodySmall,
           ),
           const SizedBox(height: 24),
@@ -686,6 +698,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
             decoration: const InputDecoration(hintText: 'e.g. Software Engineer, Physician, Architect'),
           ),
+
+          const SizedBox(height: 20),
+          _buildDropdownField(
+            label: 'Highest Educational Qualification',
+            value: _educationSelect,
+            items: KnotLocationData.educationOptions,
+            onChanged: (val) {
+              if (val != null) setState(() => _educationSelect = val);
+            },
+          ),
+          if (_educationSelect == 'Other') ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: _educationCustomController,
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+              decoration: const InputDecoration(hintText: 'Specify highest educational qualification'),
+            ),
+          ],
 
           const SizedBox(height: 20),
           _buildDropdownField(

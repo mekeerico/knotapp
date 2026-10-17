@@ -198,7 +198,7 @@ class MatchProfile {
       originState: originState,
       originCountry: originCountry,
       occupation: _nonEmpty(partner['occupation'], 'Professional'),
-      education: _nonEmpty(partner['education'], 'University Degree'),
+      education: _nonEmpty(partner['education']),
       religion: _nonEmpty(partner['religion'], 'Christian'),
       culturalBackground: _nonEmpty(partner['culturalBackground']),
       languagesSpoken: _parseStringList(partner['languagesSpoken'], const ['English']),

@@ -76,6 +76,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       _socket?.onConnect((_) => state = state.copyWith(isConnected: true));
       _socket?.onDisconnect((_) => state = state.copyWith(isConnected: false));
       _socket?.on('receiveMessage', _handleIncoming);
+      _socket?.on('messageReceived', _handleIncoming);
       _socket?.connect();
     } catch (_) {
       // Polling below keeps chat working even if the socket can't connect.
@@ -117,7 +118,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
     // Fallback refresh so messages arrive even if the websocket is blocked
     _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
       final active = state.activeMatchId;
       if (active != null) loadMessageHistory(active);
     });
@@ -168,6 +169,13 @@ class ChatNotifier extends StateNotifier<ChatState> {
       if (data is Map && data['id'] != null) {
         _mergeMessages(partnerId, [ChatMessage.fromJson(Map<String, dynamic>.from(data), _currentUserId)]);
         state = state.copyWith(clearError: true);
+        // Trigger fast follow-up fetches so the matched candidate's reply appears immediately
+        Future.delayed(const Duration(milliseconds: 1800), () {
+          if (mounted) loadMessageHistory(partnerId);
+        });
+        Future.delayed(const Duration(milliseconds: 3600), () {
+          if (mounted) loadMessageHistory(partnerId);
+        });
       } else {
         throw Exception('Message was not saved');
       }

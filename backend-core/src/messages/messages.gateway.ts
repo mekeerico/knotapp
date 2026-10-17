@@ -43,12 +43,17 @@ export class MessagesGateway implements OnGatewayConnection, OnGatewayDisconnect
     }
   }
 
+  isUserOnline(userId: string): boolean {
+    return this.activeConnections.has(userId);
+  }
+
   /** Push a message saved via REST to both participants if they are online. */
   notifyNewMessage(message: { senderId: string; receiverId: string }) {
     for (const uid of [message.receiverId, message.senderId]) {
       const sid = this.activeConnections.get(uid);
       if (sid) {
         this.server.to(sid).emit('receiveMessage', message);
+        this.server.to(sid).emit('messageReceived', message);
       }
     }
   }

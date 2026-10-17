@@ -136,17 +136,12 @@ export class VerificationService {
       const detectedLabel = this.geminiVisionService.humanDocumentLabel(
         geminiResult.documentType,
       );
+      const expiryNote =
+        geminiResult.isExpired && geminiResult.extractedExpiryDate
+          ? ` Additionally, the uploaded ${detectedLabel} is expired (Expiry Date: ${geminiResult.extractedExpiryDate}).`
+          : '';
       throw new BadRequestException(
-        `Document type mismatch: You selected "${selectedLabel}", but the uploaded document was identified as "${detectedLabel}". Please select "${detectedLabel}" or upload a valid "${selectedLabel}".`,
-      );
-    }
-
-    if (!geminiResult.hasValidIdNumber) {
-      const detectedLabel = this.geminiVisionService.humanDocumentLabel(
-        geminiResult.documentType,
-      );
-      throw new BadRequestException(
-        `Unreadable ID number: Could not verify a valid official ID / Document Number on your ${detectedLabel}. Please ensure all 4 corners and the ID number are clearly visible.`,
+        `Document type mismatch: You selected "${selectedLabel}", but the uploaded document was identified as "${detectedLabel}".${expiryNote} Please select "${detectedLabel}" or upload a valid, non-expired "${selectedLabel}".`,
       );
     }
 
@@ -159,6 +154,15 @@ export class VerificationService {
         : ' (Expiration date unreadable or expired)';
       throw new BadRequestException(
         `Expired document rejected: Your ${detectedLabel}${expiryInfo} is no longer valid. Please upload a current, non-expired government ID.`,
+      );
+    }
+
+    if (!geminiResult.hasValidIdNumber) {
+      const detectedLabel = this.geminiVisionService.humanDocumentLabel(
+        geminiResult.documentType,
+      );
+      throw new BadRequestException(
+        `Unreadable ID number: Could not verify a valid official ID / Document Number on your ${detectedLabel}. Please ensure all 4 corners and the ID number are clearly visible.`,
       );
     }
 
@@ -271,9 +275,6 @@ export class VerificationService {
 
   private formatDocumentClass(raw: string): string {
     const val = (raw || '').toUpperCase().trim();
-    if (val.includes('NIN') || val.includes('NATIONAL') || val.includes('NIMC')) {
-      return 'National Identity Card (NIN)';
-    }
     if (val.includes('PASS') || val.includes('PASSPORT')) {
       return "Int'l Passport";
     }
@@ -285,6 +286,9 @@ export class VerificationService {
     }
     if (val.includes('RESID') || val.includes('STATE') || val.includes('PR') || val.includes('PERMIT')) {
       return 'Residence Permit / State ID';
+    }
+    if (val.includes('NIN') || val.includes('NATIONAL') || val.includes('NIMC')) {
+      return 'National Identity Card (NIN)';
     }
     return 'Government ID';
   }

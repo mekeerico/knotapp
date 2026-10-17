@@ -21,6 +21,7 @@ class EditProfileScreen extends ConsumerStatefulWidget {
 class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _bioController;
   late TextEditingController _occupationController;
+  late TextEditingController _educationController;
   late TextEditingController _cityController;
   late TextEditingController _countryController;
   String _timeline = '1-2 years';
@@ -36,6 +37,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final user = ref.read(authProvider).user;
     _bioController = TextEditingController(text: user?.bio ?? '');
     _occupationController = TextEditingController(text: user?.occupation ?? '');
+    _educationController = TextEditingController(
+      text: (user?.education.isNotEmpty ?? false)
+          ? user!.education
+          : "Bachelor's Degree (B.Sc. / B.A. / LL.B)",
+    );
     _cityController = TextEditingController(text: user?.residenceCity ?? '');
     _countryController = TextEditingController(text: user?.residenceCountry ?? '');
     _timeline = user?.marriageTimeline ?? '1-2 years';
@@ -54,6 +60,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   void dispose() {
     _bioController.dispose();
     _occupationController.dispose();
+    _educationController.dispose();
     _cityController.dispose();
     _countryController.dispose();
     super.dispose();
@@ -121,6 +128,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final Map<String, dynamic> updateData = {
       'bio': _bioController.text.trim(),
       'occupation': _occupationController.text.trim(),
+      'education': _educationController.text.trim(),
       'residenceCity': _cityController.text.trim(),
       'residenceCountry': _countryController.text.trim(),
       'marriageTimeline': _timeline,
@@ -250,6 +258,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       controller: _occupationController,
                       style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
                       decoration: const InputDecoration(hintText: 'Occupation'),
+                    ),
+                    const SizedBox(height: 18),
+
+                    Text('Highest Educational Qualification', style: AppTypography.titleMedium),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _educationController,
+                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+                      decoration: const InputDecoration(hintText: "e.g. Bachelor's Degree, Master's Degree, Ph.D."),
                     ),
                     const SizedBox(height: 18),
 

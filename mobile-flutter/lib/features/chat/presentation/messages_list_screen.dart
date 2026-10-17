@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/knot_app_bar.dart';
+import '../../../core/widgets/knot_image.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../discovery/providers/discovery_provider.dart';
 
@@ -48,10 +49,12 @@ class MessagesListScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(color: AppColors.champagneGold, width: 1.5),
-                                image: DecorationImage(
-                                  image: NetworkImage(candidate.photos.first),
-                                  fit: BoxFit.cover,
-                                ),
+                              ),
+                              child: KnotImage(
+                                imageUrl: candidate.photos.isNotEmpty ? candidate.photos.first : null,
+                                width: 54,
+                                height: 54,
+                                isCircle: true,
                               ),
                             ),
                             if (candidate.isVerified)

@@ -220,9 +220,6 @@ class DiditVerificationScreen extends ConsumerWidget {
 
   String _formatDocumentClass(String raw) {
     final val = raw.toUpperCase().trim();
-    if (val.contains('NIN') || val.contains('NATIONAL') || val.contains('NIMC')) {
-      return 'National Identity Card (NIN)';
-    }
     if (val.contains('PASS') || val.contains('PASSPORT')) {
       return "Int'l Passport";
     }
@@ -234,6 +231,9 @@ class DiditVerificationScreen extends ConsumerWidget {
     }
     if (val.contains('RESID') || val.contains('STATE') || val.contains('PR') || val.contains('PERMIT')) {
       return 'Residence Permit / State ID';
+    }
+    if (val.contains('NIN') || val.contains('NATIONAL') || val.contains('NIMC')) {
+      return 'National Identity Card (NIN)';
     }
     return raw;
   }

@@ -340,7 +340,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                   onPressed: () {
                     final id = candidate.id;
                     notifier.dismissMatchModal();
-                    context.push('/chat/$id');
+                    context.push('/chat/$id', extra: candidate);
                   },
                   child: Text('Open Conversation', style: AppTypography.button.copyWith(color: AppColors.champagneGold)),
                 ),

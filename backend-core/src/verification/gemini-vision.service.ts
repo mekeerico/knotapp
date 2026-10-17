@@ -43,20 +43,27 @@ export class GeminiVisionService {
   normalizeDocumentCategory(raw?: string): string {
     const val = (raw || '').toUpperCase().trim();
     if (!val) return '';
-    if (val.includes('NIN') || val.includes('NATIONAL') || val.includes('NIMC')) {
-      return 'NATIONAL_ID_NIN';
-    }
+    // IMPORTANT: Check 'PASS' BEFORE 'NATIONAL' because "INTERNATIONAL_PASSPORT" contains "NATIONAL"!
     if (val.includes('PASS')) {
       return 'INTERNATIONAL_PASSPORT';
     }
-    if (val.includes('DRIV') || val.includes('LICEN')) {
+    if (val.includes('DRIV') || val.includes('LICEN') || val.includes('FRSC')) {
       return 'DRIVERS_LICENSE';
     }
     if (val.includes('VOTE') || val.includes('PVC') || val.includes('INEC')) {
       return 'VOTERS_CARD';
     }
-    if (val.includes('RESID') || val.includes('STATE') || val.includes('PERMIT')) {
+    if (
+      val.includes('RESID') ||
+      val.includes('PERMIT') ||
+      val.includes('GREEN CARD') ||
+      val.includes('STATE ID') ||
+      val.includes('STATE_ID')
+    ) {
       return 'RESIDENCE_PERMIT';
+    }
+    if (val.includes('NIN') || val.includes('NATIONAL') || val.includes('NIMC')) {
+      return 'NATIONAL_ID_NIN';
     }
     return 'UNKNOWN';
   }
@@ -66,7 +73,7 @@ export class GeminiVisionService {
       case 'NATIONAL_ID_NIN':
         return 'National ID (NIN)';
       case 'INTERNATIONAL_PASSPORT':
-        return "International Passport";
+        return 'International Passport';
       case 'DRIVERS_LICENSE':
         return "Driver's License";
       case 'VOTERS_CARD':
@@ -117,32 +124,35 @@ PERFORM ALL 6 MANDATORY VERIFICATION CHECKS STRICTLY:
 
 1. EXACT DOCUMENT CLASSIFICATION & SELECTED TYPE MATCH:
    - Identify what type of document Image 1 ACTUALLY is and set "documentType" to EXACTLY ONE of:
-     * "NATIONAL_ID_NIN" — National Identity Card (NIMC plastic card) OR NIMC National Identification Number (NIN) Slip (with 11-digit NIN, Tracking ID, coat of arms).
-     * "INTERNATIONAL_PASSPORT" — International Passport bio-data page (with Passport No., Date of Issue, Date of Expiry, and MRZ lines starting with P<).
+     * "INTERNATIONAL_PASSPORT" — International Passport booklet or bio-data page (says "PASSPORT" / "PASSEPORT", has Passport No., Date of Issue, Date of Expiry, or Machine Readable Zone lines starting with "P<").
+       CRITICAL NOTE FOR PASSPORTS: Many modern passports (such as Nigerian e-Passports) also print the holder's NIN / Personal Number on the passport bio-data page. If the document is a Passport bio-data page, you MUST classify it as "INTERNATIONAL_PASSPORT" — NEVER classify a Passport page as "NATIONAL_ID_NIN"!
+     * "NATIONAL_ID_NIN" — Standalone National Identity Card (NIMC card) OR standalone NIMC National Identification Number (NIN) Slip (with 11-digit NIN and Tracking ID, NOT a passport booklet).
      * "DRIVERS_LICENSE" — Official Driver's License (FRSC or national/state driver's license).
      * "VOTERS_CARD" — Official Voter's Card / INEC Permanent Voter's Card (PVC) with VIN.
      * "RESIDENCE_PERMIT" — Official Residence Permit, Green Card, Biometric Residence Permit, or State ID Card.
-     * "UNKNOWN" — If Image 1 is not one of the 5 official government ID categories above (e.g., bank card, student ID, utility bill, random photo, screenshot, unreadable image).
+     * "UNKNOWN" — If Image 1 is not one of the 5 official government ID categories above.
    - Compare "documentType" with the Candidate's Selected Document Category ("${expectedCategory}").
-   - If "${expectedCategory}" is specified and "documentType" !== "${expectedCategory}", you MUST set "documentTypeMatches": false and "isValid": false. (For example, if the user selected NATIONAL_ID_NIN or VOTERS_CARD, and uploaded an INTERNATIONAL_PASSPORT or DRIVERS_LICENSE, that is a mismatch and MUST be rejected!).
+   - Set "documentTypeMatches": true ONLY if "documentType" === "${expectedCategory}" (or if "${expectedCategory}" is empty). Otherwise set "documentTypeMatches": false and "isValid": false.
 
 2. OFFICIAL ID / DOCUMENT NUMBER EXTRACTION ("extractedIdNumber" & "hasValidIdNumber"):
-   - Locate and transcribe the official ID number printed on Image 1:
+   - Locate and transcribe the primary official document number printed on Image 1:
+     * For INTERNATIONAL_PASSPORT: Passport Number (e.g. A01234567, B12345678).
      * For NATIONAL_ID_NIN: 11-digit NIN (or national ID number).
-     * For INTERNATIONAL_PASSPORT: Passport Number (e.g. A01234567 / B12345678).
      * For DRIVERS_LICENSE: License Number.
      * For VOTERS_CARD: Voter Identification Number (VIN).
      * For RESIDENCE_PERMIT: Permit / Card Number.
    - If the ID number is missing, covered, or unreadable, set "hasValidIdNumber": false and "isValid": false.
 
 3. EXPIRATION DATE VERIFICATION ("hasExpiryDate", "extractedExpiryDate", "isExpired"):
-   - Carefully inspect Image 1 for ANY expiration date ("Date of Expiry", "Expiry Date", "Valid Until", "EXP", AND for Passports also check the 2nd MRZ line where positions 22-27 encode YYMMDD expiry date).
-   - Transcribe the expiration date in strict "YYYY-MM-DD" format into "extractedExpiryDate".
+   - Carefully read the expiration date on Image 1 from BOTH:
+     a) The printed field ("Date of Expiry", "Date d'expiration", "Expiry Date", "Valid Until", "EXP"), e.g. "14 MAY 2022" or "14 MAY/MAI 22".
+     b) For an INTERNATIONAL_PASSPORT, ALSO check the 2nd MRZ line at the bottom (positions 22-27 immediately after the sex 'M'/'F' character encode the expiry date as YYMMDD).
+   - Convert the expiration date you read into strict "YYYY-MM-DD" format and place it in "extractedExpiryDate" (for example, "14 MAY 2022" or "14 MAY/MAI 22" -> "2022-05-14").
    - Note:
      * INTERNATIONAL_PASSPORT, DRIVERS_LICENSE, and RESIDENCE_PERMIT ALWAYS have an expiration date ("hasExpiryDate": true).
-     * Nigerian NIN Slips and INEC Voter's Cards (PVC) generally do NOT have an expiration date ("hasExpiryDate": false, "extractedExpiryDate": "", "isExpired": false).
+     * Standalone Nigerian NIN Slips and INEC Voter's Cards (PVC) generally do NOT have an expiration date ("hasExpiryDate": false, "extractedExpiryDate": "", "isExpired": false).
    - Compare "extractedExpiryDate" against Today's Date ("${todayIso}"):
-     * If "extractedExpiryDate" is earlier than "${todayIso}" (OR earlier than 2025-10-17 in case of any calendar reference), the document is EXPIRED! You MUST set "isExpired": true and "isValid": false!
+     * If "extractedExpiryDate" is earlier than "${todayIso}", the document is EXPIRED! You MUST set "isExpired": true and "isValid": false!
      * For an INTERNATIONAL_PASSPORT or DRIVERS_LICENSE, if the expiration date is cut off, blurred, or cannot be read, set "isExpired": true and "isValid": false.
 
 4. STRICT LEGAL NAME VERIFICATION ("extractedName" & "nameMatches"):
@@ -236,7 +246,8 @@ Respond ONLY with a raw JSON object (no markdown, no backticks) matching this ex
         const extractedName = (parsed.extractedName || '').trim();
         const extractedIdNumber = (parsed.extractedIdNumber || '').trim();
         const extractedDob = (parsed.extractedDob || '').trim();
-        const extractedExpiryDate = (parsed.extractedExpiryDate || '').trim();
+        const rawExpiry = (parsed.extractedExpiryDate || '').trim();
+        const normalizedExpiry = this.normalizeDateString(rawExpiry) || rawExpiry;
 
         const programmaticNameMatch = this.checkNameConsistency(
           claimedFirstName,
@@ -251,7 +262,7 @@ Respond ONLY with a raw JSON object (no markdown, no backticks) matching this ex
         const finalDocTypeMatches =
           !expectedCategory ||
           expectedCategory === 'UNKNOWN' ||
-          (detectedDocType === expectedCategory && Boolean(parsed.documentTypeMatches ?? true));
+          detectedDocType === expectedCategory;
 
         // 3. Valid ID number check
         const finalHasIdNumber =
@@ -261,8 +272,8 @@ Respond ONLY with a raw JSON object (no markdown, no backticks) matching this ex
         const requiresExpiry =
           detectedDocType === 'INTERNATIONAL_PASSPORT' ||
           detectedDocType === 'DRIVERS_LICENSE';
-        const programmaticExpired = this.isDateExpired(extractedExpiryDate);
-        const missingRequiredExpiry = requiresExpiry && !extractedExpiryDate;
+        const programmaticExpired = this.isDateExpired(normalizedExpiry);
+        const missingRequiredExpiry = requiresExpiry && !normalizedExpiry;
         const finalIsExpired =
           Boolean(parsed.isExpired) || programmaticExpired || missingRequiredExpiry;
 
@@ -291,7 +302,7 @@ Respond ONLY with a raw JSON object (no markdown, no backticks) matching this ex
           finalAgeMatch;
 
         this.logger.log(
-          `Gemini Vision (${model}) for "${claimedFullName}": Valid=${finalIsValid}, Selected=${expectedCategory}, Detected=${detectedDocType}, DocMatch=${finalDocTypeMatches}, IDNo="${extractedIdNumber}", Expiry="${extractedExpiryDate}", Expired=${finalIsExpired}, NameMatch=${finalNameMatch}, FaceMatch=${finalFaceMatch} (${faceScore}%), AgeMatch=${finalAgeMatch}`,
+          `Gemini Vision (${model}) for "${claimedFullName}": Valid=${finalIsValid}, Selected=${expectedCategory}, Detected=${detectedDocType}, DocMatch=${finalDocTypeMatches}, IDNo="${extractedIdNumber}", Expiry="${normalizedExpiry}", Expired=${finalIsExpired}, NameMatch=${finalNameMatch}, FaceMatch=${finalFaceMatch} (${faceScore}%), AgeMatch=${finalAgeMatch}`,
         );
 
         return {
@@ -304,8 +315,8 @@ Respond ONLY with a raw JSON object (no markdown, no backticks) matching this ex
           extractedIdNumber,
           hasValidIdNumber: finalHasIdNumber,
           extractedDob,
-          hasExpiryDate: Boolean(parsed.hasExpiryDate) || Boolean(extractedExpiryDate),
-          extractedExpiryDate,
+          hasExpiryDate: Boolean(parsed.hasExpiryDate) || Boolean(normalizedExpiry),
+          extractedExpiryDate: normalizedExpiry,
           isExpired: finalIsExpired,
           estimatedSelfieAge: parsed.estimatedSelfieAge || 0,
           ageMatches: finalAgeMatch,
@@ -337,15 +348,86 @@ Respond ONLY with a raw JSON object (no markdown, no backticks) matching this ex
   }
 
   /**
+   * Parse various passport/ID date formats (e.g. "2022-05-14", "14/05/2022",
+   * "14 MAY 2022", "14 MAY/MAI 22", "14-05-2022") into "YYYY-MM-DD".
+   */
+  private normalizeDateString(raw: string): string {
+    if (!raw) return '';
+    const cleaned = raw.trim().toUpperCase();
+
+    // 1. Already YYYY-MM-DD
+    const isoMatch = cleaned.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (isoMatch) {
+      const y = isoMatch[1];
+      const m = isoMatch[2].padStart(2, '0');
+      const d = isoMatch[3].padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    // 2. DD/MM/YYYY or DD-MM-YYYY
+    const dmyNumeric = cleaned.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (dmyNumeric) {
+      const d = dmyNumeric[1].padStart(2, '0');
+      const m = dmyNumeric[2].padStart(2, '0');
+      let y = dmyNumeric[3];
+      if (y.length === 2) {
+        const yNum = parseInt(y, 10);
+        y = yNum > 50 ? `19${y}` : `20${y}`;
+      }
+      return `${y}-${m}-${d}`;
+    }
+
+    // 3. Passport alphanumeric dates e.g. "14 MAY 2022", "14 MAY/MAI 22", "14 MAY / MAI 2022"
+    const months: Record<string, string> = {
+      JAN: '01',
+      FEB: '02',
+      FEV: '02',
+      MAR: '03',
+      APR: '04',
+      AVR: '04',
+      MAY: '05',
+      MAI: '05',
+      JUN: '06',
+      JUI: '06',
+      JUL: '07',
+      AUG: '08',
+      AOU: '08',
+      SEP: '09',
+      OCT: '10',
+      NOV: '11',
+      DEC: '12',
+    };
+    const dayMatch = cleaned.match(/^(\d{1,2})\b/);
+    const yearMatch = cleaned.match(/\b(\d{4}|\d{2})$/);
+    let foundMonth = '';
+    for (const [abbr, num] of Object.entries(months)) {
+      if (cleaned.includes(abbr)) {
+        foundMonth = num;
+        break;
+      }
+    }
+    if (dayMatch && foundMonth && yearMatch) {
+      const d = dayMatch[1].padStart(2, '0');
+      let y = yearMatch[1];
+      if (y.length === 2) {
+        const yNum = parseInt(y, 10);
+        y = yNum > 50 ? `19${y}` : `20${y}`;
+      }
+      return `${y}-${foundMonth}-${d}`;
+    }
+
+    return '';
+  }
+
+  /**
    * Programmatically verify if an extracted date string is expired.
    */
   private isDateExpired(dateStr: string): boolean {
     if (!dateStr) return false;
-    const cleaned = dateStr.trim();
-    const parsed = new Date(cleaned);
+    const normalized = this.normalizeDateString(dateStr) || dateStr.trim();
+    const parsed = new Date(normalized);
     if (!isNaN(parsed.getTime())) {
       const now = new Date();
-      // Compare against end of the expiry day
       const expiryEndOfDay = new Date(
         parsed.getFullYear(),
         parsed.getMonth(),
@@ -358,8 +440,7 @@ Respond ONLY with a raw JSON object (no markdown, no backticks) matching this ex
         return true;
       }
     }
-    // Fallback year check if format is non-standard (e.g. "12 AUG 2023")
-    const yearMatch = cleaned.match(/\b(19\d{2}|20\d{2})\b/);
+    const yearMatch = normalized.match(/\b(19\d{2}|20\d{2})\b/);
     if (yearMatch) {
       const expYear = parseInt(yearMatch[1], 10);
       const currentYear = new Date().getFullYear();

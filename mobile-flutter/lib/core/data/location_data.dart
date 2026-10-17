@@ -151,4 +151,16 @@ class KnotLocationData {
   static const List<String> childrenIntentOptions = [
     'Want children', 'Don\'t want children', 'Open to children'
   ];
+
+  static const List<String> educationOptions = [
+    "Bachelor's Degree (B.Sc. / B.A. / LL.B)",
+    "Master's Degree (M.Sc. / M.A. / MBA)",
+    'Doctorate (Ph.D. / MD / JD)',
+    'Postgraduate Diploma (PGD)',
+    'Higher National Diploma (HND)',
+    'Associate Degree / OND / NCE',
+    'Professional Certification',
+    'High School / Secondary Certificate',
+    'Other',
+  ];
 }

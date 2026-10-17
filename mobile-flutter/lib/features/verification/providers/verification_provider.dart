@@ -130,7 +130,9 @@ class VerificationNotifier extends StateNotifier<VerificationState> {
   }
 
   void reset() {
-    state = const VerificationState();
+    state = VerificationState(
+      selectedDocumentType: state.selectedDocumentType,
+    );
   }
 
   Future<void> submitVerification() async {

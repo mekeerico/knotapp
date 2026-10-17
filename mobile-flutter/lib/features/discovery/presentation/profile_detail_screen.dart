@@ -298,20 +298,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  // 3. Heritage & Origin + Current Residence
+                  // 3. Heritage & Origin (Current Residence is already shown in the top header)
                   GlassCard(
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildSectionHeader(Icons.public, 'HERITAGE, ORIGIN & RESIDENCE'),
+                        _buildSectionHeader(Icons.public, 'HERITAGE & ORIGIN'),
                         const SizedBox(height: 14),
-                        _buildDetailRow(
-                          icon: Icons.home_work_outlined,
-                          label: 'Current Residence',
-                          value: residenceFormatted,
-                        ),
-                        const SizedBox(height: 12),
                         _buildDetailRow(
                           icon: Icons.account_balance_outlined,
                           label: 'Ancestral Origin',
@@ -343,12 +337,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           label: 'Profession / Occupation',
                           value: profile.occupation,
                         ),
-                        const SizedBox(height: 12),
-                        _buildDetailRow(
-                          icon: Icons.school_outlined,
-                          label: 'Education Level',
-                          value: profile.education,
-                        ),
+                        if (profile.education.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          _buildDetailRow(
+                            icon: Icons.school_outlined,
+                            label: 'Highest Educational Qualification',
+                            value: profile.education,
+                          ),
+                        ],
                         const SizedBox(height: 12),
                         _buildDetailRow(
                           icon: Icons.church_outlined,
@@ -499,8 +495,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     text: 'Initiate Marriage Conversation',
                     icon: Icons.chat_bubble_outline,
                     onPressed: () {
-                      context.pop();
-                      context.go('/chat/${profile.id}');
+                      context.push('/chat/${profile.id}', extra: profile);
                     },
                   ),
                   const SizedBox(height: 40),
