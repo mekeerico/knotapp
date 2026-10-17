@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,8 +38,14 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 }
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
+  final ScrollController _scrollController = ScrollController();
   final PageController _candidateController = PageController();
   int _activeCandidateIndex = 0;
+
+  Timer? _initialDelayTimer;
+  Timer? _autoScrollTimer;
+  Timer? _candidateCycleTimer;
+  bool _userTookOverScroll = false;
 
   static const List<_ShowcaseCandidate> _candidates = [
     _ShowcaseCandidate(
@@ -88,12 +95,69 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _startGentleAutoScroll();
+  }
+
+  void _startGentleAutoScroll() {
+    // Wait briefly after launch so the user takes in the hero headline, then begin a gentle upward glide
+    _initialDelayTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (!mounted || _userTookOverScroll) return;
+
+      // 24ms tick (~42 fps) moving 0.65px per tick = ~27px/sec smooth editorial glide
+      _autoScrollTimer = Timer.periodic(const Duration(milliseconds: 24), (timer) {
+        if (!mounted || _userTookOverScroll || !_scrollController.hasClients) {
+          timer.cancel();
+          return;
+        }
+        final maxExtent = _scrollController.position.maxScrollExtent;
+        final currentOffset = _scrollController.offset;
+        if (currentOffset >= maxExtent) {
+          timer.cancel();
+          return;
+        }
+        _scrollController.jumpTo(
+          (currentOffset + 0.65).clamp(0.0, maxExtent),
+        );
+      });
+
+      // Also gently cycle through Verified Male & Female candidate cards every 4.2s until user touches
+      _candidateCycleTimer = Timer.periodic(const Duration(milliseconds: 4200), (timer) {
+        if (!mounted || _userTookOverScroll || !_candidateController.hasClients) {
+          timer.cancel();
+          return;
+        }
+        final nextIdx = (_activeCandidateIndex + 1) % _candidates.length;
+        _candidateController.animateToPage(
+          nextIdx,
+          duration: const Duration(milliseconds: 550),
+          curve: Curves.easeInOutCubic,
+        );
+      });
+    });
+  }
+
+  void _stopAutoScrollOnUserTouch() {
+    if (_userTookOverScroll) return;
+    _userTookOverScroll = true;
+    _initialDelayTimer?.cancel();
+    _autoScrollTimer?.cancel();
+    _candidateCycleTimer?.cancel();
+  }
+
+  @override
   void dispose() {
+    _initialDelayTimer?.cancel();
+    _autoScrollTimer?.cancel();
+    _candidateCycleTimer?.cancel();
+    _scrollController.dispose();
     _candidateController.dispose();
     super.dispose();
   }
 
   Future<void> _navigateToAuth({required bool isRegister}) async {
+    _stopAutoScrollOnUserTouch();
     await ref.read(authProvider.notifier).completeWelcome();
     if (!mounted) return;
     context.go(isRegister ? '/auth?mode=register' : '/auth');
@@ -134,25 +198,31 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 _buildTopNavbar(),
 
                 // Scrollable Multi-Section Editorial Landing Content
+                // Gently auto-scrolls on launch and immediately yields control on touch
                 Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeroSection(),
-                        const SizedBox(height: 28),
-                        _buildCandidateShowcaseSection(),
-                        const SizedBox(height: 40),
-                        _buildIntelligencePillarsSection(),
-                        const SizedBox(height: 40),
-                        _buildTrustArchitectureSection(),
-                        const SizedBox(height: 40),
-                        _buildAICoachPreviewSection(),
-                        const SizedBox(height: 32),
-                        _buildFooterNote(),
-                      ],
+                  child: Listener(
+                    onPointerDown: (_) => _stopAutoScrollOnUserTouch(),
+                    onPointerMove: (_) => _stopAutoScrollOnUserTouch(),
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeroSection(),
+                          const SizedBox(height: 28),
+                          _buildCandidateShowcaseSection(),
+                          const SizedBox(height: 40),
+                          _buildIntelligencePillarsSection(),
+                          const SizedBox(height: 40),
+                          _buildTrustArchitectureSection(),
+                          const SizedBox(height: 40),
+                          _buildAICoachPreviewSection(),
+                          const SizedBox(height: 32),
+                          _buildFooterNote(),
+                        ],
+                      ),
                     ),
                   ),
                 ),
