@@ -51,25 +51,54 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
             .map((item) => MatchProfile.fromJson(item))
             .toList();
 
-        // Strict Client-Side Opposite-Gender Enforcement:
-        // Ensures that under all network circumstances, candidates of the same gender are never shown
+        // Strict Client-Side Self-Exclusion & Opposite-Gender Enforcement:
+        // Guarantees that a user can NEVER see themselves and can ONLY see opposite-sex candidates
         final authState = _ref.read(authProvider);
+        final currentUserId = (authState.user?.id ?? '').trim();
+        final currentUserEmail = (authState.user?.email ?? '').trim().toLowerCase();
+        final currentUserFullName = (authState.user?.fullName ?? '').trim().toLowerCase();
+        final userFirstName = (authState.user?.firstName ?? '').trim().toLowerCase();
+        final userLastName = (authState.user?.lastName ?? '').trim().toLowerCase();
         final userGender = (authState.user?.gender ?? '').trim().toLowerCase();
-        if (userGender.isNotEmpty) {
-          final isUserMale = userGender == 'male' || userGender == 'man' || userGender == 'm';
-          final isUserFemale = userGender == 'female' || userGender == 'woman' || userGender == 'f';
 
-          list = list.where((c) {
-            final cGen = c.gender.trim().toLowerCase();
-            if (cGen.isEmpty) return true;
-            if (isUserMale) {
-              return cGen != 'male' && cGen != 'man' && cGen != 'm';
-            } else if (isUserFemale) {
-              return cGen != 'female' && cGen != 'woman' && cGen != 'f';
+        final isUserMale = userGender == 'male' || userGender == 'man' || userGender == 'm';
+        final isUserFemale = userGender == 'female' || userGender == 'woman' || userGender == 'f';
+
+        list = list.where((c) {
+          // 1. Strict Self-Exclusion: User can NEVER be matched to themselves
+          if (currentUserId.isNotEmpty && c.id == currentUserId) return false;
+
+          final candName = c.name.trim().toLowerCase();
+          if (currentUserFullName.isNotEmpty && candName.isNotEmpty && candName == currentUserFullName) {
+            return false;
+          }
+          if (userFirstName.isNotEmpty && userLastName.isNotEmpty && candName.isNotEmpty) {
+            if (candName.contains(userFirstName) && candName.contains(userLastName)) {
+              return false;
             }
-            return true;
-          }).toList();
-        }
+          }
+
+          // 2. Strict Opposite-Gender Enforcement: Only opposite sex (Male <-> Female)
+          final cGen = c.gender.trim().toLowerCase();
+          final isCandMale = cGen == 'male' || cGen == 'man' || cGen == 'm';
+          final isCandFemale = cGen == 'female' || cGen == 'woman' || cGen == 'f';
+
+          if (isUserMale) {
+            // Male user must only see female candidates
+            return isCandFemale && !isCandMale;
+          } else if (isUserFemale) {
+            // Female user must only see male candidates
+            return isCandMale && !isCandFemale;
+          }
+
+          // If current user's gender string wasn't explicitly 'male' or 'female'
+          // still forbid matching with candidates of the same detected gender
+          if (cGen.isNotEmpty && userGender.isNotEmpty && cGen == userGender) {
+            return false;
+          }
+
+          return true;
+        }).toList();
 
         state = state.copyWith(candidates: list, isLoading: false);
         return;

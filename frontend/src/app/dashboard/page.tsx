@@ -182,20 +182,47 @@ export default function Dashboard() {
         };
       });
 
-      // Strict opposite-gender filtering to mirror mobile app & backend constraints
-      let filteredMatches = normalizedMatches;
-      if (profileData?.gender) {
-        const userGender = profileData.gender.trim().toLowerCase();
-        const isUserMale = userGender === 'male' || userGender === 'man' || userGender === 'm';
-        const isUserFemale = userGender === 'female' || userGender === 'woman' || userGender === 'f';
-        filteredMatches = normalizedMatches.filter((m: any) => {
-          const candGender = (m.partner?.gender || m.gender || '').trim().toLowerCase();
-          if (!candGender) return true;
-          if (isUserMale) return candGender !== 'male' && candGender !== 'man' && candGender !== 'm';
-          if (isUserFemale) return candGender !== 'female' && candGender !== 'woman' && candGender !== 'f';
-          return true;
-        });
-      }
+      // Strict self-exclusion and opposite-gender filtering to mirror mobile app & backend constraints
+      const currentUserId = (profileData?.id || '').trim();
+      const currentUserEmail = (profileData?.email || '').trim().toLowerCase();
+      const userFirstName = (profileData?.firstName || '').trim().toLowerCase();
+      const userLastName = (profileData?.lastName || '').trim().toLowerCase();
+      const currentUserFullName = `${userFirstName} ${userLastName}`.trim();
+      const userGender = (profileData?.gender || '').trim().toLowerCase();
+      const isUserMale = userGender === 'male' || userGender === 'man' || userGender === 'm';
+      const isUserFemale = userGender === 'female' || userGender === 'woman' || userGender === 'f';
+
+      const filteredMatches = normalizedMatches.filter((m: any) => {
+        const partner = m.partner || {};
+        const partnerId = (partner.id || m.id || '').trim();
+        const partnerEmail = (partner.email || m.email || '').trim().toLowerCase();
+        const pFirst = (partner.firstName || m.firstName || '').trim().toLowerCase();
+        const pLast = (partner.lastName || m.lastName || '').trim().toLowerCase();
+        const partnerFullName = `${pFirst} ${pLast}`.trim();
+
+        // 1. Strict Self-Exclusion: User should NEVER be matched to themselves
+        if (currentUserId && partnerId === currentUserId) return false;
+        if (currentUserEmail && partnerEmail && partnerEmail === currentUserEmail) return false;
+        if (currentUserFullName && partnerFullName && currentUserFullName === partnerFullName) return false;
+        if (userFirstName && pFirst && userFirstName === pFirst && userLastName && pLast && userLastName === pLast) return false;
+
+        // 2. Strict Opposite-Gender Enforcement: Only opposite sex (Male <-> Female)
+        const candGender = (partner.gender || m.gender || '').trim().toLowerCase();
+        const isCandMale = candGender === 'male' || candGender === 'man' || candGender === 'm';
+        const isCandFemale = candGender === 'female' || candGender === 'woman' || candGender === 'f';
+
+        if (isUserMale) {
+          return isCandFemale && !isCandMale;
+        } else if (isUserFemale) {
+          return isCandMale && !isCandFemale;
+        }
+
+        if (candGender && userGender && candGender === userGender) {
+          return false;
+        }
+
+        return true;
+      });
 
       setMatches(filteredMatches);
       setCurrentMatchIndex(0);

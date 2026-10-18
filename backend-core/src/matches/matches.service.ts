@@ -103,40 +103,72 @@ export class MatchesService {
 
     // Strictly enforce opposite-sex matching only (Male <-> Female)
     const userGenderRaw = (user.gender || '').trim().toLowerCase();
+    const isUserMale = userGenderRaw === 'male' || userGenderRaw === 'man' || userGenderRaw === 'm';
+    const isUserFemale = userGenderRaw === 'female' || userGenderRaw === 'woman' || userGenderRaw === 'f';
+
     let targetGender: 'Male' | 'Female';
 
-    if (userGenderRaw === 'female' || userGenderRaw === 'woman' || userGenderRaw === 'f') {
+    if (isUserFemale) {
       targetGender = 'Male';
-    } else if (userGenderRaw === 'male' || userGenderRaw === 'man' || userGenderRaw === 'm') {
+    } else if (isUserMale) {
       targetGender = 'Female';
     } else {
       const prefRaw = (user.preferredGender || '').trim().toLowerCase();
-      targetGender = (prefRaw === 'male' || prefRaw === 'man') ? 'Male' : 'Female';
+      targetGender = (prefRaw === 'male' || prefRaw === 'man' || prefRaw === 'm') ? 'Male' : 'Female';
     }
 
-    // Single fast query prioritizing verified & high-trust opposite-sex candidates
+    const userEmail = (user.email || '').trim().toLowerCase();
+    const userFirstName = (user.firstName || '').trim().toLowerCase();
+    const userLastName = (user.lastName || '').trim().toLowerCase();
+    const userFullName = `${userFirstName} ${userLastName}`.trim();
+
+    // Query opposite-sex candidates excluding current user ID and current user email
     const allCandidates = await this.prisma.user.findMany({
       where: {
         id: { not: userId },
+        ...(userEmail ? { email: { not: userEmail } } : {}),
         gender: { equals: targetGender, mode: 'insensitive' },
       },
       orderBy: [
         { isVerified: 'desc' },
         { trustScore: 'desc' },
       ],
-      take: 20,
+      take: 25,
       include: { profileImages: true },
     });
 
-    // Hard guarantee filter: Discard any candidate whose gender is not strictly the opposite sex
+    // Hard guarantee filter:
+    // 1. A user can NEVER be matched to themselves (by ID, email, or identical full name).
+    // 2. Strict Opposite-Sex matching only (Male <-> Female). Candidates of the same sex or ambiguous sex are discarded.
     const strictlyOppositeCandidates = allCandidates.filter((c) => {
+      // 1. Strict Self-Exclusion
+      if (c.id === userId) return false;
+      if (userEmail && c.email && c.email.trim().toLowerCase() === userEmail) return false;
+
+      const candFirstName = (c.firstName || '').trim().toLowerCase();
+      const candLastName = (c.lastName || '').trim().toLowerCase();
+      const candFullName = `${candFirstName} ${candLastName}`.trim();
+      if (userFullName.length > 2 && candFullName === userFullName) return false;
+      if (userFirstName.length > 1 && candFirstName === userFirstName && userLastName.length > 1 && candLastName === userLastName) return false;
+
+      // 2. Strict Opposite-Sex Enforcement
       const cGender = (c.gender || '').trim().toLowerCase();
-      if (!cGender) return false;
+      const isCandMale = cGender === 'male' || cGender === 'man' || cGender === 'm';
+      const isCandFemale = cGender === 'female' || cGender === 'woman' || cGender === 'f';
+
+      if (!isCandMale && !isCandFemale) return false;
+
       if (targetGender === 'Male') {
-        return cGender === 'male' || cGender === 'man' || cGender === 'm';
+        if (!isCandMale || isCandFemale) return false;
       } else {
-        return cGender === 'female' || cGender === 'woman' || cGender === 'f';
+        if (!isCandFemale || isCandMale) return false;
       }
+
+      // Mutual exclusivity guard: user and candidate must never have the same gender
+      if (isUserMale && isCandMale) return false;
+      if (isUserFemale && isCandFemale) return false;
+
+      return true;
     });
 
     if (strictlyOppositeCandidates.length === 0) {
@@ -324,7 +356,13 @@ export class MatchesService {
       },
     });
 
-    return matches.map((m) => {
+    const validMatches = matches.filter((m) => {
+      if (m.userAId === m.userBId) return false;
+      const partner = m.userAId === userId ? m.userB : m.userA;
+      return partner && partner.id !== userId;
+    });
+
+    return validMatches.map((m) => {
       const partner = m.userAId === userId ? m.userB : m.userA;
       const media = this.formatPartnerMedia(partner);
       return {
