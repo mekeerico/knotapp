@@ -324,7 +324,51 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   ),
                   const SizedBox(height: 18),
 
-                  // 4. Vocation, Education & Faith
+                  // 4. Partner Preferences (Residence & Heritage/Origin of Desired Partner)
+                  GlassCard(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader(Icons.person_search_outlined, 'PARTNER PREFERENCES'),
+                        const SizedBox(height: 14),
+                        _buildDetailRow(
+                          icon: Icons.flag_outlined,
+                          label: 'Preferred Partner Country of Residence',
+                          value: profile.preferredResidenceCountry.isNotEmpty
+                              ? profile.preferredResidenceCountry
+                              : 'Any Country',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailRow(
+                          icon: Icons.map_outlined,
+                          label: 'Preferred Partner State / Province / Region',
+                          value: profile.preferredResidenceState.isNotEmpty
+                              ? profile.preferredResidenceState
+                              : 'Any State/Province/Region',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailRow(
+                          icon: Icons.public_outlined,
+                          label: 'Preferred Partner Heritage Country',
+                          value: profile.preferredOriginCountry.isNotEmpty
+                              ? profile.preferredOriginCountry
+                              : 'Any Country',
+                        ),
+                        const SizedBox(height: 12),
+                        _buildDetailRow(
+                          icon: Icons.diversity_2_outlined,
+                          label: 'Native Heritage / Ethno-Cultural Background',
+                          value: profile.preferredOriginState.isNotEmpty
+                              ? profile.preferredOriginState
+                              : 'Any Heritage',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+
+                  // 5. Vocation, Education & Faith
                   GlassCard(
                     padding: const EdgeInsets.all(20),
                     child: Column(

@@ -1057,6 +1057,29 @@ export default function Dashboard() {
                     </div>
                   </div>
 
+                  {/* ══ PARTNER PREFERENCES ══ */}
+                  <div className="space-y-4 mt-8">
+                    <h3 className="text-sm font-black text-white uppercase tracking-widest border-b border-white/10 pb-2">Partner Preferences</h3>
+                    <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Preferred Partner Country of Residence</h4>
+                        <p className="text-sm text-white font-medium">{activeMatch.preferredResidenceCountry || 'Any Country'}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Preferred Partner State / Province / Region</h4>
+                        <p className="text-sm text-white font-medium">{activeMatch.preferredResidenceState || 'Any State/Province/Region'}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Preferred Partner Heritage Country</h4>
+                        <p className="text-sm text-white font-medium">{activeMatch.preferredOriginCountry || 'Any Country'}</p>
+                      </div>
+                      <div>
+                        <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Native Heritage / Ethno-Cultural Background</h4>
+                        <p className="text-sm text-white font-medium">{activeMatch.preferredOriginState || 'Any Heritage'}</p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* ══ MARRIAGE EXPECTATIONS ══ */}
                   <div className="space-y-4 mt-8">
                     <h3 className="text-sm font-black text-white uppercase tracking-widest border-b border-white/10 pb-2">Marriage Expectations</h3>

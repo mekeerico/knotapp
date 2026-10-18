@@ -9,6 +9,10 @@ class MatchProfile {
   final String originCity;
   final String originState;
   final String originCountry;
+  final String preferredResidenceCountry;
+  final String preferredResidenceState;
+  final String preferredOriginCountry;
+  final String preferredOriginState;
   final String occupation;
   final String education;
   final String religion;
@@ -50,6 +54,10 @@ class MatchProfile {
     this.originCity = '',
     this.originState = '',
     this.originCountry = '',
+    this.preferredResidenceCountry = 'Any Country',
+    this.preferredResidenceState = 'Any State/Province/Region',
+    this.preferredOriginCountry = 'Any Country',
+    this.preferredOriginState = 'Any Heritage',
     required this.occupation,
     this.education = 'University Degree',
     this.religion = 'Christian',
@@ -186,6 +194,23 @@ class MatchProfile {
     final originState = _nonEmpty(partner['originState']);
     final originCity = _nonEmpty(partner['originCity']);
 
+    final preferredResidenceCountry = _nonEmpty(
+      partner['preferredResidenceCountry'],
+      'Any Country',
+    );
+    final preferredResidenceState = _nonEmpty(
+      partner['preferredResidenceState'],
+      'Any State/Province/Region',
+    );
+    final preferredOriginCountry = _nonEmpty(
+      partner['preferredOriginCountry'],
+      'Any Country',
+    );
+    final preferredOriginState = _nonEmpty(
+      partner['preferredOriginState'],
+      'Any Heritage',
+    );
+
     return MatchProfile(
       id: _nonEmpty(partner['id'], _nonEmpty(json['matchId'])),
       name: fullName,
@@ -197,6 +222,10 @@ class MatchProfile {
       originCity: originCity,
       originState: originState,
       originCountry: originCountry,
+      preferredResidenceCountry: preferredResidenceCountry,
+      preferredResidenceState: preferredResidenceState,
+      preferredOriginCountry: preferredOriginCountry,
+      preferredOriginState: preferredOriginState,
       occupation: _nonEmpty(partner['occupation'], 'Professional'),
       education: _nonEmpty(partner['education']),
       religion: _nonEmpty(partner['religion'], 'Christian'),
