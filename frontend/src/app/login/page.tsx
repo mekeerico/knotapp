@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Loader2, ArrowRight, Eye, EyeOff, Check } from "lucide-react";
 import { getApiUrl } from "../../services/api";
 
 export default function Login() {
@@ -14,6 +14,25 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+  const [rememberMe, setRememberMe] = useState(true);
+
+  // Pre-load saved credentials on mount if Remember Me was enabled
+  useEffect(() => {
+    try {
+      const storedRemember = localStorage.getItem("knot_remember_me");
+      const isRemember = storedRemember === null || storedRemember === "true";
+      setRememberMe(isRemember);
+
+      if (isRemember) {
+        const savedEmail = localStorage.getItem("knot_saved_email");
+        const savedPass = localStorage.getItem("knot_saved_password");
+        if (savedEmail) setEmail(savedEmail);
+        if (savedPass) setPassword(savedPass);
+      }
+    } catch (_) {
+      // In case localStorage is blocked in some environments
+    }
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +44,19 @@ export default function Login() {
     setIsLoading(true);
     setError("");
 
+    // Persist or clear saved credentials based on Remember Me preference
+    try {
+      if (rememberMe) {
+        localStorage.setItem("knot_saved_email", email.trim());
+        localStorage.setItem("knot_saved_password", password);
+        localStorage.setItem("knot_remember_me", "true");
+      } else {
+        localStorage.removeItem("knot_saved_email");
+        localStorage.removeItem("knot_saved_password");
+        localStorage.setItem("knot_remember_me", "false");
+      }
+    } catch (_) {}
+
     if (!isLogin) {
       // For onboarding, store credentials temporarily and go directly to step 2 (Personal Details)
       sessionStorage.setItem('onboard_email', email);
@@ -34,8 +66,6 @@ export default function Login() {
     }
 
     try {
-
-
       const API_URL = getApiUrl();
         
       const res = await fetch(`${API_URL}/auth/login`, {
@@ -128,6 +158,23 @@ export default function Login() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+            </div>
+
+            {/* Remember Me Checkbox */}
+            <div 
+              onClick={() => setRememberMe(!rememberMe)}
+              className="flex items-center gap-3 cursor-pointer select-none py-1 group"
+            >
+              <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+                rememberMe 
+                  ? "bg-[#D4AF37] border-[#D4AF37] text-black" 
+                  : "bg-[#121721] border-white/20 text-transparent group-hover:border-white/40"
+              }`}>
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+              </div>
+              <span className="text-xs text-gray-300 font-medium">
+                Remember my email & password on this device
+              </span>
             </div>
 
             <button 

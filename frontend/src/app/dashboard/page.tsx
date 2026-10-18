@@ -19,6 +19,21 @@ export default function Dashboard() {
     const base = getApiUrl();
     return `${base}${url}`;
   };
+
+  const formatAgeOrDob = (dob: any): string => {
+    if (!dob) return '';
+    if (typeof dob === 'number') return `${dob}`;
+    const str = String(dob).trim();
+    if (/^\d{1,2}$/.test(str)) return str;
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const ageDiffMs = Date.now() - d.getTime();
+      const ageDate = new Date(ageDiffMs);
+      const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+      if (age > 0 && age < 120) return `${age}`;
+    }
+    return str;
+  };
   const [activeTab, setActiveTab] = useState("matches"); // matches, insights, coach, messages, profile
   const [isPremium, setIsPremium] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -104,8 +119,9 @@ export default function Dashboard() {
         const profileRes = await fetch(`${API_URL}/users/profile`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
+        let profileData: any = null;
         if (profileRes.ok) {
-          const profileData = await profileRes.json();
+          profileData = await profileRes.json();
           setUserProfile(profileData);
           // Support all backend image formats
           if (profileData.profileImages && profileData.profileImages.length > 0) {
@@ -166,7 +182,22 @@ export default function Dashboard() {
             trustScore: partner.trustScore || m.trustScore || 95,
           };
         });
-        setMatches(normalizedMatches);
+
+        // Strict opposite-gender filtering to mirror mobile app & backend constraints
+        let filteredMatches = normalizedMatches;
+        if (profileData?.gender) {
+          const userGender = profileData.gender.trim().toLowerCase();
+          const isUserMale = userGender === 'male' || userGender === 'man' || userGender === 'm';
+          const isUserFemale = userGender === 'female' || userGender === 'woman' || userGender === 'f';
+          filteredMatches = normalizedMatches.filter((m: any) => {
+            const candGender = (m.partner?.gender || m.gender || '').trim().toLowerCase();
+            if (!candGender) return true;
+            if (isUserMale) return candGender !== 'male' && candGender !== 'man' && candGender !== 'm';
+            if (isUserFemale) return candGender !== 'female' && candGender !== 'woman' && candGender !== 'f';
+            return true;
+          });
+        }
+        setMatches(filteredMatches);
 
         // Fetch dynamic exchange rates
         try {
@@ -367,6 +398,7 @@ export default function Dashboard() {
 
   const handleConnect = () => {
     checkLimitAndProceed(async () => {
+      setConnectedMatchName(`${activeMatch?.firstName || 'Partner'} ${activeMatch?.lastName || ''}`.trim());
       setShowMatchModal(true);
       setIsCalculatingMatch(true);
       try {
@@ -850,19 +882,68 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
               {/* Profile Card */}
               <div className="md:col-span-7 glass-card rounded-[32px] overflow-hidden border border-white/10 p-6 space-y-6">
-                <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-900 flex items-center justify-center">
-                  {activeMatch.imageUrls?.[0] || activeMatch.photoUrl ? (
-                    <img src={activeMatch.imageUrls?.[0] || activeMatch.photoUrl} alt={activeMatch.firstName} className="w-full h-full object-cover grayscale-[15%] brightness-95" />
+                <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-900 flex items-center justify-center group">
+                  {activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl ? (
+                    <img 
+                      src={activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl} 
+                      alt={activeMatch.firstName} 
+                      className="w-full h-full object-cover grayscale-[15%] brightness-95 transition-all duration-300" 
+                    />
                   ) : (
                     <User className="w-24 h-24 text-gray-700" />
+                  )}
+
+                  {/* Multi-photo indicators if more than 1 image */}
+                  {activeMatch.imageUrls?.length > 1 && (
+                    <>
+                      <button 
+                        type="button"
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setActiveMatchImageIndex(prev => prev > 0 ? prev - 1 : activeMatch.imageUrls.length - 1); 
+                        }} 
+                        className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/80 transition-all z-20"
+                        title="Previous photo"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button 
+                        type="button"
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setActiveMatchImageIndex(prev => prev < activeMatch.imageUrls.length - 1 ? prev + 1 : 0); 
+                        }} 
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/80 transition-all z-20"
+                        title="Next photo"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                      <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-6 z-20">
+                        {activeMatch.imageUrls.map((_: any, i: number) => (
+                          <div 
+                            key={i} 
+                            onClick={(e) => { e.stopPropagation(); setActiveMatchImageIndex(i); }}
+                            className={`h-1 flex-1 rounded-full cursor-pointer transition-all ${i === activeMatchImageIndex ? 'bg-white shadow-md' : 'bg-white/30'}`} 
+                          />
+                        ))}
+                      </div>
+                    </>
                   )}
                   
                   <div className="absolute top-8 right-4 trust-badge px-3 py-1 rounded-full text-xs font-black flex items-center gap-1.5 z-10">
                     <ShieldCheck className="w-3.5 h-3.5" /> Trust {activeMatch.trustScore}%
                   </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10">
-                    <h3 className="text-2xl font-black text-white">{activeMatch.firstName} {activeMatch.lastName}, {activeMatch.dateOfBirth}</h3>
+                  <div 
+                    onClick={() => setActiveTab("matchProfile")}
+                    className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 cursor-pointer group/title"
+                  >
+                    <h3 className="text-2xl font-black text-white group-hover/title:text-[#D4AF37] transition-colors">
+                      {activeMatch.firstName} {activeMatch.lastName}, {formatAgeOrDob(activeMatch.dateOfBirth)}
+                    </h3>
                     <p className="text-xs text-gray-400 font-semibold">{activeMatch.occupation} • {activeMatch.residenceCity}</p>
+                    <span className="text-[11px] text-[#D4AF37] font-semibold mt-1 inline-block group-hover/title:underline">
+                      View Psychological Compatibility & Vows ›
+                    </span>
                   </div>
                 </div>
 
@@ -1653,7 +1734,13 @@ export default function Dashboard() {
                 Start Secure Conversation
               </button>
               <button 
-                onClick={() => setShowMatchModal(false)}
+                onClick={() => {
+                  setShowMatchModal(false);
+                  if (currentMatchIndex < matches.length - 1) {
+                    setCurrentMatchIndex(prev => prev + 1);
+                    setActiveMatchImageIndex(0);
+                  }
+                }}
                 className="w-full py-3 rounded-full text-xs font-bold bg-white/5 border border-white/10 hover:bg-white/10 text-gray-400"
               >
                 Keep Exploring Matches
