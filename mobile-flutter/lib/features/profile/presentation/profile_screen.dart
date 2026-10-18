@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/auto_hiding_floating_bar.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/gold_button.dart';
 import '../../../core/widgets/knot_image.dart';
@@ -24,177 +25,200 @@ class ProfileScreen extends ConsumerWidget {
         title: 'SOVEREIGN IDENTITY',
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Column(
-            children: [
-              // User Avatar & Name Card
-              GlassCard(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Stack(
-                      children: [
-                        Container(
-                          width: 96,
-                          height: 96,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: AppColors.champagneGold, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.champagneGold.withOpacity(0.3),
-                                blurRadius: 16,
-                              ),
-                            ],
-                          ),
-                          child: KnotImage(
-                            imageUrl: user?.primaryPhoto,
+        child: AutoHidingFloatingBar(
+          bottomOffset: 0,
+          floatingContent: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  AppColors.obsidianBlack.withOpacity(0.75),
+                  AppColors.obsidianBlack.withOpacity(0.96),
+                  AppColors.obsidianBlack,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 0.25, 0.65, 1.0],
+              ),
+            ),
+            padding: const EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 14,
+              bottom: 16,
+            ),
+            child: GoldButton(
+              text: 'Sign Out',
+              isSecondary: true,
+              icon: Icons.logout,
+              onPressed: () async {
+                await ref.read(authProvider.notifier).logout();
+                if (context.mounted) {
+                  context.go('/auth');
+                }
+              },
+            ),
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Column(
+              children: [
+                // User Avatar & Name Card
+                GlassCard(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      Stack(
+                        children: [
+                          Container(
                             width: 96,
                             height: 96,
-                            isCircle: true,
-                          ),
-                        ),
-                        if (isVerified)
-                          const Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: VerifiedBadge(size: 26),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      user?.fullName ?? 'Sovereign Candidate',
-                      style: AppTypography.displayMedium.copyWith(fontSize: 22),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${user?.occupation.isNotEmpty ?? false ? user!.occupation : "Professional"} • ${user?.residenceCity.isNotEmpty ?? false ? user!.residenceCity : "Global Registry"}',
-                      style: AppTypography.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Didit KYC Verification Card
-              GlassCard(
-                padding: const EdgeInsets.all(20),
-                backgroundColor: isVerified
-                    ? AppColors.emeraldVerified.withOpacity(0.08)
-                    : AppColors.champagneGold.withOpacity(0.08),
-                border: Border.all(
-                  color: isVerified
-                      ? AppColors.emeraldVerified.withOpacity(0.4)
-                      : AppColors.champagneGold.withOpacity(0.4),
-                  width: 1.2,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isVerified
-                            ? AppColors.emeraldVerified.withOpacity(0.2)
-                            : AppColors.champagneGold.withOpacity(0.2),
-                      ),
-                      child: Icon(
-                        isVerified ? Icons.verified_user : Icons.shield_outlined,
-                        color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
-                        size: 26,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                isVerified ? 'VERIFIED PROFILE' : 'UNVERIFIED PROFILE',
-                                style: AppTypography.titleMedium.copyWith(
-                                  color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.champagneGold, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.champagneGold.withOpacity(0.3),
+                                  blurRadius: 16,
                                 ),
-                              ),
-                              if (isVerified) ...[
-                                const SizedBox(width: 6),
-                                const VerifiedBadge(size: 18),
                               ],
-                            ],
+                            ),
+                            child: KnotImage(
+                              imageUrl: user?.primaryPhoto,
+                              width: 96,
+                              height: 96,
+                              isCircle: true,
+                            ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            isVerified
-                                ? 'Biometric 1:1 match and government document certified.'
-                                : 'Complete biometric scan to unlock high-intent marriage matches.',
-                            style: AppTypography.bodySmall.copyWith(fontSize: 12),
-                          ),
+                          if (isVerified)
+                            const Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: VerifiedBadge(size: 26),
+                            ),
                         ],
                       ),
-                    ),
-                    if (!isVerified)
-                      GoldButton(
-                        text: 'VERIFY',
-                        width: 90,
-                        height: 38,
-                        onPressed: () => context.push('/verification'),
+                      const SizedBox(height: 16),
+                      Text(
+                        user?.fullName ?? 'Sovereign Candidate',
+                        style: AppTypography.displayMedium.copyWith(fontSize: 22),
                       ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        '${user?.occupation.isNotEmpty ?? false ? user!.occupation : "Professional"} • ${user?.residenceCity.isNotEmpty ?? false ? user!.residenceCity : "Global Registry"}',
+                        style: AppTypography.bodySmall,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-              // Profile Actions Menu
-              _buildMenuItem(
-                context,
-                title: 'Edit Your Profile',
-                icon: Icons.edit_note,
-                onTap: () => context.push('/edit-profile'),
-              ),
-              const SizedBox(height: 12),
-              _buildMenuItem(
-                context,
-                title: 'Manage Your Photos',
-                icon: Icons.photo_library_outlined,
-                onTap: () => context.push('/manage-photos'),
-              ),
-              const SizedBox(height: 12),
-              _buildMenuItem(
-                context,
-                title: 'Upgrade',
-                icon: Icons.workspace_premium,
-                onTap: () => context.push('/paywall'),
-              ),
-              if (!isVerified) ...[
+                // Didit KYC Verification Card
+                GlassCard(
+                  padding: const EdgeInsets.all(20),
+                  backgroundColor: isVerified
+                      ? AppColors.emeraldVerified.withOpacity(0.08)
+                      : AppColors.champagneGold.withOpacity(0.08),
+                  border: Border.all(
+                    color: isVerified
+                        ? AppColors.emeraldVerified.withOpacity(0.4)
+                        : AppColors.champagneGold.withOpacity(0.4),
+                    width: 1.2,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isVerified
+                              ? AppColors.emeraldVerified.withOpacity(0.2)
+                              : AppColors.champagneGold.withOpacity(0.2),
+                        ),
+                        child: Icon(
+                          isVerified ? Icons.verified_user : Icons.shield_outlined,
+                          color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
+                          size: 26,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  isVerified ? 'VERIFIED PROFILE' : 'UNVERIFIED PROFILE',
+                                  style: AppTypography.titleMedium.copyWith(
+                                    color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (isVerified) ...[
+                                  const SizedBox(width: 6),
+                                  const VerifiedBadge(size: 18),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isVerified
+                                  ? 'Biometric 1:1 match and government document certified.'
+                                  : 'Complete biometric scan to unlock high-intent marriage matches.',
+                              style: AppTypography.bodySmall.copyWith(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (!isVerified)
+                        GoldButton(
+                          text: 'VERIFY',
+                          width: 90,
+                          height: 38,
+                          onPressed: () => context.push('/verification'),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Profile Actions Menu
+                _buildMenuItem(
+                  context,
+                  title: 'Edit Your Profile',
+                  icon: Icons.edit_note,
+                  onTap: () => context.push('/edit-profile'),
+                ),
                 const SizedBox(height: 12),
                 _buildMenuItem(
                   context,
-                  title: 'Verify Your Identity',
-                  icon: Icons.verified_user_outlined,
-                  onTap: () => context.push('/verification'),
+                  title: 'Manage Your Photos',
+                  icon: Icons.photo_library_outlined,
+                  onTap: () => context.push('/manage-photos'),
                 ),
+                const SizedBox(height: 12),
+                _buildMenuItem(
+                  context,
+                  title: 'Upgrade',
+                  icon: Icons.workspace_premium,
+                  onTap: () => context.push('/paywall'),
+                ),
+                if (!isVerified) ...[
+                  const SizedBox(height: 12),
+                  _buildMenuItem(
+                    context,
+                    title: 'Verify Your Identity',
+                    icon: Icons.verified_user_outlined,
+                    onTap: () => context.push('/verification'),
+                  ),
+                ],
+                // Bottom spacer ensuring scroll view content never gets blocked by the floating button
+                const SizedBox(height: 90),
               ],
-              const SizedBox(height: 24),
-
-              // Sign Out Button
-              GoldButton(
-                text: 'Sign Out',
-                isSecondary: true,
-                onPressed: () async {
-                  await ref.read(authProvider.notifier).logout();
-                  if (context.mounted) {
-                    context.go('/auth');
-                  }
-                },
-              ),
-              const SizedBox(height: 32),
-            ],
+            ),
           ),
         ),
       ),

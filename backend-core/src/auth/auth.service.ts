@@ -21,7 +21,8 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const gender = dto.gender || '';
-    const preferredGender = dto.preferredGender || (gender.toLowerCase() === 'female' ? 'Male' : gender.toLowerCase() === 'male' ? 'Female' : '');
+    const gLower = gender.trim().toLowerCase();
+    const preferredGender = (gLower === 'female' || gLower === 'woman' || gLower === 'f') ? 'Male' : 'Female';
 
     const user = await this.prisma.user.create({
       data: {

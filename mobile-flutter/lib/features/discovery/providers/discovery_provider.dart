@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
+import '../../auth/providers/auth_provider.dart';
 import '../models/match_profile.dart';
 
 class DiscoveryState {
@@ -34,8 +35,9 @@ class DiscoveryState {
 
 class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
   final Dio _dio;
+  final Ref _ref;
 
-  DiscoveryNotifier(this._dio) : super(const DiscoveryState()) {
+  DiscoveryNotifier(this._dio, this._ref) : super(const DiscoveryState()) {
     loadCandidates();
   }
 
@@ -45,9 +47,30 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     try {
       final response = await _dio.get(ApiEndpoints.potentialMatches);
       if (response.data is List) {
-        final list = (response.data as List)
+        var list = (response.data as List)
             .map((item) => MatchProfile.fromJson(item))
             .toList();
+
+        // Strict Client-Side Opposite-Gender Enforcement:
+        // Ensures that under all network circumstances, candidates of the same gender are never shown
+        final authState = _ref.read(authProvider);
+        final userGender = (authState.user?.gender ?? '').trim().toLowerCase();
+        if (userGender.isNotEmpty) {
+          final isUserMale = userGender == 'male' || userGender == 'man' || userGender == 'm';
+          final isUserFemale = userGender == 'female' || userGender == 'woman' || userGender == 'f';
+
+          list = list.where((c) {
+            final cGen = c.gender.trim().toLowerCase();
+            if (cGen.isEmpty) return true;
+            if (isUserMale) {
+              return cGen != 'male' && cGen != 'man' && cGen != 'm';
+            } else if (isUserFemale) {
+              return cGen != 'female' && cGen != 'woman' && cGen != 'f';
+            }
+            return true;
+          }).toList();
+        }
+
         state = state.copyWith(candidates: list, isLoading: false);
         return;
       }
@@ -103,5 +126,5 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
 final discoveryProvider =
     StateNotifierProvider<DiscoveryNotifier, DiscoveryState>((ref) {
   final dio = ref.watch(dioProvider);
-  return DiscoveryNotifier(dio);
+  return DiscoveryNotifier(dio, ref);
 });

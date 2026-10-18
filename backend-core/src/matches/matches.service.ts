@@ -19,8 +19,18 @@ export class MatchesService {
     if (!user) throw new BadRequestException('User not found.');
 
     // Strictly enforce opposite-sex matching only (Male <-> Female)
-    const userGender = user.gender?.toLowerCase() || '';
-    const targetGender = userGender === 'female' ? 'Male' : (user.preferredGender || 'Female');
+    const userGenderRaw = (user.gender || '').trim().toLowerCase();
+    let targetGender: 'Male' | 'Female';
+
+    if (userGenderRaw === 'female' || userGenderRaw === 'woman' || userGenderRaw === 'f') {
+      targetGender = 'Male';
+    } else if (userGenderRaw === 'male' || userGenderRaw === 'man' || userGenderRaw === 'm') {
+      targetGender = 'Female';
+    } else {
+      // Fallback only if user's own biological gender is unrecorded
+      const prefRaw = (user.preferredGender || '').trim().toLowerCase();
+      targetGender = (prefRaw === 'male' || prefRaw === 'man') ? 'Male' : 'Female';
+    }
 
     // Step 1: Query verified opposite-sex candidates first
     const verifiedCandidates = await this.prisma.user.findMany({
@@ -49,9 +59,20 @@ export class MatchesService {
       allCandidates.push(...unverifiedCandidates);
     }
 
+    // Step 3: Hard guarantee filter: Discard any candidate whose gender is not strictly the opposite sex
+    const strictlyOppositeCandidates = allCandidates.filter(c => {
+      const cGender = (c.gender || '').trim().toLowerCase();
+      if (!cGender) return false;
+      if (targetGender === 'Male') {
+        return cGender === 'male' || cGender === 'man' || cGender === 'm';
+      } else {
+        return cGender === 'female' || cGender === 'woman' || cGender === 'f';
+      }
+    });
+
     const matchesList: any[] = [];
 
-    for (const cand of allCandidates) {
+    for (const cand of strictlyOppositeCandidates) {
       // Check if we already have calculated their compatibility
       let match = await this.prisma.match.findUnique({
         where: {

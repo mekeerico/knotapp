@@ -5,7 +5,7 @@ import '../../../../core/widgets/knot_image.dart';
 import '../../../../core/widgets/verified_badge.dart';
 import '../../models/match_profile.dart';
 
-class CandidateCard extends StatelessWidget {
+class CandidateCard extends StatefulWidget {
   final MatchProfile candidate;
   final VoidCallback onDetailsTap;
 
@@ -16,66 +16,140 @@ class CandidateCard extends StatelessWidget {
   });
 
   @override
+  State<CandidateCard> createState() => _CandidateCardState();
+}
+
+class _CandidateCardState extends State<CandidateCard> {
+  int _currentPhotoIndex = 0;
+
+  MatchProfile get candidate => widget.candidate;
+
+  @override
   Widget build(BuildContext context) {
-    final photo = candidate.photos.isNotEmpty
-        ? candidate.photos.first
+    final photos = candidate.photos;
+    final hasMultiplePhotos = photos.length > 1;
+    final photo = photos.isNotEmpty
+        ? photos[_currentPhotoIndex.clamp(0, photos.length - 1)]
         : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800';
 
-    return GestureDetector(
-      onTap: onDetailsTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.55),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.55),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // 1. High-Resolution Background Photo
+            Positioned.fill(
+              child: KnotImage(
+                imageUrl: photo,
+                fit: BoxFit.cover,
+                borderRadius: BorderRadius.circular(24),
+              ),
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            children: [
-              // High-Resolution Background Photo
-              Positioned.fill(
-                child: KnotImage(
-                  imageUrl: photo,
-                  fit: BoxFit.cover,
-                  borderRadius: BorderRadius.circular(24),
+
+            // 2. Extra Photos Navigation: Left/Right Tap Zones on the photo
+            if (hasMultiplePhotos) ...[
+              Positioned(
+                top: 70,
+                bottom: 120,
+                left: 0,
+                width: MediaQuery.of(context).size.width * 0.35,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () {
+                    if (_currentPhotoIndex > 0) {
+                      setState(() => _currentPhotoIndex--);
+                    }
+                  },
                 ),
               ),
+              Positioned(
+                top: 70,
+                bottom: 120,
+                right: 0,
+                width: MediaQuery.of(context).size.width * 0.35,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: () {
+                    if (_currentPhotoIndex < photos.length - 1) {
+                      setState(() => _currentPhotoIndex++);
+                    }
+                  },
+                ),
+              ),
+            ],
 
-            // Deep Vignette Gradient Scrim
+            // 3. Low-profile Vignette Scrim (concentrated ONLY at the bottom 38% to keep face/chest 100% clear)
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
+                      Colors.transparent,
                       Colors.black.withOpacity(0.0),
-                      Colors.black.withOpacity(0.3),
+                      Colors.black.withOpacity(0.45),
                       Colors.black.withOpacity(0.92),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    stops: const [0.45, 0.7, 1.0],
+                    stops: const [0.0, 0.60, 0.80, 1.0],
                   ),
                 ),
               ),
             ),
 
-            // Top Compatibility Pill & Verified Status
+            // 4. Story Progress Bars for Extra Pictures (if candidate has multiple photos)
+            if (hasMultiplePhotos)
+              Positioned(
+                top: 10,
+                left: 18,
+                right: 18,
+                child: Row(
+                  children: List.generate(photos.length, (idx) {
+                    final isActive = idx == _currentPhotoIndex;
+                    return Expanded(
+                      child: Container(
+                        height: 3,
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(2),
+                          color: isActive
+                              ? AppColors.champagneGold
+                              : Colors.white.withOpacity(0.35),
+                          boxShadow: isActive
+                              ? [
+                                  BoxShadow(
+                                    color: AppColors.champagneGold.withOpacity(0.6),
+                                    blurRadius: 4,
+                                  )
+                                ]
+                              : null,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ),
+
+            // 5. Top Compatibility Pill & Verified Status
             Positioned(
-              top: 18,
-              left: 18,
-              right: 18,
+              top: hasMultiplePhotos ? 20 : 16,
+              left: 16,
+              right: 16,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.obsidianBlack.withOpacity(0.75),
                       borderRadius: BorderRadius.circular(20),
@@ -92,10 +166,10 @@ class CandidateCard extends StatelessWidget {
                       children: [
                         const Icon(
                           Icons.favorite,
-                          size: 14,
+                          size: 13,
                           color: AppColors.roseGlow,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 5),
                         Text(
                           candidate.compatibilityScore >= 80
                               ? '${candidate.compatibilityScore}% ALIGNED'
@@ -104,97 +178,134 @@ class CandidateCard extends StatelessWidget {
                             color: AppColors.champagneGold,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 0.5,
+                            fontSize: 11,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  if (candidate.isVerified)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.obsidianBlack.withOpacity(0.75),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppColors.borderGold, width: 0.8),
-                      ),
-                      child: const VerifiedBadge(size: 16, showLabel: true, label: 'GOLD'),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (hasMultiplePhotos)
+                        Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.obsidianBlack.withOpacity(0.75),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppColors.borderGold, width: 0.8),
+                          ),
+                          child: Text(
+                            '${_currentPhotoIndex + 1}/${photos.length}',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.champagneGold,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      if (candidate.isVerified)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: AppColors.obsidianBlack.withOpacity(0.75),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppColors.borderGold, width: 0.8),
+                          ),
+                          child: const VerifiedBadge(size: 15, showLabel: true, label: 'GOLD'),
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
 
-            // Bottom Profile Information
+            // 6. Compact & Smartly Arranged Bottom Profile Info
+            // Designed specifically so it NEVER covers the face, eyes or portrait!
             Positioned(
-              bottom: 24,
-              left: 20,
-              right: 20,
+              bottom: 14,
+              left: 16,
+              right: 16,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Name, Age & Verified Checkmark
+                  // Row 1: Candidate Name & Age + Verified Badge
                   Row(
                     children: [
                       Flexible(
                         child: Text(
                           '${candidate.name}, ${candidate.age}',
                           style: AppTypography.headingLarge.copyWith(
-                            fontSize: 24,
+                            fontSize: 21,
                             color: AppColors.textPure,
+                            fontWeight: FontWeight.w700,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const VerifiedBadge(size: 20),
+                      const VerifiedBadge(size: 18),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
 
-                  // Occupation & Location
+                  // Row 2: Vocation/Occupation & Residence City/Country combined on one elegant row
                   Row(
                     children: [
-                      const Icon(Icons.work_outline, size: 15, color: AppColors.champagneGold),
-                      const SizedBox(width: 6),
-                      Expanded(
+                      const Icon(Icons.work_outline, size: 13, color: AppColors.champagneGold),
+                      const SizedBox(width: 4),
+                      Flexible(
                         child: Text(
                           candidate.occupation,
-                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textPure,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text('•', style: TextStyle(color: AppColors.textSubtle, fontSize: 11)),
+                      const SizedBox(width: 6),
+                      const Icon(Icons.location_on_outlined, size: 13, color: AppColors.textMuted),
+                      const SizedBox(width: 3),
+                      Flexible(
+                        child: Text(
+                          '${candidate.city}, ${candidate.country}',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textMuted,
+                            fontSize: 12,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
+
+                  // Row 3: The 3 items under them arranged smartly & compactly:
+                  // 1) Archetype chip, 2) Marriage Timeline chip, 3) Compatibility Link
                   Row(
                     children: [
-                      const Icon(Icons.location_on_outlined, size: 15, color: AppColors.textMuted),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${candidate.city}, ${candidate.country}',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Trait Chips
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 6,
-                    children: [
                       _buildMiniChip(candidate.personalityArchetype, Icons.psychology_outlined),
+                      const SizedBox(width: 6),
                       _buildMiniChip(candidate.marriageTimeline, Icons.access_time),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 6),
 
-                  // Tap for Deep Analysis Trigger
+                  // Compact Compatibility & Vows Trigger
                   GestureDetector(
-                    onTap: onDetailsTap,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                    onTap: widget.onDetailsTap,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -203,11 +314,12 @@ class CandidateCard extends StatelessWidget {
                             style: AppTypography.bodySmall.copyWith(
                               color: AppColors.champagneGold,
                               fontWeight: FontWeight.w600,
+                              fontSize: 11.5,
                             ),
                           ),
                           const Icon(
                             Icons.arrow_forward_ios,
-                            size: 13,
+                            size: 11,
                             color: AppColors.champagneGold,
                           ),
                         ],
@@ -220,28 +332,28 @@ class CandidateCard extends StatelessWidget {
           ],
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildMiniChip(String text, IconData icon) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
       decoration: BoxDecoration(
         color: AppColors.darkSlate.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderGold.withOpacity(0.3), width: 0.8),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.borderGold.withOpacity(0.4), width: 0.8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: AppColors.champagneGold),
+          Icon(icon, size: 11, color: AppColors.champagneGold),
           const SizedBox(width: 4),
           Text(
             text,
             style: AppTypography.bodySmall.copyWith(
-              fontSize: 11,
+              fontSize: 10.5,
               color: AppColors.textPure,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
