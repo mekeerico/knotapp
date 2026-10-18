@@ -7,7 +7,6 @@ import '../../../core/widgets/auto_hiding_floating_bar.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/gold_button.dart';
 import '../../../core/widgets/knot_image.dart';
-import '../../../core/widgets/knot_app_bar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../auth/providers/auth_provider.dart';
 
@@ -21,12 +20,40 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
-      appBar: const KnotAppBar(
-        title: 'SOVEREIGN IDENTITY',
-      ),
       body: SafeArea(
         child: AutoHidingFloatingBar(
           bottomOffset: 0,
+          topOffset: 0,
+          topFloatingContent: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.obsidianBlack,
+                  AppColors.obsidianBlack.withOpacity(0.95),
+                  AppColors.obsidianBlack.withOpacity(0.72),
+                  Colors.transparent,
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 0.55, 0.85, 1.0],
+              ),
+            ),
+            padding: const EdgeInsets.only(
+              top: 14,
+              bottom: 18,
+              left: 20,
+              right: 20,
+            ),
+            child: Center(
+              child: Text(
+                'SOVEREIGN IDENTITY',
+                style: AppTypography.headingMedium.copyWith(
+                  letterSpacing: 1.5,
+                  color: AppColors.champagneGold,
+                ),
+              ),
+            ),
+          ),
           floatingContent: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -60,7 +87,7 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            padding: const EdgeInsets.only(left: 20, right: 20, top: 62, bottom: 12),
             child: Column(
               children: [
                 // User Avatar & Name Card

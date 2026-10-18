@@ -82,12 +82,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
       final user = await _repo.login(email, password);
-      await _repo.markWelcomeSeen();
       state = state.copyWith(
         status: AuthStatus.authenticated,
         user: user,
         hasSeenWelcome: true,
       );
+      _repo.markWelcomeSeen();
       RevenueCatService.logIn(user.id);
       return true;
     } catch (e) {
@@ -103,12 +103,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
       final user = await _repo.register(email, password);
-      await _repo.markWelcomeSeen();
       state = state.copyWith(
         status: AuthStatus.authenticated,
         user: user,
         hasSeenWelcome: true,
       );
+      _repo.markWelcomeSeen();
       RevenueCatService.logIn(user.id);
       return true;
     } catch (e) {

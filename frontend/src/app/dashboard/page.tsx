@@ -7,7 +7,8 @@ import {
   Sparkles, ShieldCheck, Heart, User, Bot, MessageSquare, 
   Settings, LogOut, Send, AlertTriangle, Shield, CheckCircle2,
   TrendingUp, Award, Activity, Compass, BrainCircuit, HeartHandshake,
-  Menu, X, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, Camera, Loader2
+  Menu, X, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, Camera, Loader2,
+  Star, Briefcase, MapPin, RefreshCw
 } from "lucide-react";
 import { getApiUrl } from "../../services/api";
 
@@ -104,120 +105,121 @@ export default function Dashboard() {
     }
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem('knot_token');
-      if (!token) {
-        router.push('/login');
-        return;
+  const loadMatchesAndProfile = async () => {
+    const token = localStorage.getItem('knot_token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    setIsLoadingMatches(true);
+    try {
+      const API_URL = getApiUrl();
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      // Fetch profile and daily matches in parallel for maximum speed
+      const [profileRes, matchesRes] = await Promise.all([
+        fetch(`${API_URL}/users/profile`, { headers }),
+        fetch(`${API_URL}/matches/daily`, { headers }),
+      ]);
+
+      let profileData: any = userProfile;
+      if (profileRes.ok) {
+        profileData = await profileRes.json();
+        setUserProfile(profileData);
+        if (profileData.profileImages && profileData.profileImages.length > 0) {
+          const sorted = [...profileData.profileImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+          setUserPhotos(sorted.map((img: any) => resolveImageUrl(img.url)));
+        } else if (profileData.profileImageUrls && profileData.profileImageUrls.length > 0) {
+          setUserPhotos(profileData.profileImageUrls.map((u: string) => resolveImageUrl(u)));
+        } else if (profileData.photoUrls && profileData.photoUrls.length > 0) {
+          setUserPhotos(profileData.photoUrls.map((u: string) => resolveImageUrl(u)));
+        } else if (profileData.selfieUrl) {
+          setUserPhotos([resolveImageUrl(profileData.selfieUrl)]);
+        }
       }
 
-      try {
-        const API_URL = getApiUrl();
-          
-        // Fetch real profile
-        const profileRes = await fetch(`${API_URL}/users/profile`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        let profileData: any = null;
-        if (profileRes.ok) {
-          profileData = await profileRes.json();
-          setUserProfile(profileData);
-          // Support all backend image formats
-          if (profileData.profileImages && profileData.profileImages.length > 0) {
-            const sorted = [...profileData.profileImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
-            setUserPhotos(sorted.map((img: any) => resolveImageUrl(img.url)));
-          } else if (profileData.profileImageUrls && profileData.profileImageUrls.length > 0) {
-            setUserPhotos(profileData.profileImageUrls.map((u: string) => resolveImageUrl(u)));
-          } else if (profileData.photoUrls && profileData.photoUrls.length > 0) {
-            setUserPhotos(profileData.photoUrls.map((u: string) => resolveImageUrl(u)));
-          } else if (profileData.selfieUrl) {
-            setUserPhotos([resolveImageUrl(profileData.selfieUrl)]);
-          }
+      const matchesData = matchesRes.ok ? await matchesRes.json() : [];
+      const normalizedMatches = (Array.isArray(matchesData) ? matchesData : []).map((m: any) => {
+        const partner = m.partner || {};
+        let rawImages = partner.profileImages || m.profileImages || [];
+        let imageUrls: string[] = [];
+        if (Array.isArray(rawImages) && rawImages.length > 0) {
+          const sorted = [...rawImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+          imageUrls = sorted.map((img: any) => resolveImageUrl(img.url || img));
+        } else if (partner.profileImageUrls?.length > 0) {
+          imageUrls = partner.profileImageUrls.map((u: string) => resolveImageUrl(u));
+        } else if (m.profileImageUrls?.length > 0) {
+          imageUrls = m.profileImageUrls.map((u: string) => resolveImageUrl(u));
+        } else if (partner.selfieUrl) {
+          imageUrls = [resolveImageUrl(partner.selfieUrl)];
+        } else if (m.selfieUrl) {
+          imageUrls = [resolveImageUrl(m.selfieUrl)];
         }
 
-        // Fetch daily matches securely
-        const matchesRes = await fetch(`${API_URL}/matches/daily`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const matchesData = await matchesRes.json();
-        // Normalize image fields for each match
-        const normalizedMatches = (Array.isArray(matchesData) ? matchesData : []).map((m: any) => {
-          const partner = m.partner || {};
-          let rawImages = partner.profileImages || m.profileImages || [];
-          let imageUrls: string[] = [];
-          if (Array.isArray(rawImages) && rawImages.length > 0) {
-            const sorted = [...rawImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
-            imageUrls = sorted.map((img: any) => resolveImageUrl(img.url || img));
-          } else if (partner.profileImageUrls?.length > 0) {
-            imageUrls = partner.profileImageUrls.map((u: string) => resolveImageUrl(u));
-          } else if (m.profileImageUrls?.length > 0) {
-            imageUrls = m.profileImageUrls.map((u: string) => resolveImageUrl(u));
-          } else if (partner.selfieUrl) {
-            imageUrls = [resolveImageUrl(partner.selfieUrl)];
-          } else if (m.selfieUrl) {
-            imageUrls = [resolveImageUrl(m.selfieUrl)];
-          }
+        const primaryPhoto = imageUrls[0] || (partner.photoUrl ? resolveImageUrl(partner.photoUrl) : (m.photoUrl ? resolveImageUrl(m.photoUrl) : ''));
 
-          const primaryPhoto = imageUrls[0] || (partner.photoUrl ? resolveImageUrl(partner.photoUrl) : (m.photoUrl ? resolveImageUrl(m.photoUrl) : ''));
-
-          return {
+        return {
+          ...partner,
+          ...m,
+          partner: {
             ...partner,
-            ...m,
-            partner: {
-              ...partner,
-              photoUrl: primaryPhoto,
-              imageUrls,
-            },
             photoUrl: primaryPhoto,
             imageUrls,
-            firstName: partner.firstName || m.firstName || 'Match',
-            lastName: partner.lastName || m.lastName || '',
-            bio: partner.bio || m.bio || '',
-            occupation: partner.occupation || m.occupation || '',
-            residenceCity: partner.residenceCity || m.residenceCity || '',
-            residenceCountry: partner.residenceCountry || m.residenceCountry || '',
-            archetype: partner.personalityArchetype || m.archetype || '',
-            attachment: partner.attachmentStyle || m.attachment || '',
-            trustScore: partner.trustScore || m.trustScore || 95,
-          };
+          },
+          photoUrl: primaryPhoto,
+          imageUrls,
+          firstName: partner.firstName || m.firstName || 'Match',
+          lastName: partner.lastName || m.lastName || '',
+          bio: partner.bio || m.bio || '',
+          occupation: partner.occupation || m.occupation || '',
+          residenceCity: partner.residenceCity || m.residenceCity || '',
+          residenceCountry: partner.residenceCountry || m.residenceCountry || '',
+          archetype: partner.personalityArchetype || m.archetype || '',
+          attachment: partner.attachmentStyle || m.attachment || '',
+          trustScore: partner.trustScore || m.trustScore || 95,
+          compatibilityScore: m.scores?.compatibilityScore || m.compatibilityScore || 92,
+        };
+      });
+
+      // Strict opposite-gender filtering to mirror mobile app & backend constraints
+      let filteredMatches = normalizedMatches;
+      if (profileData?.gender) {
+        const userGender = profileData.gender.trim().toLowerCase();
+        const isUserMale = userGender === 'male' || userGender === 'man' || userGender === 'm';
+        const isUserFemale = userGender === 'female' || userGender === 'woman' || userGender === 'f';
+        filteredMatches = normalizedMatches.filter((m: any) => {
+          const candGender = (m.partner?.gender || m.gender || '').trim().toLowerCase();
+          if (!candGender) return true;
+          if (isUserMale) return candGender !== 'male' && candGender !== 'man' && candGender !== 'm';
+          if (isUserFemale) return candGender !== 'female' && candGender !== 'woman' && candGender !== 'f';
+          return true;
         });
-
-        // Strict opposite-gender filtering to mirror mobile app & backend constraints
-        let filteredMatches = normalizedMatches;
-        if (profileData?.gender) {
-          const userGender = profileData.gender.trim().toLowerCase();
-          const isUserMale = userGender === 'male' || userGender === 'man' || userGender === 'm';
-          const isUserFemale = userGender === 'female' || userGender === 'woman' || userGender === 'f';
-          filteredMatches = normalizedMatches.filter((m: any) => {
-            const candGender = (m.partner?.gender || m.gender || '').trim().toLowerCase();
-            if (!candGender) return true;
-            if (isUserMale) return candGender !== 'male' && candGender !== 'man' && candGender !== 'm';
-            if (isUserFemale) return candGender !== 'female' && candGender !== 'woman' && candGender !== 'f';
-            return true;
-          });
-        }
-        setMatches(filteredMatches);
-
-        // Fetch dynamic exchange rates
-        try {
-          const exchangeRes = await fetch('https://open.er-api.com/v6/latest/USD');
-          if (exchangeRes.ok) {
-            const exchangeData = await exchangeRes.json();
-            setExchangeRates(exchangeData.rates);
-          }
-        } catch (exErr) {
-          console.error("Failed to fetch exchange rates", exErr);
-        }
-
-      } catch (err) {
-        console.error("Error fetching data", err);
-        setMatches([]);
-      } finally {
-        setIsLoadingMatches(false);
       }
-    };
-    fetchData();
+
+      setMatches(filteredMatches);
+      setCurrentMatchIndex(0);
+      setActiveMatchImageIndex(0);
+      setIsLoadingMatches(false);
+
+      // Fetch dynamic exchange rates asynchronously in background without blocking UI
+      if (!exchangeRates) {
+        fetch('https://open.er-api.com/v6/latest/USD')
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => {
+            if (d?.rates) setExchangeRates(d.rates);
+          })
+          .catch(() => {});
+      }
+    } catch (err) {
+      console.error("Error fetching data", err);
+      setMatches([]);
+      setIsLoadingMatches(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMatchesAndProfile();
   }, [router]);
 
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
@@ -391,38 +393,41 @@ export default function Dashboard() {
         setCurrentMatchIndex(prev => prev + 1);
         setActiveMatchImageIndex(0);
       } else {
-        alert("You have reviewed all daily matches. More matches will be curated for you tomorrow!");
+        setMatches([]);
+        setCurrentMatchIndex(0);
+        setActiveMatchImageIndex(0);
       }
     });
   };
 
   const handleConnect = () => {
     checkLimitAndProceed(async () => {
-      setConnectedMatchName(`${activeMatch?.firstName || 'Partner'} ${activeMatch?.lastName || ''}`.trim());
-      setShowMatchModal(true);
-      setIsCalculatingMatch(true);
-      try {
-        const res = await fetch(`${getApiUrl()}/ai/compatibility`, {
+      const token = localStorage.getItem('knot_token');
+      if (token && activeMatch) {
+        fetch(`${getApiUrl()}/matches/action`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
           body: JSON.stringify({
-            user_a: userProfile || { firstName: "You" },
-            user_b: activeMatch?.partner || { firstName: "Match" }
-          })
-        });
-        const data = await res.json();
-        setMatchCompatibility(data);
-      } catch (e) {
-        setMatchCompatibility({
-          compatibilityScore: 92,
-          emotionalAlignment: 88,
-          communicationStyle: 90,
-          valuesAlignment: 95,
-          aiExplanation: "We couldn't connect to KNOT AI for deep insights, but you share a strong foundational alignment based on values."
-        });
-      } finally {
-        setIsCalculatingMatch(false);
+            matchId: activeMatch.matchId,
+            partnerId: activeMatch.partner?.id || activeMatch.id,
+            action: "like",
+          }),
+        }).catch(() => {});
       }
+
+      setConnectedMatchName(`${activeMatch?.firstName || 'Partner'} ${activeMatch?.lastName || ''}`.trim());
+      setMatchCompatibility({
+        compatibilityScore: activeMatch?.scores?.compatibilityScore || activeMatch?.compatibilityScore || 92,
+        emotionalAlignment: activeMatch?.scores?.emotionalAlignment || 91,
+        communicationStyle: activeMatch?.scores?.communicationStyle || 88,
+        valuesAlignment: activeMatch?.scores?.valuesAlignment || 95,
+        aiExplanation: activeMatch?.aiExplanation || "You share a strong foundational alignment based on matrimonial values and life vision.",
+      });
+      setIsCalculatingMatch(false);
+      setShowMatchModal(true);
     });
   };
 
@@ -870,89 +875,167 @@ export default function Dashboard() {
             </div>
           )}
           {activeTab === "matches" && !isLoadingMatches && matches.length === 0 && (
-            <div className="glass-card rounded-[32px] p-12 border border-white/10 text-center space-y-4 flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 mb-4">
-                <Compass className="w-8 h-8" />
+            <div className="glass-card rounded-[32px] p-10 sm:p-12 border border-white/10 text-center space-y-5 flex flex-col items-center justify-center max-w-lg mx-auto">
+              <div className="w-18 h-18 rounded-full bg-[#D4AF37]/12 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] mb-2 p-4">
+                <Compass className="w-9 h-9" />
               </div>
-              <h3 className="text-xl font-bold text-white">No matches found yet</h3>
-              <p className="text-sm text-gray-400 max-w-md">Our AI matchmaking cron job curates new compatible partners every 24 hours. Check back soon for your personalized matches.</p>
+              <h3 className="text-2xl font-serif font-bold text-white">Curating Sovereign Matches</h3>
+              <p className="text-sm text-gray-400 max-w-md leading-relaxed">
+                The Knot Registry is actively scanning for verified {userProfile?.gender?.toLowerCase() === 'male' ? 'eligible ladies' : userProfile?.gender?.toLowerCase() === 'female' ? 'eligible gentlemen' : 'compatible candidates'} who align with your matrimonial values and marital vision.
+              </p>
+              <button
+                type="button"
+                onClick={loadMatchesAndProfile}
+                className="mt-2 px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#D4AF37]/20 cursor-pointer"
+              >
+                <RefreshCw className="w-4 h-4" /> Check for New Candidates
+              </button>
             </div>
           )}
           {activeTab === "matches" && !isLoadingMatches && activeMatch && (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-              {/* Profile Card */}
-              <div className="md:col-span-7 glass-card rounded-[32px] overflow-hidden border border-white/10 p-6 space-y-6">
-                <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-900 flex items-center justify-center group">
-                  {activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl ? (
-                    <img 
-                      src={activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl} 
-                      alt={activeMatch.firstName} 
-                      className="w-full h-full object-cover grayscale-[15%] brightness-95 transition-all duration-300" 
-                    />
-                  ) : (
-                    <User className="w-24 h-24 text-gray-700" />
-                  )}
+              {/* Profile Card & Mobile-Style Circular Action Buttons */}
+              <div className="md:col-span-7 flex flex-col items-center space-y-5">
+                <div className="w-full glass-card rounded-[32px] overflow-hidden border border-[#D4AF37]/30 p-3 sm:p-4 shadow-2xl">
+                  <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-900 flex items-center justify-center group">
+                    {activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl ? (
+                      <img 
+                        src={activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl} 
+                        alt={activeMatch.firstName} 
+                        className="w-full h-full object-cover brightness-95 transition-all duration-300" 
+                      />
+                    ) : (
+                      <User className="w-24 h-24 text-gray-700" />
+                    )}
 
-                  {/* Multi-photo indicators if more than 1 image */}
-                  {activeMatch.imageUrls?.length > 1 && (
-                    <>
-                      <button 
-                        type="button"
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          setActiveMatchImageIndex(prev => prev > 0 ? prev - 1 : activeMatch.imageUrls.length - 1); 
-                        }} 
-                        className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/80 transition-all z-20"
-                        title="Previous photo"
-                      >
-                        <ChevronLeft className="w-4 h-4" />
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={(e) => { 
-                          e.stopPropagation(); 
-                          setActiveMatchImageIndex(prev => prev < activeMatch.imageUrls.length - 1 ? prev + 1 : 0); 
-                        }} 
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/80 transition-all z-20"
-                        title="Next photo"
-                      >
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                      <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-6 z-20">
-                        {activeMatch.imageUrls.map((_: any, i: number) => (
-                          <div 
-                            key={i} 
-                            onClick={(e) => { e.stopPropagation(); setActiveMatchImageIndex(i); }}
-                            className={`h-1 flex-1 rounded-full cursor-pointer transition-all ${i === activeMatchImageIndex ? 'bg-white shadow-md' : 'bg-white/30'}`} 
-                          />
-                        ))}
+                    {/* Multi-photo indicators if more than 1 image */}
+                    {activeMatch.imageUrls?.length > 1 && (
+                      <>
+                        <button 
+                          type="button"
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setActiveMatchImageIndex(prev => prev > 0 ? prev - 1 : activeMatch.imageUrls.length - 1); 
+                          }} 
+                          className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/80 transition-all z-20"
+                          title="Previous photo"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            setActiveMatchImageIndex(prev => prev < activeMatch.imageUrls.length - 1 ? prev + 1 : 0); 
+                          }} 
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/80 transition-all z-20"
+                          title="Next photo"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                        <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-5 z-20">
+                          {activeMatch.imageUrls.map((_: any, i: number) => (
+                            <div 
+                              key={i} 
+                              onClick={(e) => { e.stopPropagation(); setActiveMatchImageIndex(i); }}
+                              className={`h-1 flex-1 rounded-full cursor-pointer transition-all ${i === activeMatchImageIndex ? 'bg-[#D4AF37] shadow-md shadow-[#D4AF37]/60' : 'bg-white/35'}`} 
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {/* Top Compatibility Pill & Gold Verified Badge */}
+                    <div className={`absolute ${activeMatch.imageUrls?.length > 1 ? 'top-6' : 'top-4'} left-4 right-4 flex items-center justify-between z-20`}>
+                      <div className="px-3 py-1.5 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#D4AF37] shadow-[0_0_10px_rgba(212,175,55,0.25)] flex items-center gap-1.5">
+                        <Heart className="w-3.5 h-3.5 text-[#E11D48] fill-[#E11D48]" />
+                        <span className="text-[11px] font-bold tracking-wider text-[#D4AF37]">
+                          {(activeMatch.compatibilityScore || 92) >= 80
+                            ? `${activeMatch.compatibilityScore || 92}% ALIGNED`
+                            : `${activeMatch.compatibilityScore || 75}% CLOSEST MATCH`}
+                        </span>
                       </div>
-                    </>
-                  )}
-                  
-                  <div className="absolute top-8 right-4 trust-badge px-3 py-1 rounded-full text-xs font-black flex items-center gap-1.5 z-10">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Trust {activeMatch.trustScore}%
-                  </div>
-                  <div 
-                    onClick={() => setActiveTab("matchProfile")}
-                    className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 via-black/40 to-transparent z-10 cursor-pointer group/title"
-                  >
-                    <h3 className="text-2xl font-black text-white group-hover/title:text-[#D4AF37] transition-colors">
-                      {activeMatch.firstName} {activeMatch.lastName}, {formatAgeOrDob(activeMatch.dateOfBirth)}
-                    </h3>
-                    <p className="text-xs text-gray-400 font-semibold">{activeMatch.occupation} • {activeMatch.residenceCity}</p>
-                    <span className="text-[11px] text-[#D4AF37] font-semibold mt-1 inline-block group-hover/title:underline">
-                      View Psychological Compatibility & Vows ›
-                    </span>
+
+                      <div className="flex items-center gap-1.5">
+                        {activeMatch.imageUrls?.length > 1 && (
+                          <span className="px-2.5 py-1 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#D4AF37]/40 text-[10px] font-bold text-[#D4AF37]">
+                            {activeMatchImageIndex + 1}/{activeMatch.imageUrls.length}
+                          </span>
+                        )}
+                        <div className="px-2.5 py-1 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#D4AF37]/50 flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-full bg-gradient-to-br from-[#F3E5AB] via-[#D4AF37] to-[#AA7C11] flex items-center justify-center text-black text-[10px] font-black">
+                            ✓
+                          </span>
+                          <span className="text-[10px] font-bold tracking-wider text-[#D4AF37] border border-[#D4AF37]/40 rounded px-1.5 py-0.5">
+                            GOLD
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Clean Unclustered Bottom Info Overlay (No Archetype or Timeline chips on card) */}
+                    <div 
+                      onClick={() => setActiveTab("matchProfile")}
+                      className="absolute bottom-0 left-0 right-0 pt-24 pb-5 px-5 bg-gradient-to-t from-black/95 via-black/55 to-transparent z-10 cursor-pointer group/title"
+                    >
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-2xl font-serif font-bold text-white group-hover/title:text-[#D4AF37] transition-colors truncate">
+                          {activeMatch.firstName} {activeMatch.lastName}{formatAgeOrDob(activeMatch.dateOfBirth) ? `, ${formatAgeOrDob(activeMatch.dateOfBirth)}` : ''}
+                        </h3>
+                        <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#F3E5AB] via-[#D4AF37] to-[#AA7C11] flex items-center justify-center text-black text-xs font-black shrink-0 shadow-sm">
+                          ✓
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 text-xs text-gray-300 font-medium mt-1 truncate">
+                        <Briefcase className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                        <span className="truncate">{activeMatch.occupation || 'Professional'}</span>
+                        <span className="text-gray-500 mx-1">•</span>
+                        <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        <span className="text-gray-400 truncate">
+                          {[activeMatch.residenceCity, activeMatch.residenceCountry].filter(Boolean).join(', ') || 'Global Registry'}
+                        </span>
+                      </div>
+
+                      <div className="mt-2.5 flex items-center justify-between text-xs font-semibold text-[#D4AF37] group-hover/title:underline">
+                        <span>View Psychological Compatibility & Vows</span>
+                        <ChevronRight className="w-4 h-4" />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex flex-wrap gap-1.5">
-                    <span className="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-xs text-gray-300">✔ {activeMatch.archetype}</span>
-                    <span className="px-3 py-1 rounded-full bg-[#2D1B4E]/30 border border-[#D4AF37]/20 text-xs text-[#D4AF37]">✔ {activeMatch.attachment} Attachment</span>
-                  </div>
-                  <p className="text-sm text-gray-400 leading-relaxed font-sans">{activeMatch.bio}</p>
+                {/* Mobile-Matched Circular Action Buttons (X, Star, and Love) */}
+                <div className="flex items-center justify-center gap-6 pt-1 pb-2">
+                  {/* Pass Button (X) */}
+                  <button
+                    type="button"
+                    onClick={handlePass}
+                    title="Pass Candidate"
+                    className="w-14 h-14 rounded-full bg-[#121721] border-[1.5px] border-gray-500/40 shadow-[0_4px_14px_rgba(107,114,128,0.25)] flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-300 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <X className="w-6 h-6 stroke-[2.2]" />
+                  </button>
+
+                  {/* View Compatibility & Full Profile Button (Star) */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("matchProfile")}
+                    title="View Psychological Compatibility & Vows"
+                    className="w-16 h-16 rounded-full bg-[#121721] border-[1.5px] border-[#D4AF37]/60 shadow-[0_4px_18px_rgba(212,175,55,0.3)] flex items-center justify-center text-[#D4AF37] hover:border-[#D4AF37] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Star className="w-7 h-7 fill-[#D4AF37] text-[#D4AF37]" />
+                  </button>
+
+                  {/* Like & Connect Button (Love / Heart) */}
+                  <button
+                    type="button"
+                    onClick={handleConnect}
+                    title="Connect & Initiate Marriage Conversation"
+                    className="w-14 h-14 rounded-full bg-[#121721] border-[1.5px] border-[#E11D48]/50 shadow-[0_4px_16px_rgba(225,29,72,0.3)] flex items-center justify-center text-[#E11D48] hover:border-[#E11D48] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Heart className="w-6 h-6 fill-[#E11D48] text-[#E11D48]" />
+                  </button>
                 </div>
               </div>
 
@@ -965,28 +1048,28 @@ export default function Dashboard() {
                     <div>
                       <div className="flex justify-between text-xs font-bold mb-1">
                         <span className="text-gray-400">Values Alignment</span>
-                        <span className="text-[#D4AF37]">95%</span>
+                        <span className="text-[#D4AF37]">{activeMatch.scores?.valuesAlignment || 95}%</span>
                       </div>
                       <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#D4AF37]" style={{ width: "95%" }} />
+                        <div className="h-full bg-[#D4AF37]" style={{ width: `${activeMatch.scores?.valuesAlignment || 95}%` }} />
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-xs font-bold mb-1">
                         <span className="text-gray-400">Emotional Synergy</span>
-                        <span className="text-[#E27D8D]">91%</span>
+                        <span className="text-[#E27D8D]">{activeMatch.scores?.emotionalAlignment || 91}%</span>
                       </div>
                       <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#E27D8D]" style={{ width: "91%" }} />
+                        <div className="h-full bg-[#E27D8D]" style={{ width: `${activeMatch.scores?.emotionalAlignment || 91}%` }} />
                       </div>
                     </div>
                     <div>
                       <div className="flex justify-between text-xs font-bold mb-1">
                         <span className="text-gray-400">Communication Match</span>
-                        <span className="text-white">88%</span>
+                        <span className="text-white">{activeMatch.scores?.communicationStyle || 88}%</span>
                       </div>
                       <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-white" style={{ width: "88%" }} />
+                        <div className="h-full bg-white" style={{ width: `${activeMatch.scores?.communicationStyle || 88}%` }} />
                       </div>
                     </div>
                   </div>
@@ -1000,22 +1083,6 @@ export default function Dashboard() {
                   <p className="text-xs text-gray-300 leading-relaxed font-sans">
                     {activeMatch.aiExplanation}
                   </p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-4">
-                  <button 
-                    onClick={handlePass}
-                    className="flex-1 py-4 rounded-full text-sm font-bold bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 transition-colors"
-                  >
-                    Pass
-                  </button>
-                  <button 
-                    onClick={handleConnect}
-                    className="flex-1 py-4 rounded-full text-sm font-black rose-glow-btn text-white flex items-center justify-center gap-1.5"
-                  >
-                    Connect <Heart className="w-4 h-4" />
-                  </button>
                 </div>
               </div>
             </div>

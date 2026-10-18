@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 class KnotImage extends StatelessWidget {
+  static final Map<int, Uint8List> _base64Cache = {};
+
   final String? imageUrl;
   final double? width;
   final double? height;
@@ -24,6 +27,19 @@ class KnotImage extends StatelessWidget {
     this.fallbackUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800',
   });
 
+  static Uint8List _decodeCached(String url) {
+    final key = url.hashCode;
+    final cached = _base64Cache[key];
+    if (cached != null) return cached;
+    final b64 = url.contains('base64,') ? url.split('base64,')[1] : url;
+    final bytes = base64Decode(b64);
+    if (_base64Cache.length > 60) {
+      _base64Cache.remove(_base64Cache.keys.first);
+    }
+    _base64Cache[key] = bytes;
+    return bytes;
+  }
+
   static String resolveUrl(String? raw) {
     if (raw == null || raw.trim().isEmpty) {
       return '';
@@ -39,20 +55,19 @@ class KnotImage extends StatelessWidget {
   static ImageProvider resolveProvider(String? raw, {String? fallback}) {
     final effectiveFallback = fallback ?? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800';
     if (raw == null || raw.trim().isEmpty) {
-      return NetworkImage(effectiveFallback);
+      return CachedNetworkImageProvider(effectiveFallback);
     }
     final url = raw.trim();
     if (url.startsWith('data:image')) {
       try {
-        final b64 = url.contains('base64,') ? url.split('base64,')[1] : url;
-        return MemoryImage(base64Decode(b64));
+        return MemoryImage(_decodeCached(url));
       } catch (_) {
-        return NetworkImage(effectiveFallback);
+        return CachedNetworkImageProvider(effectiveFallback);
       }
     }
     if (url.startsWith('/uploads/')) {
       const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
-      return NetworkImage('$apiBase$url');
+      return CachedNetworkImageProvider('$apiBase$url');
     }
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return CachedNetworkImageProvider(url);
@@ -60,7 +75,7 @@ class KnotImage extends StatelessWidget {
     if (File(url).existsSync()) {
       return FileImage(File(url));
     }
-    return NetworkImage(effectiveFallback);
+    return CachedNetworkImageProvider(effectiveFallback);
   }
 
   @override
@@ -89,12 +104,12 @@ class KnotImage extends StatelessWidget {
 
     if (url.startsWith('data:image')) {
       try {
-        final b64 = url.contains('base64,') ? url.split('base64,')[1] : url;
         return Image.memory(
-          base64Decode(b64),
+          _decodeCached(url),
           fit: fit,
           width: width,
           height: height,
+          gaplessPlayback: true,
           errorBuilder: (_, __, ___) => _buildFallback(),
         );
       } catch (_) {
@@ -108,6 +123,8 @@ class KnotImage extends StatelessWidget {
         fit: fit,
         width: width,
         height: height,
+        fadeInDuration: const Duration(milliseconds: 120),
+        fadeOutDuration: const Duration(milliseconds: 80),
         placeholder: (context, _) => Container(
           color: AppColors.darkSlate,
           child: const Center(

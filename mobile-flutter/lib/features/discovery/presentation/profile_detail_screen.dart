@@ -155,6 +155,42 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       backgroundColor: AppColors.obsidianBlack,
       body: AutoHidingFloatingBar(
         bottomOffset: 0,
+        topOffset: 0,
+        topFloatingContent: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.obsidianBlack.withOpacity(0.88),
+                AppColors.obsidianBlack.withOpacity(0.45),
+                Colors.transparent,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0.0, 0.6, 1.0],
+            ),
+          ),
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + 4,
+            left: 8,
+            right: 16,
+            bottom: 12,
+          ),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: IconButton(
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.obsidianBlack.withOpacity(0.75),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.borderGold.withOpacity(0.4), width: 1),
+                ),
+                child: const Icon(Icons.arrow_back, color: AppColors.champagneGold, size: 20),
+              ),
+              onPressed: () => context.pop(),
+            ),
+          ),
+        ),
         floatingContent: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -188,20 +224,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             // Collapsible Image AppBar with Swipable PageView, Story Bars & Fullscreen Preview
             SliverAppBar(
               expandedHeight: 440,
-              pinned: true,
+              pinned: false,
+              automaticallyImplyLeading: false,
               backgroundColor: AppColors.obsidianBlack,
-              leading: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.obsidianBlack.withOpacity(0.75),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.borderGold.withOpacity(0.4), width: 1),
-                  ),
-                  child: const Icon(Icons.arrow_back, color: AppColors.champagneGold, size: 20),
-                ),
-                onPressed: () => context.pop(),
-              ),
               flexibleSpace: FlexibleSpaceBar(
                 background: Stack(
                   fit: StackFit.expand,

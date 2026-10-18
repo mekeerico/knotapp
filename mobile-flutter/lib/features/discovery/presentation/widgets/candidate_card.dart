@@ -291,17 +291,6 @@ class _CandidateCardState extends State<CandidateCard> {
                   ),
                   const SizedBox(height: 8),
 
-                  // Row 3: The 3 items under them arranged smartly & compactly:
-                  // 1) Archetype chip, 2) Marriage Timeline chip, 3) Compatibility Link
-                  Row(
-                    children: [
-                      _buildMiniChip(candidate.personalityArchetype, Icons.psychology_outlined),
-                      const SizedBox(width: 6),
-                      _buildMiniChip(candidate.marriageTimeline, Icons.access_time),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-
                   // Compact Compatibility & Vows Trigger
                   GestureDetector(
                     onTap: widget.onDetailsTap,
@@ -333,32 +322,6 @@ class _CandidateCardState extends State<CandidateCard> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildMiniChip(String text, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
-      decoration: BoxDecoration(
-        color: AppColors.darkSlate.withOpacity(0.85),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.borderGold.withOpacity(0.4), width: 0.8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: AppColors.champagneGold),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: AppTypography.bodySmall.copyWith(
-              fontSize: 10.5,
-              color: AppColors.textPure,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }

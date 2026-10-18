@@ -15,10 +15,28 @@ export class UsersService {
     private readonly diditService: DiditService,
   ) {}
 
+  private formatUserMedia(user: any) {
+    if (!user) return user;
+    const formatted = { ...user };
+    if (Array.isArray(formatted.profileImages)) {
+      formatted.profileImages = formatted.profileImages.map((img: any) => ({
+        ...img,
+        url: img.url && typeof img.url === 'string' && img.url.startsWith('data:image')
+          ? `/uploads/db-image/${img.id}`
+          : img.url,
+      }));
+    }
+    if (formatted.selfieUrl && typeof formatted.selfieUrl === 'string' && formatted.selfieUrl.startsWith('data:image')) {
+      formatted.selfieUrl = `/uploads/db-selfie/${formatted.id}`;
+    }
+    return formatted;
+  }
+
   async findAll() {
-    return this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       include: { profileImages: true },
     });
+    return users.map((u) => this.formatUserMedia(u));
   }
 
   async findOne(id: string) {
@@ -27,7 +45,7 @@ export class UsersService {
       include: { profileImages: true },
     });
     if (!user) throw new NotFoundException('User not found.');
-    return user;
+    return this.formatUserMedia(user);
   }
 
   async updateProfile(id: string, dto: any) {
@@ -45,6 +63,10 @@ export class UsersService {
     const data: any = {};
     for (const key of allowedKeys) {
       if (dto[key] !== undefined) {
+        if (key === 'selfieUrl' && typeof dto[key] === 'string' && dto[key].includes('/uploads/db-selfie/')) {
+          // Keep existing base64 selfieUrl in PostgreSQL
+          continue;
+        }
         if (key === 'readinessScore' || key === 'seriousnessLevel' || key === 'trustScore' || key === 'moderationFlags') {
           data[key] = Number(dto[key]) || 0;
         } else if (key === 'isVerified' || key === 'isPremium' || key === 'idVerified' || key === 'selfieVerified') {
@@ -55,32 +77,40 @@ export class UsersService {
       }
     }
 
-    return this.prisma.$transaction(async (tx) => {
+    if (data.selfieUrl) {
+      try {
+        const selfieCache = path.join(process.cwd(), 'uploads', `cache_selfie_${id}.jpg`);
+        if (fs.existsSync(selfieCache)) fs.unlinkSync(selfieCache);
+      } catch (_) {}
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id },
         data,
       });
 
       if (dto.profileImageUrls && Array.isArray(dto.profileImageUrls)) {
+        const existingImages = await tx.image.findMany({ where: { userId: id } });
+        const existingMap = new Map<string, string>();
+        for (const ex of existingImages) {
+          existingMap.set(ex.id, ex.url);
+        }
+
         await tx.image.deleteMany({ where: { userId: id } });
         if (dto.profileImageUrls.length > 0) {
-          const uploadsDir = path.join(process.cwd(), 'uploads');
-          if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-          }
-
           const processedUrls = dto.profileImageUrls
-            .map((rawUrl: string, index: number) => {
+            .map((rawUrl: string) => {
               if (!rawUrl || typeof rawUrl !== 'string') return '';
               const trimmed = rawUrl.trim();
+              if (trimmed.includes('/uploads/db-image/')) {
+                const parts = trimmed.split('/uploads/db-image/');
+                const imgId = (parts[1] || '').split('?')[0].trim();
+                if (existingMap.has(imgId)) {
+                  return existingMap.get(imgId)!;
+                }
+              }
               if (trimmed.startsWith('data:image')) {
-                // Also write a backup copy to disk while keeping the persistent data URL in PostgreSQL
-                try {
-                  const base64Data = trimmed.includes('base64,') ? trimmed.split('base64,')[1] : trimmed;
-                  const buffer = Buffer.from(base64Data, 'base64');
-                  const filename = `photo_${id}_${Date.now()}_${index}.jpg`;
-                  fs.writeFileSync(path.join(uploadsDir, filename), buffer);
-                } catch (_) {}
                 return trimmed;
               }
               if (trimmed.length > 500 && !trimmed.startsWith('http') && !trimmed.startsWith('/uploads/')) {
@@ -107,6 +137,8 @@ export class UsersService {
         include: { profileImages: true },
       });
     });
+
+    return this.formatUserMedia(updated);
   }
 
   async completeOnboarding(id: string, transcript: Array<{ role: string; text: string }>) {

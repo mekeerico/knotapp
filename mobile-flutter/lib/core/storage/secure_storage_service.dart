@@ -9,6 +9,8 @@ class SecureStorageService {
   static const String rememberMeKey = 'knot_remember_me';
 
   final FlutterSecureStorage _storage;
+  String? _cachedToken;
+  String? _cachedUserId;
 
   SecureStorageService()
       : _storage = const FlutterSecureStorage(
@@ -17,19 +19,25 @@ class SecureStorageService {
         );
 
   Future<void> saveToken(String token) async {
+    _cachedToken = token;
     await _storage.write(key: tokenKey, value: token);
   }
 
   Future<String?> getToken() async {
-    return await _storage.read(key: tokenKey);
+    if (_cachedToken != null) return _cachedToken;
+    _cachedToken = await _storage.read(key: tokenKey);
+    return _cachedToken;
   }
 
   Future<void> saveUserId(String userId) async {
+    _cachedUserId = userId;
     await _storage.write(key: userIdKey, value: userId);
   }
 
   Future<String?> getUserId() async {
-    return await _storage.read(key: userIdKey);
+    if (_cachedUserId != null) return _cachedUserId;
+    _cachedUserId = await _storage.read(key: userIdKey);
+    return _cachedUserId;
   }
 
   Future<void> markWelcomeSeen() async {
@@ -42,9 +50,11 @@ class SecureStorageService {
   }
 
   Future<void> saveCredentials(String email, String password) async {
-    await _storage.write(key: savedEmailKey, value: email);
-    await _storage.write(key: savedPasswordKey, value: password);
-    await _storage.write(key: rememberMeKey, value: 'true');
+    await Future.wait([
+      _storage.write(key: savedEmailKey, value: email),
+      _storage.write(key: savedPasswordKey, value: password),
+      _storage.write(key: rememberMeKey, value: 'true'),
+    ]);
   }
 
   Future<String?> getSavedEmail() async {
@@ -69,12 +79,18 @@ class SecureStorageService {
   }
 
   Future<void> clearSavedCredentials() async {
-    await _storage.delete(key: savedEmailKey);
-    await _storage.delete(key: savedPasswordKey);
+    await Future.wait([
+      _storage.delete(key: savedEmailKey),
+      _storage.delete(key: savedPasswordKey),
+    ]);
   }
 
   Future<void> clearAll() async {
-    await _storage.delete(key: tokenKey);
-    await _storage.delete(key: userIdKey);
+    _cachedToken = null;
+    _cachedUserId = null;
+    await Future.wait([
+      _storage.delete(key: tokenKey),
+      _storage.delete(key: userIdKey),
+    ]);
   }
 }

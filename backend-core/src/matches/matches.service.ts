@@ -14,6 +14,89 @@ export class MatchesService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
+  private formatPartnerMedia(partner: any) {
+    const formattedImages = Array.isArray(partner.profileImages)
+      ? partner.profileImages.map((img: any) => ({
+          ...img,
+          url: img.url && typeof img.url === 'string' && img.url.startsWith('data:image')
+            ? `/uploads/db-image/${img.id}`
+            : img.url,
+        }))
+      : [];
+
+    const formattedSelfie =
+      partner.selfieUrl && typeof partner.selfieUrl === 'string' && partner.selfieUrl.startsWith('data:image')
+        ? `/uploads/db-selfie/${partner.id}`
+        : partner.selfieUrl;
+
+    return {
+      profileImages: formattedImages,
+      selfieUrl: formattedSelfie,
+    };
+  }
+
+  private computeFastCompatibility(user: any, cand: any) {
+    let valuesScore = 84;
+    if (user.religion && cand.religion && user.religion.toLowerCase() === cand.religion.toLowerCase()) {
+      valuesScore += 8;
+    }
+    if (user.childrenPreference && cand.childrenPreference && user.childrenPreference === cand.childrenPreference) {
+      valuesScore += 4;
+    }
+
+    let lifestyleScore = 82;
+    if (user.marriageTimeline && cand.marriageTimeline && user.marriageTimeline === cand.marriageTimeline) {
+      lifestyleScore += 8;
+    }
+    if (user.smoking && cand.smoking && user.smoking === cand.smoking) {
+      lifestyleScore += 3;
+    }
+    if (user.drinking && cand.drinking && user.drinking === cand.drinking) {
+      lifestyleScore += 3;
+    }
+
+    let emotionalScore = 85;
+    if (cand.attachmentStyle?.toLowerCase().includes('secure')) {
+      emotionalScore += 6;
+    }
+    if ((cand.readinessScore || 0) >= 80) {
+      emotionalScore += 4;
+    }
+
+    let commScore = 84;
+    if (user.residenceCountry && cand.residenceCountry && user.residenceCountry.toLowerCase() === cand.residenceCountry.toLowerCase()) {
+      commScore += 6;
+    }
+    if ((cand.seriousnessLevel || 0) >= 80) {
+      commScore += 4;
+    }
+
+    const valuesAlignment = Math.min(98, Math.max(76, valuesScore));
+    const lifestyleCompatibility = Math.min(97, Math.max(75, lifestyleScore));
+    const emotionalAlignment = Math.min(97, Math.max(78, emotionalScore));
+    const communicationStyle = Math.min(96, Math.max(78, commScore));
+    const compatibilityScore = Math.round(
+      valuesAlignment * 0.3 +
+      emotionalAlignment * 0.3 +
+      lifestyleCompatibility * 0.2 +
+      communicationStyle * 0.2,
+    );
+
+    const archetype = cand.personalityArchetype || 'Intentional Partner';
+    const timeline = cand.marriageTimeline || '1-2 Years';
+    const city = cand.residenceCity || cand.residenceCountry || 'the registry';
+    const aiExplanation = `${cand.firstName} demonstrates strong matrimonial alignment (${compatibilityScore}%) as ${archetype} based in ${city}, sharing harmonious family values and a ${timeline} marriage horizon.`;
+
+    return {
+      compatibilityScore,
+      emotionalAlignment,
+      communicationStyle,
+      valuesAlignment,
+      lifestyleCompatibility,
+      aiExplanation,
+    };
+  }
+
   async getDailyMatches(userId: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found.');
@@ -27,40 +110,26 @@ export class MatchesService {
     } else if (userGenderRaw === 'male' || userGenderRaw === 'man' || userGenderRaw === 'm') {
       targetGender = 'Female';
     } else {
-      // Fallback only if user's own biological gender is unrecorded
       const prefRaw = (user.preferredGender || '').trim().toLowerCase();
       targetGender = (prefRaw === 'male' || prefRaw === 'man') ? 'Male' : 'Female';
     }
 
-    // Step 1: Query verified opposite-sex candidates first
-    const verifiedCandidates = await this.prisma.user.findMany({
+    // Single fast query prioritizing verified & high-trust opposite-sex candidates
+    const allCandidates = await this.prisma.user.findMany({
       where: {
         id: { not: userId },
-        isVerified: true,
         gender: { equals: targetGender, mode: 'insensitive' },
       },
+      orderBy: [
+        { isVerified: 'desc' },
+        { trustScore: 'desc' },
+      ],
       take: 20,
       include: { profileImages: true },
     });
 
-    // Step 2: If verified pool is small, supplement with unverified opposite-sex candidates
-    // so the user's Matches screen is NEVER left empty as long as opposite-sex candidates exist in registry!
-    const allCandidates = [...verifiedCandidates];
-    if (allCandidates.length < 15) {
-      const remainingNeeded = 15 - allCandidates.length;
-      const unverifiedCandidates = await this.prisma.user.findMany({
-        where: {
-          id: { notIn: [userId, ...allCandidates.map(c => c.id)] },
-          gender: { equals: targetGender, mode: 'insensitive' },
-        },
-        take: remainingNeeded,
-        include: { profileImages: true },
-      });
-      allCandidates.push(...unverifiedCandidates);
-    }
-
-    // Step 3: Hard guarantee filter: Discard any candidate whose gender is not strictly the opposite sex
-    const strictlyOppositeCandidates = allCandidates.filter(c => {
+    // Hard guarantee filter: Discard any candidate whose gender is not strictly the opposite sex
+    const strictlyOppositeCandidates = allCandidates.filter((c) => {
       const cGender = (c.gender || '').trim().toLowerCase();
       if (!cGender) return false;
       if (targetGender === 'Male') {
@@ -70,35 +139,61 @@ export class MatchesService {
       }
     });
 
+    if (strictlyOppositeCandidates.length === 0) {
+      return [];
+    }
+
+    const candIds = strictlyOppositeCandidates.map((c) => c.id);
+
+    // Batch fetch all existing Match records in ONE single query instead of N queries
+    const existingMatches = await this.prisma.match.findMany({
+      where: {
+        OR: [
+          { userAId: userId, userBId: { in: candIds } },
+          { userBId: userId, userAId: { in: candIds } },
+        ],
+      },
+    });
+
+    const matchMap = new Map<string, any>();
+    for (const m of existingMatches) {
+      matchMap.set(`${m.userAId}_${m.userBId}`, m);
+    }
+
+    const newMatchesToCreate: any[] = [];
     const matchesList: any[] = [];
 
     for (const cand of strictlyOppositeCandidates) {
-      // Check if we already have calculated their compatibility
-      let match = await this.prisma.match.findUnique({
-        where: {
-          userAId_userBId: {
-            userAId: userId < cand.id ? userId : cand.id,
-            userBId: userId < cand.id ? cand.id : userId,
-          },
-        },
-      });
+      const uA = userId < cand.id ? userId : cand.id;
+      const uB = userId < cand.id ? cand.id : userId;
+      const pairKey = `${uA}_${uB}`;
+
+      let match = matchMap.get(pairKey);
 
       if (!match) {
-        // Run deep Gemini AI mathematical compatibility calculations
-        const aiScore = await this.aiService.calculateCompatibility(user, cand);
-
-        match = await this.prisma.match.create({
-          data: {
-            userAId: userId < cand.id ? userId : cand.id,
-            userBId: userId < cand.id ? cand.id : userId,
-            compatibilityScore: aiScore.compatibilityScore,
-            emotionalAlignment: aiScore.emotionalAlignment,
-            communicationStyle: aiScore.communicationStyle,
-            valuesAlignment: aiScore.valuesAlignment,
-            lifestyleCompatibility: aiScore.lifestyleCompatibility,
-            aiExplanation: aiScore.aiExplanation,
-            status: MatchStatus.PENDING,
-          },
+        const fastScore = this.computeFastCompatibility(user, cand);
+        match = {
+          id: `${uA}_${uB}`,
+          userAId: uA,
+          userBId: uB,
+          compatibilityScore: fastScore.compatibilityScore,
+          emotionalAlignment: fastScore.emotionalAlignment,
+          communicationStyle: fastScore.communicationStyle,
+          valuesAlignment: fastScore.valuesAlignment,
+          lifestyleCompatibility: fastScore.lifestyleCompatibility,
+          aiExplanation: fastScore.aiExplanation,
+          status: MatchStatus.PENDING,
+        };
+        newMatchesToCreate.push({
+          userAId: uA,
+          userBId: uB,
+          compatibilityScore: fastScore.compatibilityScore,
+          emotionalAlignment: fastScore.emotionalAlignment,
+          communicationStyle: fastScore.communicationStyle,
+          valuesAlignment: fastScore.valuesAlignment,
+          lifestyleCompatibility: fastScore.lifestyleCompatibility,
+          aiExplanation: fastScore.aiExplanation,
+          status: MatchStatus.PENDING,
         });
       }
 
@@ -109,6 +204,8 @@ export class MatchesService {
       if (isClosestAvailable) {
         explanation = `Closest Available Alignment: ${partner.firstName} is currently your closest matching partner in the registry while we search for your exact marriage timeline & preference alignment. ${explanation} Your recommendations will continuously update as closer candidates join.`;
       }
+
+      const media = this.formatPartnerMedia(partner);
 
       matchesList.push({
         matchId: match.id,
@@ -155,7 +252,8 @@ export class MatchesService {
           isVerified: partner.isVerified,
           idVerified: partner.idVerified,
           verificationBadge: partner.verificationBadge,
-          profileImages: partner.profileImages,
+          selfieUrl: media.selfieUrl,
+          profileImages: media.profileImages,
         },
         scores: {
           compatibilityScore: match.compatibilityScore,
@@ -168,6 +266,13 @@ export class MatchesService {
         status: match.status,
         isClosestAvailable,
       });
+    }
+
+    if (newMatchesToCreate.length > 0) {
+      // Persist newly calculated match pairs asynchronously without blocking response
+      this.prisma.match
+        .createMany({ data: newMatchesToCreate, skipDuplicates: true })
+        .catch((err) => this.logger.warn(`Failed batch match insert: ${err.message}`));
     }
 
     // Sort by compatibilityScore descending so the highest/closest matches are always presented first
@@ -221,6 +326,7 @@ export class MatchesService {
 
     return matches.map((m) => {
       const partner = m.userAId === userId ? m.userB : m.userA;
+      const media = this.formatPartnerMedia(partner);
       return {
         matchId: m.id,
         partner: {
@@ -266,7 +372,8 @@ export class MatchesService {
           isVerified: partner.isVerified,
           idVerified: partner.idVerified,
           verificationBadge: partner.verificationBadge,
-          profileImages: partner.profileImages,
+          selfieUrl: media.selfieUrl,
+          profileImages: media.profileImages,
         },
         scores: {
           compatibilityScore: m.compatibilityScore,

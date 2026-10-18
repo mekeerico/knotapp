@@ -37,9 +37,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   Future<void> _loadSavedCredentials() async {
     final storage = ref.read(secureStorageProvider);
-    final remember = await storage.getRememberMe();
-    final savedEmail = await storage.getSavedEmail();
-    final savedPassword = await storage.getSavedPassword();
+    final results = await Future.wait([
+      storage.getRememberMe(),
+      storage.getSavedEmail(),
+      storage.getSavedPassword(),
+    ]);
+    final remember = results[0] as bool;
+    final savedEmail = results[1] as String?;
+    final savedPassword = results[2] as String?;
 
     if (!mounted) return;
     setState(() {
@@ -95,15 +100,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       // Trigger native Android Google Password Manager / iOS Keychain prompt
       TextInput.finishAutofillContext(shouldSave: _rememberMe);
 
-      // Persist or clear encrypted local credentials based on "Remember Me"
+      // Persist or clear encrypted local credentials asynchronously in background
       final storage = ref.read(secureStorageProvider);
       if (_rememberMe) {
-        await storage.saveCredentials(email, password);
+        storage.saveCredentials(email, password);
       } else {
-        await storage.setRememberMe(false);
+        storage.setRememberMe(false);
       }
 
-      if (!mounted) return;
       final user = ref.read(authProvider).user;
       if (user?.firstName.isEmpty ?? true) {
         context.go('/onboarding');

@@ -2,13 +2,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-/// A floating bottom bar that gently slides and fades out
-/// whenever the user touches or scrolls the screen, and smoothly glides back in
-/// as soon as the user removes their finger or scrolling stops.
+/// A floating bar container that gently slides and fades out both top and bottom
+/// overlays simultaneously whenever the user touches or scrolls the screen,
+/// and smoothly glides them back in together as soon as the user removes their finger.
 class AutoHidingFloatingBar extends StatefulWidget {
   final Widget child;
   final Widget floatingContent;
+  final Widget? topFloatingContent;
   final double bottomOffset;
+  final double topOffset;
   final Duration animationDuration;
   final Duration reappearDelay;
 
@@ -16,7 +18,9 @@ class AutoHidingFloatingBar extends StatefulWidget {
     super.key,
     required this.child,
     required this.floatingContent,
+    this.topFloatingContent,
     this.bottomOffset = 0,
+    this.topOffset = 0,
     this.animationDuration = const Duration(milliseconds: 680),
     this.reappearDelay = const Duration(milliseconds: 350),
   });
@@ -109,7 +113,29 @@ class _AutoHidingFloatingBarState extends State<AutoHidingFloatingBar> {
             // Underlying scrollable content
             Positioned.fill(child: widget.child),
 
-            // Floating bottom bar overlay with gentle fade & slide
+            // Synchronized floating top bar overlay with gentle fade & slide
+            if (widget.topFloatingContent != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                top: widget.topOffset,
+                child: AnimatedSlide(
+                  duration: widget.animationDuration,
+                  curve: Curves.easeInOutSine,
+                  offset: _isVisible ? Offset.zero : const Offset(0, -0.35),
+                  child: AnimatedOpacity(
+                    duration: widget.animationDuration,
+                    curve: Curves.easeInOutSine,
+                    opacity: _isVisible ? 1.0 : 0.0,
+                    child: IgnorePointer(
+                      ignoring: !_isVisible,
+                      child: widget.topFloatingContent!,
+                    ),
+                  ),
+                ),
+              ),
+
+            // Synchronized floating bottom bar overlay with gentle fade & slide
             Positioned(
               left: 0,
               right: 0,

@@ -70,13 +70,23 @@ export class AuthService {
   }
 
   async login(dto: any) {
-    const user = await this.prisma.user.findUnique({ where: { email: dto.email }, include: { profileImages: true } });
+    const normalizedEmail = (dto.email || '').trim().toLowerCase();
+    let user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: { profileImages: true },
+    });
+    if (!user && dto.email && dto.email !== normalizedEmail) {
+      user = await this.prisma.user.findUnique({
+        where: { email: dto.email.trim() },
+        include: { profileImages: true },
+      });
+    }
     if (!user) {
-      if (dto.email === 'superadmin@knot.com' && (dto.password === 'KnotAdmin2026!' || dto.password === 'knotAdmin2026!')) {
+      if (normalizedEmail === 'superadmin@knot.com' && (dto.password === 'KnotAdmin2026!' || dto.password === 'knotAdmin2026!')) {
         const passwordHash = await bcrypt.hash(dto.password, 10);
         await this.prisma.user.create({
           data: {
-            email: dto.email,
+            email: normalizedEmail,
             passwordHash,
             firstName: 'Super',
             lastName: 'Admin',
@@ -112,6 +122,17 @@ export class AuthService {
 
   private sanitizeUser(user: any) {
     const { passwordHash, ...result } = user;
+    if (Array.isArray(result.profileImages)) {
+      result.profileImages = result.profileImages.map((img: any) => ({
+        ...img,
+        url: img.url && typeof img.url === 'string' && img.url.startsWith('data:image')
+          ? `/uploads/db-image/${img.id}`
+          : img.url,
+      }));
+    }
+    if (result.selfieUrl && typeof result.selfieUrl === 'string' && result.selfieUrl.startsWith('data:image')) {
+      result.selfieUrl = `/uploads/db-selfie/${result.id}`;
+    }
     return result;
   }
 

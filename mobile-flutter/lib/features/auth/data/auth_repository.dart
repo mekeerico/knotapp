@@ -17,13 +17,13 @@ class AuthRepository {
       );
 
       final token = response.data['token'] ?? response.data['accessToken'];
-      if (token != null) {
-        await _storage.saveToken(token.toString());
-      }
-
       final userData = response.data['user'] ?? response.data;
       final user = UserModel.fromJson(userData);
-      await _storage.saveUserId(user.id);
+
+      await Future.wait([
+        if (token != null) _storage.saveToken(token.toString()),
+        _storage.saveUserId(user.id),
+      ]);
       return user;
     } catch (e) {
       if (e is DioException) {
@@ -42,13 +42,13 @@ class AuthRepository {
       );
 
       final token = response.data['token'] ?? response.data['accessToken'];
-      if (token != null) {
-        await _storage.saveToken(token.toString());
-      }
-
       final userData = response.data['user'] ?? response.data;
       final user = UserModel.fromJson(userData);
-      await _storage.saveUserId(user.id);
+
+      await Future.wait([
+        if (token != null) _storage.saveToken(token.toString()),
+        _storage.saveUserId(user.id),
+      ]);
       return user;
     } catch (e) {
       if (e is DioException) {
