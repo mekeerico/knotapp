@@ -72,7 +72,8 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                 key: ValueKey('deck_${state.candidates.length}'),
                                 controller: _swiperController,
                                 cardsCount: state.candidates.length,
-                                numberOfCardsDisplayed: state.candidates.length > 1 ? 2 : 1,
+                                numberOfCardsDisplayed: 1,
+                                backCardOffset: Offset.zero,
                                 isLoop: false,
                                 onEnd: () {
                                   notifier.onDeckEmpty();

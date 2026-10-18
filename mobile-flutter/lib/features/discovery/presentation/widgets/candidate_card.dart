@@ -34,7 +34,9 @@ class _CandidateCardState extends State<CandidateCard> {
 
     return Container(
       decoration: BoxDecoration(
+        color: AppColors.obsidianBlack,
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppColors.borderGold, width: 1.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.55),

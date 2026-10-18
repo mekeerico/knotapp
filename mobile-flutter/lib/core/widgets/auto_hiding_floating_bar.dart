@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-/// A floating bottom bar that automatically slides down and fades out
-/// whenever the user touches or scrolls the screen, and smoothly reappears
+/// A floating bottom bar that gently slides and fades out
+/// whenever the user touches or scrolls the screen, and smoothly glides back in
 /// as soon as the user removes their finger or scrolling stops.
 class AutoHidingFloatingBar extends StatefulWidget {
   final Widget child;
@@ -17,8 +17,8 @@ class AutoHidingFloatingBar extends StatefulWidget {
     required this.child,
     required this.floatingContent,
     this.bottomOffset = 0,
-    this.animationDuration = const Duration(milliseconds: 240),
-    this.reappearDelay = const Duration(milliseconds: 200),
+    this.animationDuration = const Duration(milliseconds: 680),
+    this.reappearDelay = const Duration(milliseconds: 350),
   });
 
   @override
@@ -109,18 +109,18 @@ class _AutoHidingFloatingBarState extends State<AutoHidingFloatingBar> {
             // Underlying scrollable content
             Positioned.fill(child: widget.child),
 
-            // Floating bottom bar overlay
+            // Floating bottom bar overlay with gentle fade & slide
             Positioned(
               left: 0,
               right: 0,
               bottom: widget.bottomOffset,
               child: AnimatedSlide(
                 duration: widget.animationDuration,
-                curve: Curves.easeOutCubic,
-                offset: _isVisible ? Offset.zero : const Offset(0, 1.4),
+                curve: Curves.easeInOutSine,
+                offset: _isVisible ? Offset.zero : const Offset(0, 0.35),
                 child: AnimatedOpacity(
                   duration: widget.animationDuration,
-                  curve: Curves.easeOutCubic,
+                  curve: Curves.easeInOutSine,
                   opacity: _isVisible ? 1.0 : 0.0,
                   child: IgnorePointer(
                     ignoring: !_isVisible,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/glass_card.dart';
@@ -24,11 +26,33 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _rememberMe = true;
 
   @override
   void initState() {
     super.initState();
     _isSignUp = widget.initialSignUp;
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    final storage = ref.read(secureStorageProvider);
+    final remember = await storage.getRememberMe();
+    final savedEmail = await storage.getSavedEmail();
+    final savedPassword = await storage.getSavedPassword();
+
+    if (!mounted) return;
+    setState(() {
+      _rememberMe = remember;
+      if (remember) {
+        if (savedEmail != null && savedEmail.isNotEmpty && _emailController.text.isEmpty) {
+          _emailController.text = savedEmail;
+        }
+        if (savedPassword != null && savedPassword.isNotEmpty && _passwordController.text.isEmpty) {
+          _passwordController.text = savedPassword;
+        }
+      }
+    });
   }
 
   @override
@@ -68,6 +92,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
 
     if (success && mounted) {
+      // Trigger native Android Google Password Manager / iOS Keychain prompt
+      TextInput.finishAutofillContext(shouldSave: _rememberMe);
+
+      // Persist or clear encrypted local credentials based on "Remember Me"
+      final storage = ref.read(secureStorageProvider);
+      if (_rememberMe) {
+        await storage.saveCredentials(email, password);
+      } else {
+        await storage.setRememberMe(false);
+      }
+
+      if (!mounted) return;
       final user = ref.read(authProvider).user;
       if (user?.firstName.isEmpty ?? true) {
         context.go('/onboarding');
@@ -121,117 +157,177 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 // Auth Form Glass Card
                 GlassCard(
                   padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      // Toggle Tab
-                      Row(
-                        children: [
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _isSignUp = false),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: !_isSignUp ? AppColors.champagneGold : Colors.transparent,
-                                      width: 2,
+                  child: AutofillGroup(
+                    child: Column(
+                      children: [
+                        // Toggle Tab
+                        Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => setState(() => _isSignUp = false),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: !_isSignUp ? AppColors.champagneGold : Colors.transparent,
+                                        width: 2,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'SIGN IN',
-                                    style: AppTypography.labelLarge.copyWith(
-                                      color: !_isSignUp ? AppColors.champagneGold : AppColors.textSubtle,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: GestureDetector(
-                              onTap: () => setState(() => _isSignUp = true),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: _isSignUp ? AppColors.champagneGold : Colors.transparent,
-                                      width: 2,
-                                    ),
-                                  ),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    'JOIN REGISTRY',
-                                    style: AppTypography.labelLarge.copyWith(
-                                      color: _isSignUp ? AppColors.champagneGold : AppColors.textSubtle,
+                                  child: Center(
+                                    child: Text(
+                                      'SIGN IN',
+                                      style: AppTypography.labelLarge.copyWith(
+                                        color: !_isSignUp ? AppColors.champagneGold : AppColors.textSubtle,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 28),
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () => setState(() => _isSignUp = true),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                      bottom: BorderSide(
+                                        color: _isSignUp ? AppColors.champagneGold : Colors.transparent,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      'JOIN REGISTRY',
+                                      style: AppTypography.labelLarge.copyWith(
+                                        color: _isSignUp ? AppColors.champagneGold : AppColors.textSubtle,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 28),
 
-                      if (authState.errorMessage != null) ...[
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.roseGlow.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.roseGlow, width: 0.8),
+                        if (authState.errorMessage != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.roseGlow.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.roseGlow, width: 0.8),
+                            ),
+                            child: Text(
+                              authState.errorMessage!,
+                              style: AppTypography.bodySmall.copyWith(color: AppColors.roseGlow),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                          child: Text(
-                            authState.errorMessage!,
-                            style: AppTypography.bodySmall.copyWith(color: AppColors.roseGlow),
-                            textAlign: TextAlign.center,
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Email Field
+                        TextField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.email, AutofillHints.username],
+                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+                          decoration: const InputDecoration(
+                            hintText: 'Email address',
+                            prefixIcon: Icon(Icons.mail_outline, color: AppColors.champagneGold),
                           ),
                         ),
                         const SizedBox(height: 16),
-                      ],
 
-                      // Email Field
-                      TextField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-                        decoration: const InputDecoration(
-                          hintText: 'Email address',
-                          prefixIcon: Icon(Icons.mail_outline, color: AppColors.champagneGold),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Password Field
-                      TextField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-                        decoration: InputDecoration(
-                          hintText: 'Master Password',
-                          prefixIcon: const Icon(Icons.lock_outline, color: AppColors.champagneGold),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: AppColors.textSubtle,
+                        // Password Field
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: _isSignUp
+                              ? const [AutofillHints.newPassword]
+                              : const [AutofillHints.password],
+                          onSubmitted: (_) => _handleSubmit(),
+                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+                          decoration: InputDecoration(
+                            hintText: 'Master Password',
+                            prefixIcon: const Icon(Icons.lock_outline, color: AppColors.champagneGold),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                color: AppColors.textSubtle,
+                              ),
+                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                             ),
-                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
+                        const SizedBox(height: 14),
 
-                      GoldButton(
-                        text: _isSignUp ? 'Create Marriage Account' : 'Authenticate',
-                        isLoading: isLoading,
-                        onPressed: _handleSubmit,
-                      ),
-                    ],
+                        // Remember Me Toggle
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () async {
+                            final nextVal = !_rememberMe;
+                            setState(() => _rememberMe = nextVal);
+                            await ref.read(secureStorageProvider).setRememberMe(nextVal);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(6),
+                                    color: _rememberMe
+                                        ? AppColors.champagneGold
+                                        : AppColors.darkSlate,
+                                    border: Border.all(
+                                      color: _rememberMe
+                                          ? AppColors.champagneGold
+                                          : AppColors.borderSubtle,
+                                      width: 1.5,
+                                    ),
+                                  ),
+                                  child: _rememberMe
+                                      ? const Icon(
+                                          Icons.check,
+                                          size: 14,
+                                          color: AppColors.obsidianBlack,
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Remember my email & password on this device',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: _rememberMe ? AppColors.textPure : AppColors.textMuted,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        GoldButton(
+                          text: _isSignUp ? 'Create Marriage Account' : 'Authenticate',
+                          isLoading: isLoading,
+                          onPressed: _handleSubmit,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),

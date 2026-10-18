@@ -4,6 +4,9 @@ class SecureStorageService {
   static const String tokenKey = 'knot_token';
   static const String userIdKey = 'knot_user_id';
   static const String hasSeenWelcomeKey = 'knot_has_seen_welcome';
+  static const String savedEmailKey = 'knot_saved_email';
+  static const String savedPasswordKey = 'knot_saved_password';
+  static const String rememberMeKey = 'knot_remember_me';
 
   final FlutterSecureStorage _storage;
 
@@ -36,6 +39,38 @@ class SecureStorageService {
   Future<bool> hasSeenWelcome() async {
     final val = await _storage.read(key: hasSeenWelcomeKey);
     return val == 'true';
+  }
+
+  Future<void> saveCredentials(String email, String password) async {
+    await _storage.write(key: savedEmailKey, value: email);
+    await _storage.write(key: savedPasswordKey, value: password);
+    await _storage.write(key: rememberMeKey, value: 'true');
+  }
+
+  Future<String?> getSavedEmail() async {
+    return await _storage.read(key: savedEmailKey);
+  }
+
+  Future<String?> getSavedPassword() async {
+    return await _storage.read(key: savedPasswordKey);
+  }
+
+  Future<void> setRememberMe(bool remember) async {
+    await _storage.write(key: rememberMeKey, value: remember ? 'true' : 'false');
+    if (!remember) {
+      await clearSavedCredentials();
+    }
+  }
+
+  Future<bool> getRememberMe() async {
+    final val = await _storage.read(key: rememberMeKey);
+    // Default to true so credentials are remembered by default
+    return val == null || val == 'true';
+  }
+
+  Future<void> clearSavedCredentials() async {
+    await _storage.delete(key: savedEmailKey);
+    await _storage.delete(key: savedPasswordKey);
   }
 
   Future<void> clearAll() async {
