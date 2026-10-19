@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../../features/notifications/presentation/widgets/notification_bell_button.dart';
 
 class KnotAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
   final bool showLogo;
+  final bool showNotificationBell;
   final List<Widget>? actions;
   final Widget? leading;
   final bool centerTitle;
@@ -13,6 +15,7 @@ class KnotAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     this.title,
     this.showLogo = false,
+    this.showNotificationBell = false,
     this.actions,
     this.leading,
     this.centerTitle = true,
@@ -20,6 +23,11 @@ class KnotAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> resolvedActions = [
+      if (actions != null) ...actions!,
+      if (showNotificationBell) const NotificationBellButton(),
+    ];
+
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -48,7 +56,7 @@ class KnotAppBar extends StatelessWidget implements PreferredSizeWidget {
           : title != null
               ? Text(title!, style: AppTypography.headingMedium)
               : null,
-      actions: actions,
+      actions: resolvedActions.isNotEmpty ? resolvedActions : null,
     );
   }
 

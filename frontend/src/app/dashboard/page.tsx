@@ -8,7 +8,7 @@ import {
   Settings, LogOut, Send, AlertTriangle, Shield, CheckCircle2,
   TrendingUp, Award, Activity, Compass, BrainCircuit, HeartHandshake,
   Menu, X, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, Camera, Loader2,
-  Star, Briefcase, MapPin, RefreshCw, Lock
+  Star, Briefcase, MapPin, RefreshCw, Lock, Bell
 } from "lucide-react";
 import { getApiUrl } from "../../services/api";
 
@@ -58,6 +58,60 @@ export default function Dashboard() {
   const [isMessageLimitReached, setIsMessageLimitReached] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
+
+  // In-App Notification Center States
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [notifCategoryFilter, setNotifCategoryFilter] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<any[]>([
+    {
+      id: 'notif_welcome',
+      title: 'Welcome to Sovereign Matrimony',
+      body: 'Your profile is active in the Knot global marriage registry. Review verified candidates matching your marital values.',
+      category: 'matches',
+      timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+      isRead: false,
+      actionTab: 'matches',
+      actionLabel: 'View Curated Matches',
+    },
+    {
+      id: 'notif_kyc',
+      title: 'Verify Your Identity for Gold Seal',
+      body: 'Didit 3D Liveness and Government ID verification increases candidate response rates by 4.2x.',
+      category: 'verification',
+      timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      isRead: false,
+      actionModal: 'didit',
+      actionLabel: 'Verify ID Now',
+    },
+    {
+      id: 'notif_membership',
+      title: 'Daily Curated Registry Ready',
+      body: '3 AI-curated marriage candidates are available in your deck today. Upgrade for 15-100 matches daily.',
+      category: 'tiers',
+      timestamp: new Date(Date.now() - 180 * 60 * 1000).toISOString(),
+      isRead: false,
+      actionModal: 'subscription',
+      actionLabel: 'View Membership Tiers',
+    },
+  ]);
+
+  const unreadNotifsCount = notifications.filter(n => !n.isRead).length;
+
+  const handleMarkAllNotifsAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  };
+
+  const handleNotificationClick = (notif: any) => {
+    setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+    setShowNotificationsModal(false);
+    if (notif.actionTab) {
+      setActiveTab(notif.actionTab);
+    } else if (notif.actionModal === 'subscription') {
+      setShowSubscriptionModal(true);
+    } else if (notif.actionModal === 'didit') {
+      setShowDiditModal(true);
+    }
+  };
 
   // Didit Verification Modal States
   const [showDiditModal, setShowDiditModal] = useState(false);
@@ -624,6 +678,116 @@ export default function Dashboard() {
         />
       )}
 
+      {/* Activity & Notifications Modal */}
+      {showNotificationsModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-xl bg-[#121721] rounded-[28px] border border-[#D4AF37]/40 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+                  <Bell className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white font-serif">Notifications & Activity</h3>
+                  <p className="text-[11px] text-gray-400">Real-time matrimonial matches and registry updates</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {unreadNotifsCount > 0 && (
+                  <button
+                    onClick={handleMarkAllNotifsAsRead}
+                    className="text-xs font-semibold text-[#D4AF37] hover:underline px-2 py-1 cursor-pointer"
+                  >
+                    Mark All Read
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowNotificationsModal(false)}
+                  className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div className="flex items-center gap-2 py-3 overflow-x-auto no-scrollbar">
+              {[
+                { label: 'All', value: null },
+                { label: 'Matches', value: 'matches' },
+                { label: 'Messages', value: 'messages' },
+                { label: 'Tiers & Limits', value: 'tiers' },
+                { label: 'Verification', value: 'verification' },
+              ].map((tab, idx) => {
+                const isActive = notifCategoryFilter === tab.value;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setNotifCategoryFilter(tab.value)}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-[#D4AF37] text-black shadow-sm shadow-[#D4AF37]/40'
+                        : 'bg-white/5 text-gray-400 hover:text-white border border-white/5'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Notification Cards */}
+            <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+              {notifications
+                .filter(n => !notifCategoryFilter || n.category === notifCategoryFilter)
+                .map((notif) => (
+                  <div
+                    key={notif.id}
+                    onClick={() => handleNotificationClick(notif)}
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 group ${
+                      notif.isRead
+                        ? 'bg-white/[0.02] border-white/5 hover:border-white/10'
+                        : 'bg-[#18202F] border-[#D4AF37]/40 shadow-sm shadow-[#D4AF37]/5 hover:border-[#D4AF37]'
+                    }`}
+                  >
+                    <div className="w-9 h-9 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] flex-shrink-0 mt-0.5">
+                      {notif.category === 'verification' && <ShieldCheck className="w-4 h-4 text-emerald-400" />}
+                      {notif.category === 'tiers' && <Sparkles className="w-4 h-4 text-[#D4AF37]" />}
+                      {notif.category === 'messages' && <MessageSquare className="w-4 h-4 text-rose-400" />}
+                      {(notif.category === 'matches' || notif.category === 'system') && <Heart className="w-4 h-4 text-[#D4AF37]" />}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h4 className={`text-xs font-bold truncate ${notif.isRead ? 'text-gray-200' : 'text-white'}`}>
+                          {notif.title}
+                        </h4>
+                        <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                          {Math.max(1, Math.round((Date.now() - new Date(notif.timestamp).getTime()) / 60000))}m ago
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                        {notif.body}
+                      </p>
+                      {notif.actionLabel && (
+                        <div className="mt-2.5 flex items-center gap-1 text-[11px] font-bold text-[#D4AF37] group-hover:underline">
+                          <span>{notif.actionLabel}</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+                    </div>
+
+                    {!notif.isRead && (
+                      <span className="w-2 h-2 rounded-full bg-[#D4AF37] flex-shrink-0 mt-1 shadow-[0_0_8px_#D4AF37]" />
+                    )}
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Subscription Overlay Modal */}
       {showSubscriptionModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
@@ -910,6 +1074,21 @@ export default function Dashboard() {
             </h2>
           </div>
           <div className="flex items-center gap-3">
+            {/* Notification Bell Button */}
+            <button
+              type="button"
+              onClick={() => setShowNotificationsModal(true)}
+              className="relative p-2 md:p-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#D4AF37]/50 text-gray-300 hover:text-[#D4AF37] transition-all flex items-center justify-center cursor-pointer"
+              title="Activity & Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              {unreadNotifsCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#E11D48] text-white text-[9px] font-black flex items-center justify-center shadow-md">
+                  {unreadNotifsCount}
+                </span>
+              )}
+            </button>
+
             <div className="trust-badge px-2.5 py-1.5 md:px-3.5 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 md:gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="hidden sm:inline">Biometric Identity Active</span>

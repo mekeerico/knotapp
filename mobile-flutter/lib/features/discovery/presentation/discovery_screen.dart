@@ -40,6 +40,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
         showLogo: true,
+        showNotificationBell: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.tune, color: AppColors.champagneGold),

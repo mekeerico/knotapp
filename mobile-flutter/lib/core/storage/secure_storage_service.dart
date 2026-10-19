@@ -18,6 +18,8 @@ class SecureStorageService {
           iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
         );
 
+  FlutterSecureStorage get storage => _storage;
+
   Future<void> saveToken(String token) async {
     _cachedToken = token;
     await _storage.write(key: tokenKey, value: token);

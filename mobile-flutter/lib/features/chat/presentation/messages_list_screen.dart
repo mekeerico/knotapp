@@ -21,6 +21,7 @@ class MessagesListScreen extends ConsumerWidget {
       backgroundColor: AppColors.obsidianBlack,
       appBar: const KnotAppBar(
         title: 'SOVEREIGN MESSAGES',
+        showNotificationBell: true,
       ),
       body: SafeArea(
         child: candidates.isEmpty

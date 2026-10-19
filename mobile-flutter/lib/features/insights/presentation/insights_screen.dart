@@ -27,6 +27,7 @@ class InsightsScreen extends ConsumerWidget {
       backgroundColor: AppColors.obsidianBlack,
       appBar: const KnotAppBar(
         title: 'RELATIONSHIP INTELLIGENCE',
+        showNotificationBell: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(

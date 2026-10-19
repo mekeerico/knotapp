@@ -56,6 +56,7 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
       backgroundColor: AppColors.obsidianBlack,
       appBar: const KnotAppBar(
         title: 'AI RELATIONSHIP COACH',
+        showNotificationBell: true,
       ),
       body: SafeArea(
         child: Column(
