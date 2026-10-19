@@ -1,4 +1,4 @@
-name: Build Flutter Android APK
+name: Build Flutter Android APK & AAB Bundle
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    name: Build Flutter APK
+    name: Build Flutter APK & AAB Bundle
     runs-on: ubuntu-latest
 
     steps:
@@ -35,15 +35,47 @@ jobs:
         run: flutter pub get
         working-directory: mobile-flutter
 
-      - name: Build APK
+      - name: Configure Keystore Signing (if secret provided)
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload.keystore
+            echo "storeFile=app/upload.keystore" > android/key.properties
+            echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+            echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+            echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+            echo "Keystore successfully configured."
+          else
+            echo "No keystore secret found. Build will fall back to default signing."
+          fi
+        working-directory: mobile-flutter
+
+      - name: Build Android App Bundle (AAB) for Play Store
+        run: |
+          flutter build appbundle --release --no-tree-shake-icons --dart-define=API_URL=http://knotconnect.duckdns.org:8080
+          cp build/app/outputs/bundle/release/app-release.aab build/app/outputs/bundle/release/knot-app-release.aab
+        working-directory: mobile-flutter
+
+      - name: Build Release APK
         run: |
           flutter build apk --release --no-tree-shake-icons --dart-define=API_URL=http://knotconnect.duckdns.org:8080
           cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/knot-app.apk
         working-directory: mobile-flutter
 
-      - name: Upload Knot APK
+      - name: Upload Knot AAB Artifact (Play Store Bundle)
         uses: actions/upload-artifact@v4
         with:
-          name: knot-app-v1.0.0
+          name: knot-app-bundle-aab
+          path: mobile-flutter/build/app/outputs/bundle/release/knot-app-release.aab
+          retention-days: 30
+
+      - name: Upload Knot APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: knot-app-release-apk
           path: mobile-flutter/build/app/outputs/flutter-apk/knot-app.apk
-          retention-days: 14
+          retention-days: 30
