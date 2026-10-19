@@ -11,6 +11,7 @@ class AppColors {
   static const Color champagneGold = Color(0xFFD4AF37);
   static const Color goldLight = Color(0xFFF5DE88);
   static const Color goldDark = Color(0xFFAA820A);
+  static const Color deepGold = Color(0xFFAA820A);
   static const Color roseGlow = Color(0xFFE11D48);
   static const Color emeraldVerified = Color(0xFF10B981);
   static const Color emeraldSuccess = Color(0xFF10B981);
