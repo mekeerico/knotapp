@@ -93,4 +93,30 @@ class SecureStorageService {
       _storage.delete(key: userIdKey),
     ]);
   }
+
+  static const String dailyViewCountKey = 'knot_daily_view_count';
+  static const String dailyViewDateKey = 'knot_daily_view_date';
+
+  Future<int> getDailyViewCount() async {
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final savedDate = await _storage.read(key: dailyViewDateKey);
+    if (savedDate != today) {
+      await _storage.write(key: dailyViewDateKey, value: today);
+      await _storage.write(key: dailyViewCountKey, value: '0');
+      return 0;
+    }
+    final countStr = await _storage.read(key: dailyViewCountKey);
+    return int.tryParse(countStr ?? '0') ?? 0;
+  }
+
+  Future<int> incrementDailyViewCount() async {
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final current = await getDailyViewCount();
+    final next = current + 1;
+    await Future.wait([
+      _storage.write(key: dailyViewDateKey, value: today),
+      _storage.write(key: dailyViewCountKey, value: next.toString()),
+    ]);
+    return next;
+  }
 }

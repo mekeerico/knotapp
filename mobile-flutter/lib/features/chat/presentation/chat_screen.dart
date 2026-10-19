@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/widgets/glass_card.dart';
+import '../../../core/widgets/gold_button.dart';
 import '../../../core/widgets/knot_app_bar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../auth/providers/auth_provider.dart';
@@ -140,82 +142,283 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            if (messages.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  'No messages yet. Say hello to $partnerName.',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
-                ),
-              ),
-
-            // Messages View
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final msg = messages[index];
-                  final isMine = msg.senderId == currentUserId;
-                  return _buildMessageRow(msg, isMine);
-                },
-              ),
-            ),
-
-            // Input Bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: const BoxDecoration(
-                color: AppColors.darkSlate,
-                border: Border(top: BorderSide(color: AppColors.borderSubtle)),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
-                      decoration: InputDecoration(
-                        hintText: 'Type your message...',
-                        hintStyle: AppTypography.bodyMedium,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide.none,
-                        ),
-                        filled: true,
-                        fillColor: AppColors.darkCardElevated,
-                      ),
-                      onSubmitted: (_) => _send(),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                if (chatState.hasReachedMessageLimit)
                   GestureDetector(
-                    onTap: _send,
+                    onTap: () => context.push('/paywall'),
                     child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: AppColors.goldGradient,
-                      ),
-                      child: const Icon(
-                        Icons.send_rounded,
-                        color: AppColors.obsidianBlack,
-                        size: 20,
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      color: AppColors.roseGlow.withOpacity(0.15),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.lock_clock, size: 16, color: AppColors.roseGlow),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Free conversation limit reached. Upgrade to continue.',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.roseGlow,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppColors.champagneGold,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              'UPGRADE ✨',
+                              style: AppTypography.bodySmall.copyWith(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                if (messages.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'No messages yet. Say hello to $partnerName.',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                    ),
+                  ),
+
+                // Messages View
+                Expanded(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    itemCount: messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = messages[index];
+                      final isMine = msg.senderId == currentUserId;
+                      return _buildMessageRow(msg, isMine);
+                    },
+                  ),
+                ),
+
+                // Input Bar or Limit Reached Bar
+                if (chatState.hasReachedMessageLimit)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: const BoxDecoration(
+                      color: AppColors.darkSlate,
+                      border: Border(top: BorderSide(color: AppColors.borderGold)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock_rounded, color: AppColors.champagneGold, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Free tier conversation limit reached.',
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.textMuted),
+                          ),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.champagneGold,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                          ),
+                          onPressed: () => context.push('/paywall'),
+                          child: const Text(
+                            'UPGRADE',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: const BoxDecoration(
+                      color: AppColors.darkSlate,
+                      border: Border(top: BorderSide(color: AppColors.borderSubtle)),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _textController,
+                            style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
+                            decoration: InputDecoration(
+                              hintText: 'Type your message...',
+                              hintStyle: AppTypography.bodyMedium,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(24),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: AppColors.darkCardElevated,
+                            ),
+                            onSubmitted: (_) => _send(),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: _send,
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: AppColors.goldGradient,
+                            ),
+                            child: const Icon(
+                              Icons.send_rounded,
+                              color: AppColors.obsidianBlack,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
-          ],
+          ),
+          if (chatState.showUpgradeFlier)
+            _buildUpgradeFlierModal(context, ref.read(chatProvider.notifier)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpgradeFlierModal(BuildContext context, ChatNotifier notifier) {
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black.withOpacity(0.88),
+        padding: const EdgeInsets.all(20),
+        child: Center(
+          child: GlassCard(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                    icon: const Icon(Icons.close, color: AppColors.textSubtle),
+                    onPressed: () => notifier.dismissUpgradeFlier(),
+                  ),
+                ),
+                Container(
+                  width: 68,
+                  height: 68,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const RadialGradient(
+                      colors: [AppColors.champagneGold, AppColors.deepGold],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.champagneGold.withOpacity(0.4),
+                        blurRadius: 24,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.chat_bubble_outline_rounded, size: 34, color: Colors.black),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.champagneGold.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.borderGold),
+                  ),
+                  child: Text(
+                    'CONVERSATION LIMIT REACHED',
+                    style: AppTypography.bodySmall.copyWith(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      color: AppColors.champagneGold,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Upgrade to Continue Chatting',
+                  style: AppTypography.displayMedium.copyWith(fontSize: 20),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Free members can message one match. Upgrade your membership tier now to unlock unlimited intentional messaging and vows.',
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted, fontSize: 13, height: 1.4),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppColors.darkSlate,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.borderSubtle),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildPerkRow('Unlimited intentional messages with matches'),
+                      const SizedBox(height: 8),
+                      _buildPerkRow('15 to 100 AI-Curated verified matches daily'),
+                      const SizedBox(height: 8),
+                      _buildPerkRow('Priority delivery & verified status'),
+                      const SizedBox(height: 8),
+                      _buildPerkRow('Full psychological compatibility insights'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+                GoldButton(
+                  text: 'Upgrade Now ✨',
+                  onPressed: () {
+                    notifier.dismissUpgradeFlier();
+                    context.push('/paywall');
+                  },
+                ),
+                const SizedBox(height: 10),
+                TextButton(
+                  onPressed: () => notifier.dismissUpgradeFlier(),
+                  child: Text('Maybe Later', style: AppTypography.bodySmall.copyWith(color: AppColors.textSubtle)),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _buildPerkRow(String perk) {
+    return Row(
+      children: [
+        const Icon(Icons.check_circle_rounded, size: 16, color: AppColors.champagneGold),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            perk,
+            style: AppTypography.bodySmall.copyWith(color: AppColors.textPure, fontSize: 12),
+          ),
+        ),
+      ],
     );
   }
 

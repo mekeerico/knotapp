@@ -12,12 +12,16 @@ class ChatState {
   final bool isConnected;
   final String? activeMatchId;
   final String? errorMessage;
+  final bool hasReachedMessageLimit;
+  final bool showUpgradeFlier;
 
   const ChatState({
     this.messagesByMatch = const {},
     this.isConnected = false,
     this.activeMatchId,
     this.errorMessage,
+    this.hasReachedMessageLimit = false,
+    this.showUpgradeFlier = false,
   });
 
   List<ChatMessage> get activeMessages =>
@@ -29,12 +33,16 @@ class ChatState {
     String? activeMatchId,
     String? errorMessage,
     bool clearError = false,
+    bool? hasReachedMessageLimit,
+    bool? showUpgradeFlier,
   }) {
     return ChatState(
       messagesByMatch: messagesByMatch ?? this.messagesByMatch,
       isConnected: isConnected ?? this.isConnected,
       activeMatchId: activeMatchId ?? this.activeMatchId,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      hasReachedMessageLimit: hasReachedMessageLimit ?? this.hasReachedMessageLimit,
+      showUpgradeFlier: showUpgradeFlier ?? this.showUpgradeFlier,
     );
   }
 }
@@ -183,15 +191,26 @@ class ChatNotifier extends StateNotifier<ChatState> {
       _removeLocal(partnerId, localId);
       final body = e.response?.data;
       final code = body is Map ? (body['error'] ?? body['message']) : null;
+      final isLimit = code == 'FREE_TIER_LIMIT' || (body is Map && body['message']?.toString().contains('FREE_TIER_LIMIT') == true);
       state = state.copyWith(
-        errorMessage: code == 'FREE_TIER_LIMIT'
-            ? 'Free members can message one match. Upgrade to Premium to message more matches.'
+        hasReachedMessageLimit: isLimit ? true : state.hasReachedMessageLimit,
+        showUpgradeFlier: isLimit ? true : state.showUpgradeFlier,
+        errorMessage: isLimit
+            ? 'Free tier messaging limit reached. Upgrade to continue conversations.'
             : 'Message not sent. Check your connection and try again.',
       );
     } catch (_) {
       _removeLocal(partnerId, localId);
       state = state.copyWith(errorMessage: 'Message not sent. Please try again.');
     }
+  }
+
+  void dismissUpgradeFlier() {
+    state = state.copyWith(showUpgradeFlier: false);
+  }
+
+  void triggerUpgradeFlier() {
+    state = state.copyWith(showUpgradeFlier: true);
   }
 
   void _removeLocal(String partnerId, String localId) {

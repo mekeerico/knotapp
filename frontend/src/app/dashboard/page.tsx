@@ -8,7 +8,7 @@ import {
   Settings, LogOut, Send, AlertTriangle, Shield, CheckCircle2,
   TrendingUp, Award, Activity, Compass, BrainCircuit, HeartHandshake,
   Menu, X, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, Camera, Loader2,
-  Star, Briefcase, MapPin, RefreshCw
+  Star, Briefcase, MapPin, RefreshCw, Lock
 } from "lucide-react";
 import { getApiUrl } from "../../services/api";
 
@@ -48,7 +48,14 @@ export default function Dashboard() {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [matches, setMatches] = useState<any[]>([]);
   const [isLoadingMatches, setIsLoadingMatches] = useState(true);
-  const [matchesViewedToday, setMatchesViewedToday] = useState(0);
+  const [matchesViewedToday, setMatchesViewedToday] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const todayKey = 'knot_daily_views_' + new Date().toISOString().slice(0, 10);
+      return parseInt(localStorage.getItem(todayKey) || '0', 10);
+    }
+    return 0;
+  });
+  const [isMessageLimitReached, setIsMessageLimitReached] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
 
@@ -363,11 +370,21 @@ export default function Dashboard() {
       const token = localStorage.getItem('knot_token');
       if (partnerId && token) {
         const API_URL = getApiUrl();
-        await fetch(`${API_URL}/messages/${partnerId}`, {
+        const res = await fetch(`${API_URL}/messages/${partnerId}`, {
           method: "POST",
           headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
           body: JSON.stringify({ text: msg }),
         });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const isLimit = errData.error === 'FREE_TIER_LIMIT' || errData.message === 'FREE_TIER_LIMIT' || res.status === 403;
+          if (isLimit) {
+            setIsMessageLimitReached(true);
+            setShowSubscriptionModal(true);
+            setAiChatTip("🔒 Free tier messaging limit reached. Upgrade to continue unlimited conversations.");
+            return;
+          }
+        }
       }
 
       const history = chatMessages.map(m => ({ role: m.sender === "me" ? "user" : "match", text: m.text }));
@@ -388,6 +405,8 @@ export default function Dashboard() {
       }
     } catch (e) {
       if (e instanceof Error && e.message.includes('FREE_TIER_LIMIT')) {
+        setIsMessageLimitReached(true);
+        setShowSubscriptionModal(true);
         setAiChatTip("Free tier limit reached. Upgrade to message more matches.");
       } else {
         setAiChatTip("AI Coach is currently unavailable.");
@@ -410,8 +429,16 @@ export default function Dashboard() {
       setShowSubscriptionModal(true);
       return;
     }
-    setMatchesViewedToday(prev => prev + 1);
+    const nextCount = matchesViewedToday + 1;
+    setMatchesViewedToday(nextCount);
+    if (typeof window !== 'undefined') {
+      const todayKey = 'knot_daily_views_' + new Date().toISOString().slice(0, 10);
+      localStorage.setItem(todayKey, String(nextCount));
+    }
     action();
+    if (nextCount >= limit) {
+      setTimeout(() => setShowSubscriptionModal(true), 350);
+    }
   };
 
   const handlePass = () => {
@@ -902,25 +929,74 @@ export default function Dashboard() {
             </div>
           )}
           {activeTab === "matches" && !isLoadingMatches && matches.length === 0 && (
-            <div className="glass-card rounded-[32px] p-10 sm:p-12 border border-white/10 text-center space-y-5 flex flex-col items-center justify-center max-w-lg mx-auto">
-              <div className="w-18 h-18 rounded-full bg-[#D4AF37]/12 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] mb-2 p-4">
-                <Compass className="w-9 h-9" />
+            matchesViewedToday >= getDailyLimit() ? (
+              <div className="glass-card rounded-[32px] p-10 sm:p-12 border border-[#D4AF37]/40 text-center space-y-5 flex flex-col items-center justify-center max-w-lg mx-auto shadow-2xl">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#AA7C11] flex items-center justify-center text-black mb-1 p-3.5 shadow-[0_0_24px_rgba(212,175,55,0.4)]">
+                  <Lock className="w-8 h-8" />
+                </div>
+                <span className="text-[10px] uppercase tracking-widest font-black text-[#D4AF37] px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30">
+                  MEMBERSHIP CAP NOTICE
+                </span>
+                <h3 className="text-2xl font-serif font-bold text-white">Daily Match Limit Reached</h3>
+                <p className="text-sm text-gray-400 max-w-md leading-relaxed">
+                  You have reviewed all {getDailyLimit()} curated candidates for your current Free tier today. Upgrade your Knot registry tier now to unlock 15 to 100 verified intentional matches daily.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowSubscriptionModal(true)}
+                  className="mt-2 px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#D4AF37]/30 cursor-pointer"
+                >
+                  <Sparkles className="w-4 h-4" /> Upgrade for More Matches
+                </button>
+                <p className="text-[11px] text-gray-500">Resets daily at midnight or unlocks instantly upon upgrade</p>
               </div>
-              <h3 className="text-2xl font-serif font-bold text-white">Curating Sovereign Matches</h3>
-              <p className="text-sm text-gray-400 max-w-md leading-relaxed">
-                The Knot Registry is actively scanning for verified {userProfile?.gender?.toLowerCase() === 'male' ? 'eligible ladies' : userProfile?.gender?.toLowerCase() === 'female' ? 'eligible gentlemen' : 'compatible candidates'} who align with your matrimonial values and marital vision.
-              </p>
-              <button
-                type="button"
-                onClick={loadMatchesAndProfile}
-                className="mt-2 px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#D4AF37]/20 cursor-pointer"
-              >
-                <RefreshCw className="w-4 h-4" /> Check for New Candidates
-              </button>
-            </div>
+            ) : (
+              <div className="glass-card rounded-[32px] p-10 sm:p-12 border border-white/10 text-center space-y-5 flex flex-col items-center justify-center max-w-lg mx-auto">
+                <div className="w-18 h-18 rounded-full bg-[#D4AF37]/12 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] mb-2 p-4">
+                  <Compass className="w-9 h-9" />
+                </div>
+                <h3 className="text-2xl font-serif font-bold text-white">Curating Sovereign Matches</h3>
+                <p className="text-sm text-gray-400 max-w-md leading-relaxed">
+                  The Knot Registry is actively scanning for verified {userProfile?.gender?.toLowerCase() === 'male' ? 'eligible ladies' : userProfile?.gender?.toLowerCase() === 'female' ? 'eligible gentlemen' : 'compatible candidates'} who align with your matrimonial values and marital vision.
+                </p>
+                <button
+                  type="button"
+                  onClick={loadMatchesAndProfile}
+                  className="mt-2 px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#D4AF37]/20 cursor-pointer"
+                >
+                  <RefreshCw className="w-4 h-4" /> Check for New Candidates
+                </button>
+              </div>
+            )
           )}
           {activeTab === "matches" && !isLoadingMatches && activeMatch && (
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+            <div className="space-y-4">
+              {/* Daily Limit Floating Pill */}
+              <div className="flex items-center justify-between px-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs uppercase tracking-wider font-bold text-gray-400">Curated Matches</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 font-semibold">
+                    {userProfile?.subscriptionTier || 'Free'} Plan
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSubscriptionModal(true)}
+                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#121721] border border-[#D4AF37]/50 hover:border-[#D4AF37] text-xs font-semibold text-gray-200 hover:text-white transition-all shadow-[0_0_12px_rgba(212,175,55,0.12)] group cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] group-hover:scale-110 transition-transform" />
+                  <span>
+                    {matchesViewedToday >= getDailyLimit()
+                      ? `Daily Cap Reached (${getDailyLimit()}/${getDailyLimit()})`
+                      : `Free Tier: ${Math.max(0, getDailyLimit() - matchesViewedToday)} of ${getDailyLimit()} daily matches left`}
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded bg-[#D4AF37] text-black text-[10px] font-black uppercase tracking-wider ml-1">
+                    Upgrade ✨
+                  </span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
               {/* Profile Card & Mobile-Style Circular Action Buttons */}
               <div className="md:col-span-7 flex flex-col items-center space-y-5">
                 <div className="w-full glass-card rounded-[32px] overflow-hidden border border-[#D4AF37]/30 p-3 sm:p-4 shadow-2xl">
@@ -1113,6 +1189,7 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          </div>
           )}
 
           {/* TAB: MATCH PROFILE DETAIL */}
@@ -1488,22 +1565,39 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                <div className="p-4 bg-[#121721]/90 border-t border-white/5 flex items-center gap-2">
-                  <input 
-                    type="text" 
-                    value={chatInput}
-                    onChange={e => setChatInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && handleSendChatMessage()}
-                    placeholder="Type an emotionally authentic message..."
-                    className="flex-1 bg-white/5 border border-white/5 rounded-full py-3 px-6 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50"
-                  />
-                  <button 
-                    onClick={handleSendChatMessage}
-                    className="w-10 h-10 rounded-full bg-[#2D1B4E] flex items-center justify-center text-white"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </div>
+                {isMessageLimitReached ? (
+                  <div className="p-4 bg-[#121721]/95 border-t border-[#D4AF37]/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5 text-xs text-gray-300">
+                      <Lock className="w-4 h-4 text-[#D4AF37] flex-shrink-0" />
+                      <span>Free tier messaging limit reached. Upgrade to continue unlimited conversations.</span>
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => setShowSubscriptionModal(true)}
+                      className="px-4 py-2 rounded-xl bg-[#D4AF37] text-black text-xs font-black uppercase tracking-wider hover:bg-[#E5C158] transition-all flex items-center gap-1.5 shadow-md shadow-[#D4AF37]/20 flex-shrink-0 cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Upgrade Plan</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-[#121721]/90 border-t border-white/5 flex items-center gap-2">
+                    <input 
+                      type="text" 
+                      value={chatInput}
+                      onChange={e => setChatInput(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && handleSendChatMessage()}
+                      placeholder="Type an emotionally authentic message..."
+                      className="flex-1 bg-white/5 border border-white/5 rounded-full py-3 px-6 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50"
+                    />
+                    <button 
+                      onClick={handleSendChatMessage}
+                      className="w-10 h-10 rounded-full bg-[#2D1B4E] flex items-center justify-center text-white"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}

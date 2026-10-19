@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_endpoints.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../auth/models/user_model.dart';
 import '../models/match_profile.dart';
 
 class DiscoveryState {
@@ -10,25 +11,43 @@ class DiscoveryState {
   final bool isLoading;
   final String? errorMessage;
   final MatchProfile? matchedCandidate;
+  final int viewsToday;
+  final int dailyLimit;
+  final bool hasExceededLimit;
+  final bool showUpgradeFlier;
 
   const DiscoveryState({
     this.candidates = const [],
     this.isLoading = false,
     this.errorMessage,
     this.matchedCandidate,
+    this.viewsToday = 0,
+    this.dailyLimit = 3,
+    this.hasExceededLimit = false,
+    this.showUpgradeFlier = false,
   });
+
+  int get remainingDailyViews => (dailyLimit - viewsToday).clamp(0, dailyLimit);
 
   DiscoveryState copyWith({
     List<MatchProfile>? candidates,
     bool? isLoading,
     String? errorMessage,
     MatchProfile? matchedCandidate,
+    int? viewsToday,
+    int? dailyLimit,
+    bool? hasExceededLimit,
+    bool? showUpgradeFlier,
   }) {
     return DiscoveryState(
       candidates: candidates ?? this.candidates,
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
       matchedCandidate: matchedCandidate,
+      viewsToday: viewsToday ?? this.viewsToday,
+      dailyLimit: dailyLimit ?? this.dailyLimit,
+      hasExceededLimit: hasExceededLimit ?? this.hasExceededLimit,
+      showUpgradeFlier: showUpgradeFlier ?? this.showUpgradeFlier,
     );
   }
 }
@@ -38,7 +57,32 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
   final Ref _ref;
 
   DiscoveryNotifier(this._dio, this._ref) : super(const DiscoveryState()) {
-    loadCandidates();
+    initLimitsAndLoad();
+  }
+
+  int _calculateTierLimit(UserModel? user) {
+    if (user == null) return 3;
+    final tier = (user.subscriptionTier).trim().toLowerCase();
+    if (tier.contains('executive')) return 100;
+    if (tier.contains('elite')) return 25;
+    if (tier.contains('premium') || user.isPremium) return 15;
+    return 3; // Essential / Free
+  }
+
+  Future<void> initLimitsAndLoad() async {
+    final storage = _ref.read(secureStorageProvider);
+    final count = await storage.getDailyViewCount();
+    final authState = _ref.read(authProvider);
+    final limit = _calculateTierLimit(authState.user);
+    final isExceeded = count >= limit;
+
+    state = state.copyWith(
+      viewsToday: count,
+      dailyLimit: limit,
+      hasExceededLimit: isExceeded,
+    );
+
+    await loadCandidates();
   }
 
   Future<void> loadCandidates() async {
@@ -55,7 +99,6 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
         // Guarantees that a user can NEVER see themselves and can ONLY see opposite-sex candidates
         final authState = _ref.read(authProvider);
         final currentUserId = (authState.user?.id ?? '').trim();
-        final currentUserEmail = (authState.user?.email ?? '').trim().toLowerCase();
         final currentUserFullName = (authState.user?.fullName ?? '').trim().toLowerCase();
         final userFirstName = (authState.user?.firstName ?? '').trim().toLowerCase();
         final userLastName = (authState.user?.lastName ?? '').trim().toLowerCase();
@@ -113,7 +156,23 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     );
   }
 
-  void likeCandidate(MatchProfile candidate) {
+  Future<void> likeCandidate(MatchProfile candidate) async {
+    final storage = _ref.read(secureStorageProvider);
+    final authState = _ref.read(authProvider);
+    final limit = _calculateTierLimit(authState.user);
+
+    if (state.viewsToday >= limit) {
+      state = state.copyWith(
+        hasExceededLimit: true,
+        showUpgradeFlier: true,
+        dailyLimit: limit,
+      );
+      return;
+    }
+
+    final nextCount = await storage.incrementDailyViewCount();
+    final exceeded = nextCount >= limit;
+
     // Send like action to backend
     _dio.post(ApiEndpoints.matchAction, data: {
       'partnerId': candidate.id,
@@ -123,10 +182,30 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     state = state.copyWith(
       candidates: state.candidates.where((c) => c.id != candidate.id).toList(),
       matchedCandidate: candidate,
+      viewsToday: nextCount,
+      dailyLimit: limit,
+      hasExceededLimit: exceeded,
+      showUpgradeFlier: exceeded,
     );
   }
 
-  void passCandidate(MatchProfile candidate) {
+  Future<void> passCandidate(MatchProfile candidate) async {
+    final storage = _ref.read(secureStorageProvider);
+    final authState = _ref.read(authProvider);
+    final limit = _calculateTierLimit(authState.user);
+
+    if (state.viewsToday >= limit) {
+      state = state.copyWith(
+        hasExceededLimit: true,
+        showUpgradeFlier: true,
+        dailyLimit: limit,
+      );
+      return;
+    }
+
+    final nextCount = await storage.incrementDailyViewCount();
+    final exceeded = nextCount >= limit;
+
     // Send pass action to backend
     _dio.post(ApiEndpoints.matchAction, data: {
       'partnerId': candidate.id,
@@ -135,6 +214,10 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
 
     state = state.copyWith(
       candidates: state.candidates.where((c) => c.id != candidate.id).toList(),
+      viewsToday: nextCount,
+      dailyLimit: limit,
+      hasExceededLimit: exceeded,
+      showUpgradeFlier: exceeded,
     );
   }
 
@@ -148,6 +231,18 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     state = state.copyWith(
       candidates: state.candidates,
       matchedCandidate: null,
+    );
+  }
+
+  void dismissUpgradeFlier() {
+    state = state.copyWith(
+      showUpgradeFlier: false,
+    );
+  }
+
+  void triggerUpgradeFlier() {
+    state = state.copyWith(
+      showUpgradeFlier: true,
     );
   }
 }
