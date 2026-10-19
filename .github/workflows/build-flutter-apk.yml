@@ -35,22 +35,35 @@ jobs:
         run: flutter pub get
         working-directory: mobile-flutter
 
-      - name: Configure Keystore Signing (if secret provided)
+      - name: Configure Keystore Signing (if valid secret provided)
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload.keystore
-            echo "storeFile=upload.keystore" > android/key.properties
-            echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
-            echo "keyAlias=$KEY_ALIAS" >> android/key.properties
-            echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
-            echo "Keystore successfully configured."
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > android/app/upload.keystore || true
+            rm -f /tmp/verify.p12
+            if keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$KEYSTORE_PASSWORD" -srcalias "$KEY_ALIAS" -srckeypass "$KEY_PASSWORD" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt >/dev/null 2>&1; then
+              echo "storeFile=upload.keystore" > android/key.properties
+              echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+              echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+              echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
+              echo "Verified release keystore with KEY_PASSWORD."
+            elif keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$KEYSTORE_PASSWORD" -srcalias "$KEY_ALIAS" -srckeypass "$KEYSTORE_PASSWORD" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt >/dev/null 2>&1; then
+              echo "storeFile=upload.keystore" > android/key.properties
+              echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+              echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+              echo "keyPassword=$KEYSTORE_PASSWORD" >> android/key.properties
+              echo "Verified release keystore using KEYSTORE_PASSWORD as keyPassword."
+            else
+              echo "Warning: Keystore secret or password mismatch. Falling back to default signing."
+              rm -f android/app/upload.keystore android/key.properties
+            fi
+            rm -f /tmp/verify.p12
           else
-            echo "No keystore secret found. Build will fall back to default signing."
+            echo "No keystore secrets configured. Using default signing."
           fi
         working-directory: mobile-flutter
 
