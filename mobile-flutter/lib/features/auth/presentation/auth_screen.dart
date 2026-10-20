@@ -311,11 +311,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
-                                  child: Text(
-                                    'Remember my email & password on this device',
-                                    style: AppTypography.bodySmall.copyWith(
-                                      color: _rememberMe ? AppColors.textPure : AppColors.textMuted,
-                                      fontSize: 12,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      'Remember my Email & Password on this device',
+                                      maxLines: 1,
+                                      softWrap: false,
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: _rememberMe ? AppColors.textPure : AppColors.textMuted,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -334,18 +340,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 // Link to revisit the Welcome / Landing Experience anytime
                 TextButton.icon(
                   onPressed: () => context.go('/welcome?preview=true'),
                   icon: const Icon(
-                    Icons.auto_awesome_outlined,
+                    Icons.arrow_back_rounded,
                     size: 15,
                     color: AppColors.champagneGold,
                   ),
                   label: Text(
-                    'Explore KNOT • How It Works & Trust Architecture',
+                    'Return to Welcome Page • Read All About KNOT',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.champagneGold,
                       fontWeight: FontWeight.w600,
@@ -353,7 +359,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
 
                 Text(
                   'Protected by Didit Sovereign KYC & Biometric Identity Verification.',

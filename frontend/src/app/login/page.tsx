@@ -163,17 +163,17 @@ export default function Login() {
             {/* Remember Me Checkbox */}
             <div 
               onClick={() => setRememberMe(!rememberMe)}
-              className="flex items-center gap-3 cursor-pointer select-none py-1 group"
+              className="flex items-center gap-2.5 cursor-pointer select-none py-1 group overflow-hidden"
             >
-              <div className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+              <div className={`w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center border transition-all ${
                 rememberMe 
                   ? "bg-[#D4AF37] border-[#D4AF37] text-black" 
                   : "bg-[#121721] border-white/20 text-transparent group-hover:border-white/40"
               }`}>
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
               </div>
-              <span className="text-xs text-gray-300 font-medium">
-                Remember my email & password on this device
+              <span className="text-xs text-gray-300 font-medium whitespace-nowrap overflow-hidden text-ellipsis">
+                Remember my Email &amp; Password on this device
               </span>
             </div>
 
@@ -190,7 +190,7 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-white/5 text-center">
+          <div className="mt-8 pt-6 border-t border-white/5 text-center space-y-3">
             <p className="text-xs text-gray-500">
               {isLogin ? (
                 <>Not on the registry yet? <button type="button" onClick={() => setIsLogin(false)} className="text-[#D4AF37] font-bold hover:underline">Apply here</button></>
@@ -198,6 +198,14 @@ export default function Login() {
                 <>Already a member? <button type="button" onClick={() => setIsLogin(true)} className="text-[#D4AF37] font-bold hover:underline">Access Registry</button></>
               )}
             </p>
+            <div>
+              <Link 
+                href="/" 
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#D4AF37] hover:text-[#E5C158] transition-colors"
+              >
+                ← Return to Welcome Page • Read All About KNOT
+              </Link>
+            </div>
           </div>
         </div>
       </div>
