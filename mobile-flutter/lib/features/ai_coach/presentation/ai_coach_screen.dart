@@ -178,8 +178,9 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildMessageBubble(CoachMessage msg) {
     return Align(
