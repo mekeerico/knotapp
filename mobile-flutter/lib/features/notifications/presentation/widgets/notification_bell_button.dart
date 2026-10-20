@@ -24,7 +24,7 @@ class NotificationBellButton extends ConsumerWidget {
       children: [
         IconButton(
           icon: Icon(
-            unread > 0 ? Icons.notifications_active_outlined : Icons.notifications_outlined,
+            Icons.notifications_outlined,
             color: iconColor,
             size: size,
           ),

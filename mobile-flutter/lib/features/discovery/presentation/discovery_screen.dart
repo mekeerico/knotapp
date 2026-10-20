@@ -22,6 +22,7 @@ class DiscoveryScreen extends ConsumerStatefulWidget {
 
 class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
   final CardSwiperController _swiperController = CardSwiperController();
+  int _currentCardIndex = 0;
 
   @override
   void dispose() {
@@ -33,24 +34,54 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(discoveryProvider);
     final notifier = ref.read(discoveryProvider.notifier);
-
     final authState = ref.watch(authProvider);
+
+    ref.listen<DiscoveryState>(discoveryProvider, (previous, next) {
+      if (next.limitNoticeMessage != null && next.limitNoticeMessage != previous?.limitNoticeMessage) {
+        final message = next.limitNoticeMessage!;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppColors.darkSlate,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: const BorderSide(color: AppColors.champagneGold, width: 1.2),
+            ),
+            duration: const Duration(seconds: 4),
+            content: Row(
+              children: [
+                const Icon(Icons.info_outline, color: AppColors.champagneGold, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textPure,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            action: SnackBarAction(
+              label: 'UPGRADE ✨',
+              textColor: AppColors.champagneGold,
+              onPressed: () {
+                context.push('/paywall');
+              },
+            ),
+          ),
+        );
+        notifier.clearLimitNotice();
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
-      appBar: KnotAppBar(
+      appBar: const KnotAppBar(
         showLogo: true,
         showNotificationBell: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.tune, color: AppColors.champagneGold),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Registry filters active: Verified Candidates (18+).')),
-              );
-            },
-          ),
-        ],
       ),
       body: SafeArea(
         child: Stack(
@@ -63,9 +94,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                     ),
                   )
                 : state.candidates.isEmpty
-                    ? (state.hasExceededLimit
-                        ? _buildDailyLimitReachedCard(context, state, notifier)
-                        : _buildEmptyRegistry(notifier, authState.user?.gender))
+                    ? _buildEmptyRegistry(notifier, authState.user?.gender)
                     : Column(
                         children: [
                           if (!(authState.user?.isPremium ?? false))
@@ -79,9 +108,9 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                 cardsCount: state.candidates.length,
                                 numberOfCardsDisplayed: 1,
                                 backCardOffset: Offset.zero,
-                                isLoop: false,
+                                isLoop: true,
                                 onEnd: () {
-                                  notifier.onDeckEmpty();
+                                  // In continuous loop mode, candidates remain available
                                 },
                                 cardBuilder: (context, index, percentX, percentY) {
                                   if (index < 0 || index >= state.candidates.length) {
@@ -96,6 +125,11 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                   );
                                 },
                                 onSwipe: (previousIndex, currentIndex, direction) {
+                                  if (currentIndex != null && state.candidates.isNotEmpty) {
+                                    setState(() {
+                                      _currentCardIndex = currentIndex % state.candidates.length;
+                                    });
+                                  }
                                   if (previousIndex >= 0 && previousIndex < state.candidates.length) {
                                     final candidate = state.candidates[previousIndex];
                                     if (direction == CardSwiperDirection.right) {
@@ -136,7 +170,8 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                   size: 64,
                                   onTap: () {
                                     if (state.candidates.isNotEmpty) {
-                                      context.push('/profile-detail', extra: state.candidates.first);
+                                      final idx = _currentCardIndex.clamp(0, state.candidates.length - 1);
+                                      context.push('/profile-detail', extra: state.candidates[idx]);
                                     }
                                   },
                                 ),
@@ -148,7 +183,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                   color: AppColors.roseGlow,
                                   onTap: () {
                                     if (state.candidates.isNotEmpty) {
-                                      notifier.likeCandidate(state.candidates.first);
+                                      _swiperController.swipe(CardSwiperDirection.right);
                                     }
                                   },
                                 ),
@@ -161,10 +196,6 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
             // Celebratory Match Modal Overlay
             if (state.matchedCandidate != null)
               _buildMatchCelebrationModal(context, state.matchedCandidate!, notifier),
-
-            // First-Time / Exceeded Limit Upgrade Flier Modal
-            if (state.showUpgradeFlier)
-              _buildUpgradeFlierModal(context, state, notifier),
           ],
         ),
       ),
@@ -437,212 +468,5 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
       ),
     );
   }
-
-  Widget _buildDailyLimitReachedCard(
-    BuildContext context,
-    DiscoveryState state,
-    DiscoveryNotifier notifier,
-  ) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: GlassCard(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 76,
-                height: 76,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppColors.champagneGold.withOpacity(0.15),
-                  border: Border.all(color: AppColors.champagneGold, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.champagneGold.withOpacity(0.3),
-                      blurRadius: 20,
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.workspace_premium_rounded, size: 40, color: AppColors.champagneGold),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Daily Match Limit Reached',
-                style: AppTypography.headingLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                "You've completed your ${state.dailyLimit} free curated matches for today. Intentional marriages require proactive discovery—upgrade to explore 15 to 25+ verified partners daily.",
-                style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted, height: 1.5),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                decoration: BoxDecoration(
-                  color: AppColors.darkSlate,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.borderGold),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.alarm, size: 16, color: AppColors.champagneGold),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Resets at midnight or unlocks instantly',
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSubtle, fontSize: 11),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              GoldButton(
-                text: 'Upgrade for More Matches',
-                onPressed: () => context.push('/paywall'),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 48),
-                  side: const BorderSide(color: AppColors.borderSubtle),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                ),
-                onPressed: () => context.go('/insights'),
-                child: Text('View Marriage Insights', style: AppTypography.button.copyWith(color: AppColors.textMuted)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUpgradeFlierModal(
-    BuildContext context,
-    DiscoveryState state,
-    DiscoveryNotifier notifier,
-  ) {
-    return Positioned.fill(
-      child: Container(
-        color: Colors.black.withOpacity(0.88),
-        padding: const EdgeInsets.all(20),
-        child: Center(
-          child: GlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Align(
-                  alignment: Alignment.topRight,
-                  child: IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.textSubtle),
-                    onPressed: () => notifier.dismissUpgradeFlier(),
-                  ),
-                ),
-                Container(
-                  width: 68,
-                  height: 68,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const RadialGradient(
-                      colors: [AppColors.champagneGold, AppColors.deepGold],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.champagneGold.withOpacity(0.4),
-                        blurRadius: 24,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(Icons.lock_open_rounded, size: 34, color: Colors.black),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppColors.champagneGold.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.borderGold),
-                  ),
-                  child: Text(
-                    'MEMBERSHIP CAP NOTICE',
-                    style: AppTypography.bodySmall.copyWith(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      color: AppColors.champagneGold,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Daily Matching Limit Reached',
-                  style: AppTypography.displayMedium.copyWith(fontSize: 20),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  "You have reached your ${state.dailyLimit} daily candidate limit for the Free tier. Upgrade your registry tier now to unlock more verified matches immediately.",
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted, fontSize: 13, height: 1.4),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 18),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppColors.darkSlate,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.borderSubtle),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildPerkRow('15 to 100 AI-Curated verified matches daily'),
-                      const SizedBox(height: 8),
-                      _buildPerkRow('Unlimited intentional conversations'),
-                      const SizedBox(height: 8),
-                      _buildPerkRow('See who favorited your marriage vows'),
-                      const SizedBox(height: 8),
-                      _buildPerkRow('Priority placement in the Sovereign Registry'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 22),
-                GoldButton(
-                  text: 'Upgrade Now ✨',
-                  onPressed: () {
-                    notifier.dismissUpgradeFlier();
-                    context.push('/paywall');
-                  },
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () => notifier.dismissUpgradeFlier(),
-                  child: Text('Maybe Later', style: AppTypography.bodySmall.copyWith(color: AppColors.textSubtle)),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPerkRow(String text) {
-    return Row(
-      children: [
-        const Icon(Icons.check_circle_rounded, color: AppColors.emeraldVerified, size: 16),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            text,
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textPure, fontSize: 12),
-          ),
-        ),
-      ],
-    );
-  }
 }
+

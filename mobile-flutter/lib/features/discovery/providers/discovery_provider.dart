@@ -14,7 +14,7 @@ class DiscoveryState {
   final int viewsToday;
   final int dailyLimit;
   final bool hasExceededLimit;
-  final bool showUpgradeFlier;
+  final String? limitNoticeMessage;
 
   const DiscoveryState({
     this.candidates = const [],
@@ -24,7 +24,7 @@ class DiscoveryState {
     this.viewsToday = 0,
     this.dailyLimit = 3,
     this.hasExceededLimit = false,
-    this.showUpgradeFlier = false,
+    this.limitNoticeMessage,
   });
 
   int get remainingDailyViews => (dailyLimit - viewsToday).clamp(0, dailyLimit);
@@ -37,7 +37,8 @@ class DiscoveryState {
     int? viewsToday,
     int? dailyLimit,
     bool? hasExceededLimit,
-    bool? showUpgradeFlier,
+    String? limitNoticeMessage,
+    bool clearNotice = false,
   }) {
     return DiscoveryState(
       candidates: candidates ?? this.candidates,
@@ -47,7 +48,7 @@ class DiscoveryState {
       viewsToday: viewsToday ?? this.viewsToday,
       dailyLimit: dailyLimit ?? this.dailyLimit,
       hasExceededLimit: hasExceededLimit ?? this.hasExceededLimit,
-      showUpgradeFlier: showUpgradeFlier ?? this.showUpgradeFlier,
+      limitNoticeMessage: clearNotice ? null : (limitNoticeMessage ?? this.limitNoticeMessage),
     );
   }
 }
@@ -161,31 +162,23 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     final authState = _ref.read(authProvider);
     final limit = _calculateTierLimit(authState.user);
 
-    if (state.viewsToday >= limit) {
-      state = state.copyWith(
-        hasExceededLimit: true,
-        showUpgradeFlier: true,
-        dailyLimit: limit,
-      );
-      return;
-    }
-
-    final nextCount = await storage.incrementDailyViewCount();
-    final exceeded = nextCount >= limit;
-
     // Send like action to backend
     _dio.post(ApiEndpoints.matchAction, data: {
       'partnerId': candidate.id,
       'action': 'like',
     }).then((_) {}, onError: (_) {});
 
+    final nextCount = await storage.incrementDailyViewCount();
+    final reachedOrExceeded = nextCount >= limit;
+
     state = state.copyWith(
-      candidates: state.candidates.where((c) => c.id != candidate.id).toList(),
       matchedCandidate: candidate,
       viewsToday: nextCount,
       dailyLimit: limit,
-      hasExceededLimit: exceeded,
-      showUpgradeFlier: exceeded,
+      hasExceededLimit: reachedOrExceeded,
+      limitNoticeMessage: reachedOrExceeded
+          ? "You've reviewed your $limit daily matches. Upgrade to unlock 15+ verified candidates daily."
+          : null,
     );
   }
 
@@ -194,55 +187,36 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     final authState = _ref.read(authProvider);
     final limit = _calculateTierLimit(authState.user);
 
-    if (state.viewsToday >= limit) {
-      state = state.copyWith(
-        hasExceededLimit: true,
-        showUpgradeFlier: true,
-        dailyLimit: limit,
-      );
-      return;
-    }
-
-    final nextCount = await storage.incrementDailyViewCount();
-    final exceeded = nextCount >= limit;
-
     // Send pass action to backend
     _dio.post(ApiEndpoints.matchAction, data: {
       'partnerId': candidate.id,
       'action': 'pass',
     }).then((_) {}, onError: (_) {});
 
+    final nextCount = await storage.incrementDailyViewCount();
+    final reachedOrExceeded = nextCount >= limit;
+
     state = state.copyWith(
-      candidates: state.candidates.where((c) => c.id != candidate.id).toList(),
       viewsToday: nextCount,
       dailyLimit: limit,
-      hasExceededLimit: exceeded,
-      showUpgradeFlier: exceeded,
+      hasExceededLimit: reachedOrExceeded,
+      limitNoticeMessage: reachedOrExceeded
+          ? "You've reviewed your $limit daily matches. Upgrade to unlock 15+ verified candidates daily."
+          : null,
     );
   }
 
   void onDeckEmpty() {
-    state = state.copyWith(
-      candidates: const [],
-    );
+    // Keep candidates accessible for continuous looping review
+  }
+
+  void clearLimitNotice() {
+    state = state.copyWith(clearNotice: true);
   }
 
   void dismissMatchModal() {
     state = state.copyWith(
-      candidates: state.candidates,
       matchedCandidate: null,
-    );
-  }
-
-  void dismissUpgradeFlier() {
-    state = state.copyWith(
-      showUpgradeFlier: false,
-    );
-  }
-
-  void triggerUpgradeFlier() {
-    state = state.copyWith(
-      showUpgradeFlier: true,
     );
   }
 }

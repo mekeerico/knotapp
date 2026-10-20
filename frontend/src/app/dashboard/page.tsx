@@ -57,6 +57,7 @@ export default function Dashboard() {
   });
   const [isMessageLimitReached, setIsMessageLimitReached] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [limitNoticeMessage, setLimitNoticeMessage] = useState<string | null>(null);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
 
   // In-App Notification Center States
@@ -479,30 +480,28 @@ export default function Dashboard() {
 
   const checkLimitAndProceed = (action: () => void) => {
     const limit = getDailyLimit();
-    if (matchesViewedToday >= limit) {
-      setShowSubscriptionModal(true);
-      return;
-    }
     const nextCount = matchesViewedToday + 1;
     setMatchesViewedToday(nextCount);
     if (typeof window !== 'undefined') {
       const todayKey = 'knot_daily_views_' + new Date().toISOString().slice(0, 10);
       localStorage.setItem(todayKey, String(nextCount));
     }
+    // Always execute the action so user can freely view and loop their matches
     action();
-    if (nextCount >= limit) {
-      setTimeout(() => setShowSubscriptionModal(true), 350);
+
+    // Flash a temporary auto-dismissing notification if limit reached
+    if (nextCount === limit) {
+      setLimitNoticeMessage(`You have completed your daily limit of ${limit} matches. Upgrade to explore more verified candidates.`);
+      setTimeout(() => {
+        setLimitNoticeMessage(null);
+      }, 4000);
     }
   };
 
   const handlePass = () => {
     checkLimitAndProceed(() => {
-      if (currentMatchIndex < matches.length - 1) {
-        setCurrentMatchIndex(prev => prev + 1);
-        setActiveMatchImageIndex(0);
-      } else {
-        setMatches([]);
-        setCurrentMatchIndex(0);
+      if (matches.length > 0) {
+        setCurrentMatchIndex(prev => (prev + 1) % matches.length);
         setActiveMatchImageIndex(0);
       }
     });
@@ -1108,45 +1107,22 @@ export default function Dashboard() {
             </div>
           )}
           {activeTab === "matches" && !isLoadingMatches && matches.length === 0 && (
-            matchesViewedToday >= getDailyLimit() ? (
-              <div className="glass-card rounded-[32px] p-10 sm:p-12 border border-[#D4AF37]/40 text-center space-y-5 flex flex-col items-center justify-center max-w-lg mx-auto shadow-2xl">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#AA7C11] flex items-center justify-center text-black mb-1 p-3.5 shadow-[0_0_24px_rgba(212,175,55,0.4)]">
-                  <Lock className="w-8 h-8" />
-                </div>
-                <span className="text-[10px] uppercase tracking-widest font-black text-[#D4AF37] px-3 py-1 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30">
-                  MEMBERSHIP CAP NOTICE
-                </span>
-                <h3 className="text-2xl font-serif font-bold text-white">Daily Match Limit Reached</h3>
-                <p className="text-sm text-gray-400 max-w-md leading-relaxed">
-                  You have reviewed all {getDailyLimit()} curated candidates for your current Free tier today. Upgrade your Knot registry tier now to unlock 15 to 100 verified intentional matches daily.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShowSubscriptionModal(true)}
-                  className="mt-2 px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#D4AF37]/30 cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4" /> Upgrade for More Matches
-                </button>
-                <p className="text-[11px] text-gray-500">Resets daily at midnight or unlocks instantly upon upgrade</p>
+            <div className="glass-card rounded-[32px] p-10 sm:p-12 border border-white/10 text-center space-y-5 flex flex-col items-center justify-center max-w-lg mx-auto">
+              <div className="w-18 h-18 rounded-full bg-[#D4AF37]/12 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] mb-2 p-4">
+                <Compass className="w-9 h-9" />
               </div>
-            ) : (
-              <div className="glass-card rounded-[32px] p-10 sm:p-12 border border-white/10 text-center space-y-5 flex flex-col items-center justify-center max-w-lg mx-auto">
-                <div className="w-18 h-18 rounded-full bg-[#D4AF37]/12 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37] mb-2 p-4">
-                  <Compass className="w-9 h-9" />
-                </div>
-                <h3 className="text-2xl font-serif font-bold text-white">Curating Sovereign Matches</h3>
-                <p className="text-sm text-gray-400 max-w-md leading-relaxed">
-                  The Knot Registry is actively scanning for verified {userProfile?.gender?.toLowerCase() === 'male' ? 'eligible ladies' : userProfile?.gender?.toLowerCase() === 'female' ? 'eligible gentlemen' : 'compatible candidates'} who align with your matrimonial values and marital vision.
-                </p>
-                <button
-                  type="button"
-                  onClick={loadMatchesAndProfile}
-                  className="mt-2 px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#D4AF37]/20 cursor-pointer"
-                >
-                  <RefreshCw className="w-4 h-4" /> Check for New Candidates
-                </button>
-              </div>
-            )
+              <h3 className="text-2xl font-serif font-bold text-white">Curating Sovereign Matches</h3>
+              <p className="text-sm text-gray-400 max-w-md leading-relaxed">
+                The Knot Registry is actively scanning for verified {userProfile?.gender?.toLowerCase() === 'male' ? 'eligible ladies' : userProfile?.gender?.toLowerCase() === 'female' ? 'eligible gentlemen' : 'compatible candidates'} who align with your matrimonial values and marital vision.
+              </p>
+              <button
+                type="button"
+                onClick={loadMatchesAndProfile}
+                className="mt-2 px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black bg-[#D4AF37] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#D4AF37]/20 cursor-pointer"
+              >
+                <RefreshCw className="w-4 h-4" /> Check for New Candidates
+              </button>
+            </div>
           )}
           {activeTab === "matches" && !isLoadingMatches && activeMatch && (
             <div className="space-y-4">
@@ -2188,6 +2164,20 @@ export default function Dashboard() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Auto-Dismissing Daily Limit Notice Toast */}
+      {limitNoticeMessage && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-[#121721] border border-[#D4AF37] text-white px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-fade-in">
+          <Sparkles className="w-5 h-5 text-[#D4AF37] flex-shrink-0" />
+          <span className="text-xs text-gray-200">{limitNoticeMessage}</span>
+          <button
+            onClick={() => setShowSubscriptionModal(true)}
+            className="ml-auto px-3.5 py-1.5 rounded-full bg-[#D4AF37] text-black text-[10px] font-black uppercase tracking-wider hover:bg-[#E5C158] whitespace-nowrap cursor-pointer transition shadow-md"
+          >
+            Upgrade ✨
+          </button>
         </div>
       )}
     </div>
