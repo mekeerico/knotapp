@@ -130,7 +130,7 @@ export default function EditProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0E14] text-white font-sans selection:bg-[#E11D48] selection:text-black pb-20">
+    <div className="min-h-screen bg-[#0A0E14] text-white font-sans selection:bg-[#FF3366] selection:text-black pb-20">
       <header className="sticky top-0 z-50 bg-[#0A0E14]/80 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
         <button onClick={() => router.push('/dashboard')} className="text-gray-400 hover:text-white flex items-center gap-2 transition-colors">
           <ArrowLeft className="w-5 h-5" /> Back
@@ -139,7 +139,7 @@ export default function EditProfile() {
         <button 
           onClick={handleSave} 
           disabled={isSaving}
-          className="px-4 py-2 bg-[#E11D48] text-black rounded-lg font-bold text-sm hover:bg-[#F3E5AB] transition-colors disabled:opacity-50 flex items-center gap-2"
+          className="px-4 py-2 bg-[#FF3366] text-black rounded-lg font-bold text-sm hover:bg-[#F3E5AB] transition-colors disabled:opacity-50 flex items-center gap-2"
         >
           {isSaving ? "Saving..." : <><Save className="w-4 h-4" /> Save</>}
         </button>
@@ -156,14 +156,14 @@ export default function EditProfile() {
               <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group">
                 <img src={url} alt={`Photo ${idx+1}`} className="w-full h-full object-cover" />
                 {idx === 0 ? (
-                  <div className="absolute top-2 left-2 bg-[#E11D48] px-2 py-0.5 rounded-md text-[8px] font-black uppercase text-black z-10 shadow">
+                  <div className="absolute top-2 left-2 bg-[#FF3366] px-2 py-0.5 rounded-md text-[8px] font-black uppercase text-black z-10 shadow">
                     Primary
                   </div>
                 ) : (
                   <button
                     type="button"
                     onClick={() => makePrimary(idx)}
-                    className="absolute bottom-2 left-2 bg-black/80 hover:bg-[#E11D48] hover:text-black text-[9px] font-bold uppercase text-white px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    className="absolute bottom-2 left-2 bg-black/80 hover:bg-[#FF3366] hover:text-black text-[9px] font-bold uppercase text-white px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
                   >
                     Set Primary
                   </button>
@@ -179,7 +179,7 @@ export default function EditProfile() {
             ))}
             
             {photos.length < 5 && (
-              <label className={`aspect-square rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 hover:border-[#E11D48]/50 hover:bg-[#E11D48]/5 transition-all cursor-pointer ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
+              <label className={`aspect-square rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 hover:border-[#FF3366]/50 hover:bg-[#FF3366]/5 transition-all cursor-pointer ${uploading ? 'opacity-50 pointer-events-none' : ''}`}>
                 <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
                 <Camera className="w-6 h-6 text-gray-400" />
                 <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
@@ -200,7 +200,7 @@ export default function EditProfile() {
                 type="text" 
                 value={profile?.firstName || ''} 
                 onChange={e => setProfile({...profile, firstName: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#E11D48]/50 outline-none" 
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FF3366]/50 outline-none" 
               />
             </div>
             <div className="space-y-2">
@@ -209,7 +209,7 @@ export default function EditProfile() {
                 type="text" 
                 value={profile?.lastName || ''} 
                 onChange={e => setProfile({...profile, lastName: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#E11D48]/50 outline-none" 
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FF3366]/50 outline-none" 
               />
             </div>
             <div className="space-y-2 col-span-2">
@@ -218,7 +218,7 @@ export default function EditProfile() {
                 type="text" 
                 value={profile?.occupation || ''} 
                 onChange={e => setProfile({...profile, occupation: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#E11D48]/50 outline-none" 
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FF3366]/50 outline-none" 
               />
             </div>
             <div className="space-y-2 col-span-2">
@@ -226,7 +226,7 @@ export default function EditProfile() {
               <textarea 
                 value={profile?.bio || ''} 
                 onChange={e => setProfile({...profile, bio: e.target.value})}
-                className="w-full h-24 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#E11D48]/50 outline-none resize-none" 
+                className="w-full h-24 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FF3366]/50 outline-none resize-none" 
               />
             </div>
           </div>
@@ -242,7 +242,7 @@ export default function EditProfile() {
                 type="text" 
                 value={profile?.residenceCity || ''} 
                 onChange={e => setProfile({...profile, residenceCity: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#E11D48]/50 outline-none" 
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FF3366]/50 outline-none" 
               />
             </div>
             <div className="space-y-2">
@@ -251,7 +251,7 @@ export default function EditProfile() {
                 type="text" 
                 value={profile?.residenceCountry || ''} 
                 onChange={e => setProfile({...profile, residenceCountry: e.target.value})}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#E11D48]/50 outline-none" 
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#FF3366]/50 outline-none" 
               />
             </div>
           </div>
