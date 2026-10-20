@@ -1,62 +1,72 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Brand Backgrounds
-  static const Color obsidianBlack = Color(0xFF0B0E14);
-  static const Color darkSlate = Color(0xFF121721);
+  // Brand Backgrounds (Deep Space Obsidian & Dark Slate from React)
+  static const Color obsidianBlack = Color(0xFF0A0E14);
+  static const Color darkSlate = Color(0xFF10141C);
   static const Color darkCard = Color(0xFF161D2B);
   static const Color darkCardElevated = Color(0xFF1E273A);
   
-  // Lively Radiant Accents (High-Contrast, Zero Dullness, No Shouting Yellow)
-  static const Color champagneGold = Color(0xFFFF3366); // Radiant Coral-Rose (Primary Accent)
-  static const Color goldLight = Color(0xFFFF7A95);     // Bright Soft Coral Blush
-  static const Color goldDark = Color(0xFFE11D48);      // Vivid Deep Rose
-  static const Color deepGold = Color(0xFFE11D48);
-  static const Color roseGlow = Color(0xFFFF3366);
+  // React Brand Accents (Exact match to React Colors.primary #E27D8D)
+  static const Color primaryRose = Color(0xFFE27D8D);      // Signature React Rose Pink
+  static const Color violetAccent = Color(0xFF8C52FF);     // Signature React Royal Violet
+  static const Color champagneGold = Color(0xFFE27D8D);    // Primary feature accent (active tabs, logo dot, badges)
+  static const Color goldLight = Color(0xFFF3A6B2);        // Soft Rose Blush
+  static const Color goldDark = Color(0xFF8C52FF);         // Royal Violet
+  static const Color deepGold = Color(0xFF8C52FF);
+  static const Color roseGlow = Color(0xFFE27D8D);
+  static const Color prestigeGold = Color(0xFFD4AF37);     // Selective Gold (Verified Badge, Trust Score, AI Coach)
   static const Color emeraldVerified = Color(0xFF10B981);
   static const Color emeraldSuccess = Color(0xFF10B981);
   static const Color royalPurple = Color(0xFF2D1B4E);
   
-  // Borders & Glows (Crisp, High-Luminance Definition)
+  // Borders & Glows
   static const Color borderSubtle = Color(0xFF232D3F);
-  static const Color borderGold = Color(0x66FF3366); // 40% radiant coral border (clearly defined!)
-  static const Color borderGoldStrong = Color(0x99FF3366); // 60% radiant coral border
-  static const Color borderGlass = Color(0x26FFFFFF); // 15% white
-  static const Color glassBorder = Color(0x26FFFFFF); // 15% white
+  static const Color borderGold = Color(0x4DE27D8D);       // 30% rose border
+  static const Color borderGoldStrong = Color(0x80E27D8D); // 50% rose border
+  static const Color borderGlass = Color(0x1AFFFFFF);      // 10% white
+  static const Color glassBorder = Color(0x1AFFFFFF);      // 10% white
   
-  // High-Contrast Text Colors (Crisp White & Bright Pearl - Never muddy or dark)
+  // High-Contrast Typography
   static const Color textPure = Color(0xFFFFFFFF);
-  static const Color textMuted = Color(0xFFCBD5E1); // Bright silver-pearl (high readability)
-  static const Color textSecondary = Color(0xFFCBD5E1);
-  static const Color textSubtle = Color(0xFF94A3B8); // Clear readable subtitle
-  static const Color textGold = Color(0xFFFF5A79); // Radiant lively accent text
+  static const Color textMuted = Color(0xFF94A3B8);
+  static const Color textSecondary = Color(0xFF94A3B8);
+  static const Color textSubtle = Color(0xFF64748B);
+  static const Color textGold = Color(0xFFE27D8D);         // Rose accent text
 
-  // Lively Radiant Gradients
+  // Signature React Gradient: Rose Pink to Royal Violet (The exact Connect button gradient!)
   static const LinearGradient goldGradient = LinearGradient(
-    colors: [Color(0xFFFF5A79), Color(0xFFFF3366), Color(0xFFE11D48)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+    colors: [Color(0xFFE27D8D), Color(0xFF8C52FF)],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
   );
 
   static const LinearGradient roseGradient = LinearGradient(
-    colors: [Color(0xFFFF5A79), Color(0xFFFF3366), Color(0xFFE11D48)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+    colors: [Color(0xFFE27D8D), Color(0xFF8C52FF)],
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
   );
 
   static const LinearGradient darkCardGradient = LinearGradient(
-    colors: [Color(0xFF18202E), Color(0xFF0F141E)],
+    colors: [Color(0xFF161D2B), Color(0xFF0F141E)],
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
   );
 
+  // Paywall Gradient (Royal Violet into Soft Rose)
+  static const LinearGradient premiumGradient = LinearGradient(
+    colors: [Color(0xFF4C1D95), Color(0xFFE27D8D)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   static const LinearGradient scannerGlowGradient = LinearGradient(
     colors: [
-      Color(0x00FF3366),
-      Color(0x80FF3366),
-      Color(0xFFFF3366),
-      Color(0x80FF3366),
-      Color(0x00FF3366),
+      Color(0x00E27D8D),
+      Color(0x80E27D8D),
+      Color(0xFFE27D8D),
+      Color(0x80E27D8D),
+      Color(0x00E27D8D),
     ],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,

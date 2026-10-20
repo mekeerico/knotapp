@@ -279,11 +279,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             height: 44,
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: AppColors.goldGradient,
+                              color: AppColors.champagneGold,
                             ),
                             child: const Icon(
                               Icons.send_rounded,
-                              color: AppColors.obsidianBlack,
+                              color: Colors.white,
                               size: 20,
                             ),
                           ),
@@ -447,7 +447,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         child: Text(
           msg.text,
           style: AppTypography.bodyMedium.copyWith(
-            color: isMine ? AppColors.obsidianBlack : AppColors.textPure,
+            color: isMine ? Colors.white : AppColors.textPure,
             fontWeight: isMine ? FontWeight.w600 : FontWeight.normal,
           ),
         ),

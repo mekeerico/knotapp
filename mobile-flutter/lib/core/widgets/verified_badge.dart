@@ -55,15 +55,15 @@ class _VerifiedBadgeState extends State<VerifiedBadge>
                 gradient: SweepGradient(
                   transform: GradientRotation(shimmerValue * 6.28),
                   colors: const [
-                    AppColors.goldLight,
-                    AppColors.champagneGold,
-                    AppColors.goldDark,
-                    AppColors.goldLight,
+                    Color(0xFFF3DE8A),
+                    Color(0xFFD4AF37),
+                    Color(0xFFAA820A),
+                    Color(0xFFF3DE8A),
                   ],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.champagneGold.withOpacity(0.4),
+                    color: const Color(0xFFD4AF37).withValues(alpha: 0.4),
                     blurRadius: 6,
                     spreadRadius: 1,
                   ),

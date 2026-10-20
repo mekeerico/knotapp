@@ -52,7 +52,7 @@ const MultiSelectDropdown = ({ label, options, values, onChange, placeholder }: 
               className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0"
               onClick={() => toggleOption(opt)}
             >
-              <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${values.includes(opt) ? 'bg-[#FF3366] border-[#FF3366]' : 'border-white/20'}`}>
+              <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${values.includes(opt) ? 'bg-[#E27D8D] border-[#E27D8D]' : 'border-white/20'}`}>
                 {values.includes(opt) && <Check className="w-3 h-3 text-black" strokeWidth={3} />}
               </div>
               <span className="text-xs text-gray-300">{opt}</span>
@@ -628,13 +628,13 @@ export default function Onboarding() {
                 if (step === 2 && subStep > 0) setSubStep(subStep - 1);
                 else if (step > 2) setStep(step - 1);
               }}
-              className="text-white hover:text-[#FF3366] transition-colors"
+              className="text-white hover:text-[#E27D8D] transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             </button>
           )}
           <Link href="/" className="text-xl font-serif font-black tracking-wider flex items-center gap-1">
-            KNOT<span className="text-[#FF3366]">.</span>
+            KNOT<span className="text-[#E27D8D]">.</span>
           </Link>
         </div>
         <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold bg-white/5 px-4 py-1.5 rounded-full border border-white/5">
@@ -648,7 +648,7 @@ export default function Onboarding() {
         {/* Step 1: Cinematic Welcome */}
         {step === 1 && (
           <div className="space-y-8 text-center">
-            <div className="w-16 h-16 rounded-3xl bg-[#FF3366]/10 flex items-center justify-center text-[#FF3366] border border-[#FF3366]/20 mx-auto">
+            <div className="w-16 h-16 rounded-3xl bg-[#E27D8D]/10 flex items-center justify-center text-[#E27D8D] border border-[#E27D8D]/20 mx-auto">
               <Heart className="w-8 h-8" />
             </div>
             <div className="space-y-3">
@@ -677,11 +677,11 @@ export default function Onboarding() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">First Name</label>
-                  <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                  <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Last Name</label>
-                  <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                  <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                 </div>
                 <button onClick={() => setSubStep(1)} disabled={!firstName || !lastName} className="w-full py-4 mt-4 rounded-xl text-sm font-black rose-glow-btn text-white disabled:opacity-50 transition-opacity">Next</button>
               </div>
@@ -694,7 +694,7 @@ export default function Onboarding() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Your Gender</label>
-                  <select value={gender} onChange={e => setGender(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                  <select value={gender} onChange={e => setGender(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                     <option value="">Select</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
@@ -711,11 +711,11 @@ export default function Onboarding() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Date of Birth</label>
-                  <input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                  <input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Occupation</label>
-                  <input type="text" value={occupation} onChange={e => setOccupation(e.target.value)} placeholder="e.g. Software Engineer" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                  <input type="text" value={occupation} onChange={e => setOccupation(e.target.value)} placeholder="e.g. Software Engineer" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                 </div>
                 <button onClick={() => setSubStep(3)} disabled={!dateOfBirth || !occupation} className="w-full py-4 mt-4 rounded-xl text-sm font-black rose-glow-btn text-white disabled:opacity-50 transition-opacity">Next</button>
               </div>
@@ -728,13 +728,13 @@ export default function Onboarding() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Religion</label>
-                  <select value={religionSelect} onChange={e => { setReligionSelect(e.target.value); if(e.target.value !== 'Other') setReligion(e.target.value); }} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                  <select value={religionSelect} onChange={e => { setReligionSelect(e.target.value); if(e.target.value !== 'Other') setReligion(e.target.value); }} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                     <option value="">Select religion / faith</option>
                     {['Christian', 'Muslim', 'Jewish', 'Hindu', 'Buddhist', 'Atheist', 'Agnostic', 'Other'].map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
                 {religionSelect === 'Other' && (
-                  <input type="text" value={religionCustom} onChange={e => { setReligionCustom(e.target.value); setReligion(e.target.value); }} placeholder="Specify your religion" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                  <input type="text" value={religionCustom} onChange={e => { setReligionCustom(e.target.value); setReligion(e.target.value); }} placeholder="Specify your religion" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                 )}
                 <button onClick={() => setSubStep(4)} disabled={!religion} className="w-full py-4 mt-4 rounded-xl text-sm font-black rose-glow-btn text-white disabled:opacity-50 transition-opacity">Next</button>
               </div>
@@ -746,19 +746,19 @@ export default function Onboarding() {
                   <h2 className="text-2xl font-serif font-black">Where do you live?</h2>
                 </div>
                 <div className="space-y-4">
-                  <select value={residenceCountry} onChange={e => { setResidenceCountry(e.target.value); setResidenceState(""); setResidenceCity(""); }} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                  <select value={residenceCountry} onChange={e => { setResidenceCountry(e.target.value); setResidenceState(""); setResidenceCity(""); }} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                     <option value="">Select Country</option>
                     {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   {STATES_BY_COUNTRY[residenceCountry] && STATES_BY_COUNTRY[residenceCountry].length > 0 ? (
-                    <select value={residenceState} onChange={e => setResidenceState(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                    <select value={residenceState} onChange={e => setResidenceState(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                       <option value="">Select State / Province</option>
                       {STATES_BY_COUNTRY[residenceCountry].map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   ) : (
-                    <input type="text" value={residenceState} onChange={e => setResidenceState(e.target.value)} placeholder="State / Province" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                    <input type="text" value={residenceState} onChange={e => setResidenceState(e.target.value)} placeholder="State / Province" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                   )}
-                  <input type="text" value={residenceCity} onChange={e => setResidenceCity(e.target.value)} placeholder="City / Town" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                  <input type="text" value={residenceCity} onChange={e => setResidenceCity(e.target.value)} placeholder="City / Town" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                 </div>
                 <button onClick={() => setSubStep(5)} disabled={!residenceCountry || !residenceCity} className="w-full py-4 mt-4 rounded-xl text-sm font-black rose-glow-btn text-white disabled:opacity-50 transition-opacity">Next</button>
               </div>
@@ -770,19 +770,19 @@ export default function Onboarding() {
                   <h2 className="text-2xl font-serif font-black">Heritage & Origin</h2>
                 </div>
                 <div className="space-y-4">
-                  <select value={originCountry} onChange={e => { setOriginCountry(e.target.value); setOriginState(""); setOriginCity(""); }} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                  <select value={originCountry} onChange={e => { setOriginCountry(e.target.value); setOriginState(""); setOriginCity(""); }} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                     <option value="">Select Country</option>
                     {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   {STATES_BY_COUNTRY[originCountry] && STATES_BY_COUNTRY[originCountry].length > 0 ? (
-                    <select value={originState} onChange={e => setOriginState(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                    <select value={originState} onChange={e => setOriginState(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                       <option value="">Select State / Province</option>
                       {STATES_BY_COUNTRY[originCountry].map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   ) : (
-                    <input type="text" value={originState} onChange={e => setOriginState(e.target.value)} placeholder="State / Province" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                    <input type="text" value={originState} onChange={e => setOriginState(e.target.value)} placeholder="State / Province" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                   )}
-                  <input type="text" value={originCity} onChange={e => setOriginCity(e.target.value)} placeholder="City / Town" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                  <input type="text" value={originCity} onChange={e => setOriginCity(e.target.value)} placeholder="City / Town" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                 </div>
                 <button onClick={() => setSubStep(6)} disabled={!originCountry || !originCity} className="w-full py-4 mt-4 rounded-xl text-sm font-black rose-glow-btn text-white disabled:opacity-50 transition-opacity">Next</button>
               </div>
@@ -795,24 +795,24 @@ export default function Onboarding() {
                 </div>
                 <p className="text-gray-400 text-sm mb-4">Where do you ideally want your partner to be living?</p>
                 <div className="space-y-4">
-                  <select value={preferredResidenceCountry} onChange={e => { setPreferredResidenceCountry(e.target.value); setPreferredResidenceState(""); }} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                  <select value={preferredResidenceCountry} onChange={e => { setPreferredResidenceCountry(e.target.value); setPreferredResidenceState(""); }} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                     <option value="">Select Country</option>
                     <option value="Any Country">Any Country</option>
                     <option value="Enter Choice Country">Enter Choice Country</option>
                     {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   {preferredResidenceCountry === 'Enter Choice Country' && (
-                    <input type="text" value={prefResCountryCustom} onChange={e => setPrefResCountryCustom(e.target.value)} placeholder="Type your choice country" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                    <input type="text" value={prefResCountryCustom} onChange={e => setPrefResCountryCustom(e.target.value)} placeholder="Type your choice country" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                   )}
                   
-                  <select value={preferredResidenceState} onChange={e => setPreferredResidenceState(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                  <select value={preferredResidenceState} onChange={e => setPreferredResidenceState(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                     <option value="">Select State / Province</option>
                     <option value="Any State/Province/Region">Any State/Province/Region</option>
                     <option value="Enter State/Province/Region">Enter State/Province/Region</option>
                     {(STATES_BY_COUNTRY[preferredResidenceCountry] || []).map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                   {preferredResidenceState === 'Enter State/Province/Region' && (
-                    <input type="text" value={prefResStateCustom} onChange={e => setPrefResStateCustom(e.target.value)} placeholder="Type your choice state/province/region" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                    <input type="text" value={prefResStateCustom} onChange={e => setPrefResStateCustom(e.target.value)} placeholder="Type your choice state/province/region" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                   )}
                 </div>
                 <button onClick={() => {
@@ -834,23 +834,23 @@ export default function Onboarding() {
                 </div>
                 <p className="text-gray-400 text-sm mb-4">What is your preferred cultural background or origin for a partner?</p>
                 <div className="space-y-4">
-                  <select value={preferredOriginCountry} onChange={e => { setPreferredOriginCountry(e.target.value); setPreferredOriginState(""); }} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                  <select value={preferredOriginCountry} onChange={e => { setPreferredOriginCountry(e.target.value); setPreferredOriginState(""); }} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                     <option value="">Select Country</option>
                     <option value="Any Country">Any Country</option>
                     <option value="Enter Choice Country">Enter Choice Country</option>
                     {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                   {preferredOriginCountry === 'Enter Choice Country' && (
-                    <input type="text" value={prefOriCountryCustom} onChange={e => setPrefOriCountryCustom(e.target.value)} placeholder="Type your choice country" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                    <input type="text" value={prefOriCountryCustom} onChange={e => setPrefOriCountryCustom(e.target.value)} placeholder="Type your choice country" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                   )}
                   
-                  <select value={preferredOriginState} onChange={e => setPreferredOriginState(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                  <select value={preferredOriginState} onChange={e => setPreferredOriginState(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                     <option value="">Select Native Heritage</option>
                     <option value="Any Heritage">Any Heritage</option>
                     <option value="Enter Native Heritage">Enter Native Heritage</option>
                   </select>
                   {preferredOriginState === 'Enter Native Heritage' && (
-                    <input type="text" value={prefOriCustom} onChange={e => setPrefOriCustom(e.target.value)} placeholder="e.g. Yoruba, Scottish, English, Catalan" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                    <input type="text" value={prefOriCustom} onChange={e => setPrefOriCustom(e.target.value)} placeholder="e.g. Yoruba, Scottish, English, Catalan" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                   )}
                 </div>
                 <button onClick={() => {
@@ -872,7 +872,7 @@ export default function Onboarding() {
                 </div>
                 <MultiSelectDropdown label="Languages Spoken" options={[...MAJOR_LANGUAGES]} values={languagesSpoken} onChange={setLanguagesSpoken} placeholder="Select languages" />
                 {languagesSpoken.includes("Other") && (
-                  <input type="text" value={languageCustom} onChange={e => setLanguageCustom(e.target.value)} placeholder="Specify other language" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                  <input type="text" value={languageCustom} onChange={e => setLanguageCustom(e.target.value)} placeholder="Specify other language" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                 )}
                 <button onClick={() => setSubStep(9)} disabled={languagesSpoken.length === 0} className="w-full py-4 mt-4 rounded-xl text-sm font-black rose-glow-btn text-white disabled:opacity-50 transition-opacity">Next</button>
               </div>
@@ -886,7 +886,7 @@ export default function Onboarding() {
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Marriage History</label>
-                    <select value={maritalStatus} onChange={e => setMaritalStatus(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                    <select value={maritalStatus} onChange={e => setMaritalStatus(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                       <option value="">Select history</option>
                       <option value="Never married">Never married</option>
                       <option value="Divorced">Divorced</option>
@@ -896,7 +896,7 @@ export default function Onboarding() {
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Smoking</label>
-                    <select value={smoking} onChange={e => setSmoking(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                    <select value={smoking} onChange={e => setSmoking(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                       <option value="">Select</option>
                       <option value="Non-smoker">Non-smoker</option>
                       <option value="Occasional">Occasional</option>
@@ -906,7 +906,7 @@ export default function Onboarding() {
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Drinking</label>
-                    <select value={drinking} onChange={e => setDrinking(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                    <select value={drinking} onChange={e => setDrinking(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                       <option value="">Select</option>
                       <option value="Non-drinker">Non-drinker</option>
                       <option value="Socially">Socially</option>
@@ -926,7 +926,7 @@ export default function Onboarding() {
                 <div className="space-y-4">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Future Partners Children Status</label>
-                    <select value={childrenStatus} onChange={e => setChildrenStatus(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                    <select value={childrenStatus} onChange={e => setChildrenStatus(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                       <option value="">Select status</option>
                       <option value="No Kid(s)">No Kid(s)</option>
                       <option value="With Kid(s)">With Kid(s)</option>
@@ -935,7 +935,7 @@ export default function Onboarding() {
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Vow Timeline</label>
-                    <select value={marriageTimeline} onChange={e => setMarriageTimeline(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                    <select value={marriageTimeline} onChange={e => setMarriageTimeline(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                       <option value="">Timeline</option>
                       <option value="ASAP">ASAP</option>
                       <option value="1-2 years">1-2 years</option>
@@ -945,7 +945,7 @@ export default function Onboarding() {
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Relocation</label>
-                    <select value={willingToRelocate} onChange={e => setWillingToRelocate(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                    <select value={willingToRelocate} onChange={e => setWillingToRelocate(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                       <option value="">Relocate</option>
                       <option value="Yes">Yes</option>
                       <option value="No">No</option>
@@ -964,7 +964,7 @@ export default function Onboarding() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Children Intent</label>
-                  <select value={childrenPreference} onChange={e => setChildrenPreference(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50">
+                  <select value={childrenPreference} onChange={e => setChildrenPreference(e.target.value)} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50">
                     <option value="">Select intent</option>
                     <option value="Want children">Want children</option>
                     <option value="Don't want children">Don't want children</option>
@@ -982,14 +982,14 @@ export default function Onboarding() {
                 </div>
                 <MultiSelectDropdown label="Traits" options={[...MAJOR_TRAITS]} values={idealPartnerTraits} onChange={setIdealPartnerTraits} placeholder="Select traits" />
                 {idealPartnerTraits.includes("Other") && (
-                  <input type="text" value={traitCustom} onChange={e => setTraitCustom(e.target.value)} placeholder="Specify other trait" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white mb-4 focus:outline-none focus:border-[#FF3366]/50" />
+                  <input type="text" value={traitCustom} onChange={e => setTraitCustom(e.target.value)} placeholder="Specify other trait" className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white mb-4 focus:outline-none focus:border-[#E27D8D]/50" />
                 )}
                 
                 <div className="mt-4">
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Ideal Partner Age Range</label>
                   <div className="flex gap-4">
-                    <input type="number" placeholder="Min Age" value={preferredPartnerAgeRange[0]} onChange={(e) => setPreferredPartnerAgeRange([parseInt(e.target.value) || 0, preferredPartnerAgeRange[1]])} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
-                    <input type="number" placeholder="Max Age" value={preferredPartnerAgeRange[1]} onChange={(e) => setPreferredPartnerAgeRange([preferredPartnerAgeRange[0], parseInt(e.target.value) || 0])} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/50" />
+                    <input type="number" placeholder="Min Age" value={preferredPartnerAgeRange[0]} onChange={(e) => setPreferredPartnerAgeRange([parseInt(e.target.value) || 0, preferredPartnerAgeRange[1]])} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
+                    <input type="number" placeholder="Max Age" value={preferredPartnerAgeRange[1]} onChange={(e) => setPreferredPartnerAgeRange([preferredPartnerAgeRange[0], parseInt(e.target.value) || 0])} className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/50" />
                   </div>
                 </div>
 
@@ -999,7 +999,7 @@ export default function Onboarding() {
                     value={marriageExpectations} 
                     onChange={e => setMarriageExpectations(e.target.value)} 
                     placeholder="What are your expectations for marriage?" 
-                    className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white min-h-[80px] focus:outline-none focus:border-[#FF3366]/50" 
+                    className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white min-h-[80px] focus:outline-none focus:border-[#E27D8D]/50" 
                   />
                 </div>
                 
@@ -1090,14 +1090,14 @@ export default function Onboarding() {
 
         {/* Step 4: Mobile App Verification Notice */}
         {step === 4 && (
-          <div className="glass-card rounded-[32px] p-6 sm:p-8 border border-[#FF3366]/30 space-y-6 max-w-lg mx-auto text-center relative overflow-hidden">
-            <div className="w-16 h-16 rounded-2xl bg-[#FF3366]/10 border border-[#FF3366]/30 flex items-center justify-center mx-auto text-[#FF3366]">
+          <div className="glass-card rounded-[32px] p-6 sm:p-8 border border-[#E27D8D]/30 space-y-6 max-w-lg mx-auto text-center relative overflow-hidden">
+            <div className="w-16 h-16 rounded-2xl bg-[#E27D8D]/10 border border-[#E27D8D]/30 flex items-center justify-center mx-auto text-[#E27D8D]">
               <ShieldCheck className="w-8 h-8" />
             </div>
 
             <div className="space-y-2">
               <h2 className="text-2xl font-serif font-black text-white">Biometric & ID Verification</h2>
-              <p className="text-xs uppercase tracking-widest text-[#FF3366] font-bold">
+              <p className="text-xs uppercase tracking-widest text-[#E27D8D] font-bold">
                 Completed Securely via KNOT Mobile App
               </p>
             </div>
@@ -1108,7 +1108,7 @@ export default function Onboarding() {
 
             <div className="bg-[#121721] border border-white/10 rounded-2xl p-4 text-left space-y-3">
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30 flex items-center justify-center text-[#FF3366] text-xs font-bold shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 flex items-center justify-center text-[#E27D8D] text-xs font-bold shrink-0 mt-0.5">
                   1
                 </div>
                 <div className="text-xs text-gray-300">
@@ -1117,7 +1117,7 @@ export default function Onboarding() {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30 flex items-center justify-center text-[#FF3366] text-xs font-bold shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 flex items-center justify-center text-[#E27D8D] text-xs font-bold shrink-0 mt-0.5">
                   2
                 </div>
                 <div className="text-xs text-gray-300">
@@ -1127,10 +1127,10 @@ export default function Onboarding() {
             </div>
 
             {/* Privacy Warning Banner */}
-            <div className="p-4 rounded-2xl bg-[#FF3366]/10 border border-[#FF3366]/25 text-left">
+            <div className="p-4 rounded-2xl bg-[#E27D8D]/10 border border-[#E27D8D]/25 text-left">
               <div className="flex items-center gap-2 mb-1">
-                <Shield className="w-4 h-4 text-[#FF3366]" />
-                <span className="text-[11px] font-bold text-[#FF3366] uppercase tracking-wider">Profile Privacy Notice</span>
+                <Shield className="w-4 h-4 text-[#E27D8D]" />
+                <span className="text-[11px] font-bold text-[#E27D8D] uppercase tracking-wider">Profile Privacy Notice</span>
               </div>
               <p className="text-[11px] text-gray-300 leading-relaxed">
                 If you proceed without mobile verification, your profile will remain <strong>private and hidden</strong> from other members until you complete the verification process through the mobile app.
@@ -1147,7 +1147,7 @@ export default function Onboarding() {
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-gray-400">
                 <span>Mobile App Available on:</span>
-                <span className="font-bold text-[#FF3366]">Android Play Store & iOS TestFlight</span>
+                <span className="font-bold text-[#E27D8D]">Android Play Store & iOS TestFlight</span>
               </div>
             </div>
           </div>
@@ -1158,12 +1158,12 @@ export default function Onboarding() {
           <div className="glass-card rounded-[32px] border border-white/10 flex flex-col h-[500px] overflow-hidden">
             {/* Header */}
             <div className="p-4 bg-[#121721]/90 border-b border-white/5 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#FF3366]/10 flex items-center justify-center text-[#FF3366] border border-[#FF3366]/20">
+              <div className="w-9 h-9 rounded-xl bg-[#E27D8D]/10 flex items-center justify-center text-[#E27D8D] border border-[#E27D8D]/20">
                 <Bot className="w-5 h-5" />
               </div>
               <div>
                 <h4 className="text-xs font-bold">KNOT AI Matchmaking Guide</h4>
-                <p className="text-[9px] uppercase tracking-wider text-[#FF3366] font-bold">Interview Session Active</p>
+                <p className="text-[9px] uppercase tracking-wider text-[#E27D8D] font-bold">Interview Session Active</p>
               </div>
             </div>
 
@@ -1172,7 +1172,7 @@ export default function Onboarding() {
               {messages.map((m, idx) => (
                 <div key={idx} className={`flex items-start gap-3 ${m.role === "user" ? "justify-end" : ""}`}>
                   {m.role === "ai" && (
-                    <div className="w-8 h-8 rounded-full bg-[#FF3366]/15 flex items-center justify-center text-[#FF3366] text-xs font-bold flex-shrink-0">AI</div>
+                    <div className="w-8 h-8 rounded-full bg-[#E27D8D]/15 flex items-center justify-center text-[#E27D8D] text-xs font-bold flex-shrink-0">AI</div>
                   )}
                   <div className={`p-4 rounded-[22px] text-xs leading-relaxed max-w-[80%] ${
                     m.role === "user" 
@@ -1194,7 +1194,7 @@ export default function Onboarding() {
                 onChange={e => setCurrentInput(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleSendMessage()}
                 placeholder="Share your thoughts empathetically..."
-                className="flex-1 bg-white/5 border border-white/5 rounded-full py-3 px-6 text-xs text-white focus:outline-none focus:border-[#FF3366]/50"
+                className="flex-1 bg-white/5 border border-white/5 rounded-full py-3 px-6 text-xs text-white focus:outline-none focus:border-[#E27D8D]/50"
               />
               {interviewQuestionIndex >= interviewPrompts.length && currentInput === "" ? (
                 <button 
@@ -1218,8 +1218,8 @@ export default function Onboarding() {
         {/* Step 6: Cinematic AI Relationship Certificate Reveal */}
         {step === 6 && (
           <div className="space-y-8 animate-fade-in">
-            <div className="glass-card rounded-[36px] p-6 sm:p-8 border border-[#FF3366]/30 shadow-2xl relative overflow-hidden max-w-md mx-auto">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#FF3366]/10 to-transparent rounded-bl-full pointer-events-none" />
+            <div className="glass-card rounded-[36px] p-6 sm:p-8 border border-[#E27D8D]/30 shadow-2xl relative overflow-hidden max-w-md mx-auto">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#E27D8D]/10 to-transparent rounded-bl-full pointer-events-none" />
               
               <div className="text-center space-y-4 mb-6">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase trust-badge">
@@ -1233,7 +1233,7 @@ export default function Onboarding() {
               <div className="space-y-4 pt-4 border-t border-white/5">
                 <div className="flex justify-between items-center py-2 border-b border-white/5">
                   <span className="text-xs text-gray-400 uppercase tracking-widest">Archetype</span>
-                  <span className="text-xs text-[#FF3366] font-black">{archetype.personalityArchetype}</span>
+                  <span className="text-xs text-[#E27D8D] font-black">{archetype.personalityArchetype}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-white/5">
                   <span className="text-xs text-gray-400 uppercase tracking-widest">Attachment Style</span>
@@ -1246,7 +1246,7 @@ export default function Onboarding() {
                   </div>
                   <div className="p-2 rounded-xl bg-white/5">
                     <div className="text-[9px] text-gray-500 uppercase font-black">Seriousness</div>
-                    <div className="text-sm font-black text-[#FF3366]">{archetype.seriousnessLevel}%</div>
+                    <div className="text-sm font-black text-[#E27D8D]">{archetype.seriousnessLevel}%</div>
                   </div>
                   <div className="p-2 rounded-xl bg-white/5">
                     <div className="text-[9px] text-gray-500 uppercase font-black">Trust Score</div>
@@ -1266,8 +1266,8 @@ export default function Onboarding() {
               </div>
 
               {/* Mobile Verification Notice Card in Certificate */}
-              <div className="mt-4 p-3 bg-white/5 border border-[#FF3366]/20 rounded-2xl text-[11px] text-gray-300 text-center">
-                <span className="text-[#FF3366] font-bold block mb-1">📱 Pending Mobile Verification</span>
+              <div className="mt-4 p-3 bg-white/5 border border-[#E27D8D]/20 rounded-2xl text-[11px] text-gray-300 text-center">
+                <span className="text-[#E27D8D] font-bold block mb-1">📱 Pending Mobile Verification</span>
                 Complete your identity check via the KNOT Mobile App to make your profile public in the registry.
               </div>
             </div>

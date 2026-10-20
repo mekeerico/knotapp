@@ -98,18 +98,18 @@ export default function Login() {
   return (
     <main className="min-h-screen bg-[#0A0D14] flex items-center justify-center p-4 relative overflow-hidden">
       {/* Background Orbs */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#FF3366]/15 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#FF5A79]/15 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#E27D8D]/15 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#E27D8D]/15 blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-md z-10 relative">
         <Link href="/" className="inline-block mb-10">
           <span className="text-3xl font-serif font-black tracking-wider text-[#F5F5F1] flex items-center gap-1">
-            KNOT<span className="text-[#FF3366]">.</span>
+            KNOT<span className="text-[#E27D8D]">.</span>
           </span>
         </Link>
 
         <div className="glass-card rounded-[36px] p-8 sm:p-10 border border-white/10 shadow-2xl relative">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#FF3366]/15 to-transparent rounded-bl-full pointer-events-none" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#E27D8D]/15 to-transparent rounded-bl-full pointer-events-none" />
           
           <h1 className="text-2xl font-serif font-black text-white mb-2">
             {isLogin ? "Welcome Back" : "Join the Registry"}
@@ -132,7 +132,7 @@ export default function Login() {
                 value={email} 
                 onChange={e => setEmail(e.target.value)}
                 placeholder="name@email.com" 
-                className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#FF3366]/60 transition-colors"
+                className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 px-4 text-sm text-white focus:outline-none focus:border-[#E27D8D]/60 transition-colors"
                 disabled={isLoading}
                 autoComplete="username"
               />
@@ -146,7 +146,7 @@ export default function Login() {
                   value={password} 
                   onChange={e => setPassword(e.target.value)}
                   placeholder="Enter your password" 
-                  className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 pl-4 pr-12 text-sm text-white focus:outline-none focus:border-[#FF3366]/60 transition-colors"
+                  className="w-full bg-[#121721] border border-white/10 rounded-2xl py-3.5 pl-4 pr-12 text-sm text-white focus:outline-none focus:border-[#E27D8D]/60 transition-colors"
                   disabled={isLoading}
                   autoComplete={isLogin ? "current-password" : "new-password"}
                 />
@@ -167,7 +167,7 @@ export default function Login() {
             >
               <div className={`w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center border transition-all ${
                 rememberMe 
-                  ? "bg-[#FF3366] border-[#FF3366] text-white" 
+                  ? "bg-[#E27D8D] border-[#E27D8D] text-white" 
                   : "bg-[#121721] border-white/20 text-transparent group-hover:border-white/40"
               }`}>
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
@@ -193,15 +193,15 @@ export default function Login() {
           <div className="mt-8 pt-6 border-t border-white/5 text-center space-y-3">
             <p className="text-xs text-gray-400">
               {isLogin ? (
-                <>Not on the registry yet? <button type="button" onClick={() => setIsLogin(false)} className="text-[#FF5A79] font-bold hover:underline">Apply here</button></>
+                <>Not on the registry yet? <button type="button" onClick={() => setIsLogin(false)} className="text-[#E27D8D] font-bold hover:underline">Apply here</button></>
               ) : (
-                <>Already a member? <button type="button" onClick={() => setIsLogin(true)} className="text-[#FF5A79] font-bold hover:underline">Access Registry</button></>
+                <>Already a member? <button type="button" onClick={() => setIsLogin(true)} className="text-[#E27D8D] font-bold hover:underline">Access Registry</button></>
               )}
             </p>
             <div>
               <Link 
                 href="/" 
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#FF5A79] hover:text-white transition-colors"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E27D8D] hover:text-white transition-colors"
               >
                 ← Return to Welcome Page • Read All About KNOT
               </Link>

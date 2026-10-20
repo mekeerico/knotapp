@@ -765,11 +765,11 @@ export default function Dashboard() {
       {/* Activity & Notifications Modal */}
       {showNotificationsModal && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="relative w-full max-w-xl bg-[#121721] rounded-[28px] border border-[#FF3366]/40 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-xl bg-[#121721] rounded-[28px] border border-[#E27D8D]/40 p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#FF3366]/15 border border-[#FF3366]/40 flex items-center justify-center text-[#FF3366]">
+                <div className="w-8 h-8 rounded-full bg-[#E27D8D]/15 border border-[#E27D8D]/40 flex items-center justify-center text-[#E27D8D]">
                   <Bell className="w-4 h-4" />
                 </div>
                 <div>
@@ -781,7 +781,7 @@ export default function Dashboard() {
                 {unreadNotifsCount > 0 && (
                   <button
                     onClick={handleMarkAllNotifsAsRead}
-                    className="text-xs font-semibold text-[#FF3366] hover:underline px-2 py-1 cursor-pointer"
+                    className="text-xs font-semibold text-[#E27D8D] hover:underline px-2 py-1 cursor-pointer"
                   >
                     Mark All Read
                   </button>
@@ -811,7 +811,7 @@ export default function Dashboard() {
                     onClick={() => setNotifCategoryFilter(tab.value)}
                     className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-[#FF3366] text-black shadow-sm shadow-[#FF3366]/40'
+                        ? 'bg-[#E27D8D] text-black shadow-sm shadow-[#E27D8D]/40'
                         : 'bg-white/5 text-gray-400 hover:text-white border border-white/5'
                     }`}
                   >
@@ -832,14 +832,14 @@ export default function Dashboard() {
                     className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 group ${
                       notif.isRead
                         ? 'bg-white/[0.02] border-white/5 hover:border-white/10'
-                        : 'bg-[#18202F] border-[#FF3366]/40 shadow-sm shadow-[#FF3366]/5 hover:border-[#FF3366]'
+                        : 'bg-[#18202F] border-[#E27D8D]/40 shadow-sm shadow-[#E27D8D]/5 hover:border-[#E27D8D]'
                     }`}
                   >
-                    <div className="w-9 h-9 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30 flex items-center justify-center text-[#FF3366] flex-shrink-0 mt-0.5">
+                    <div className="w-9 h-9 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 flex items-center justify-center text-[#E27D8D] flex-shrink-0 mt-0.5">
                       {notif.category === 'verification' && <ShieldCheck className="w-4 h-4 text-emerald-400" />}
-                      {notif.category === 'tiers' && <Sparkles className="w-4 h-4 text-[#FF3366]" />}
+                      {notif.category === 'tiers' && <Sparkles className="w-4 h-4 text-[#E27D8D]" />}
                       {notif.category === 'messages' && <MessageSquare className="w-4 h-4 text-rose-400" />}
-                      {(notif.category === 'matches' || notif.category === 'system') && <Heart className="w-4 h-4 text-[#FF3366]" />}
+                      {(notif.category === 'matches' || notif.category === 'system') && <Heart className="w-4 h-4 text-[#E27D8D]" />}
                     </div>
 
                     <div className="flex-1 min-w-0">
@@ -855,7 +855,7 @@ export default function Dashboard() {
                         {notif.body}
                       </p>
                       {notif.actionLabel && (
-                        <div className="mt-2.5 flex items-center gap-1 text-[11px] font-bold text-[#FF3366] group-hover:underline">
+                        <div className="mt-2.5 flex items-center gap-1 text-[11px] font-bold text-[#E27D8D] group-hover:underline">
                           <span>{notif.actionLabel}</span>
                           <ChevronRight className="w-3.5 h-3.5" />
                         </div>
@@ -863,7 +863,7 @@ export default function Dashboard() {
                     </div>
 
                     {!notif.isRead && (
-                      <span className="w-2 h-2 rounded-full bg-[#FF3366] flex-shrink-0 mt-1 shadow-[0_0_8px_#FF3366]" />
+                      <span className="w-2 h-2 rounded-full bg-[#E27D8D] flex-shrink-0 mt-1 shadow-[0_0_8px_#E27D8D]" />
                     )}
                   </div>
                 ))}
@@ -922,33 +922,33 @@ export default function Dashboard() {
 
               {/* Premium Plan */}
               <div className="glass-card rounded-[24px] p-6 border border-white/5 relative flex flex-col">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2D1B4E] text-[#FF3366] px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-[#FF3366]/20 whitespace-nowrap">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#2D1B4E] text-[#E27D8D] px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-[#E27D8D]/20 whitespace-nowrap">
                   Most Popular
                 </div>
                 <h3 className="text-xl font-black text-white mb-2">Knot Premium</h3>
                 <div className="flex items-end gap-1 mb-6">
-                  <span className="text-3xl font-black text-[#FF3366]">{getFormattedPrice('Premium', userProfile?.residenceCountry).symbol}{getFormattedPrice('Premium', userProfile?.residenceCountry).amount}</span>
+                  <span className="text-3xl font-black text-[#E27D8D]">{getFormattedPrice('Premium', userProfile?.residenceCountry).symbol}{getFormattedPrice('Premium', userProfile?.residenceCountry).amount}</span>
                   <span className="text-xs text-gray-500 font-bold mb-1">/mo</span>
                 </div>
                 <ul className="space-y-4 flex-1 mb-8">
                   <li className="flex items-start gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#FF3366] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#E27D8D] flex-shrink-0 mt-0.5" />
                     <span className="font-bold text-white text-xs">15 AI Matches/Day</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#FF3366] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#E27D8D] flex-shrink-0 mt-0.5" />
                     <span className="text-xs">Unlimited Messaging</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#FF3366] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#E27D8D] flex-shrink-0 mt-0.5" />
                     <span className="text-xs">AI Relationship Coach</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#FF3366] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#E27D8D] flex-shrink-0 mt-0.5" />
                     <span className="text-xs">Detailed Compatibility Breakdowns</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#FF3366] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#E27D8D] flex-shrink-0 mt-0.5" />
                     <span className="text-xs">Advanced Filters</span>
                   </li>
                 </ul>
@@ -958,41 +958,41 @@ export default function Dashboard() {
                     getFormattedPrice('Premium', userProfile?.residenceCountry).usdAmount, 
                     'USD'
                   )}
-                  className="w-full py-3 rounded-xl bg-white/5 hover:bg-[#2D1B4E]/50 border border-white/10 hover:border-[#FF3366]/30 text-white font-bold transition-all text-sm"
+                  className="w-full py-3 rounded-xl bg-white/5 hover:bg-[#2D1B4E]/50 border border-white/10 hover:border-[#E27D8D]/30 text-white font-bold transition-all text-sm"
                 >
                   Select Premium
                 </button>
               </div>
 
               {/* Elite Plan */}
-              <div className="glass-card rounded-[24px] p-6 border border-[#FF3366]/30 relative flex flex-col shadow-lg shadow-[#FF3366]/5 bg-[#FF3366]/5">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#FF3366] text-black px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest whitespace-nowrap">
+              <div className="glass-card rounded-[24px] p-6 border border-[#E27D8D]/30 relative flex flex-col shadow-lg shadow-[#E27D8D]/5 bg-[#E27D8D]/5">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#E27D8D] text-black px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest whitespace-nowrap">
                   Elite Verification
                 </div>
                 <h3 className="text-xl font-black text-white mb-2">Knot Elite</h3>
                 <div className="flex items-end gap-1 mb-6">
-                  <span className="text-3xl font-black text-[#FF3366]">{getFormattedPrice('Elite', userProfile?.residenceCountry).symbol}{getFormattedPrice('Elite', userProfile?.residenceCountry).amount}</span>
+                  <span className="text-3xl font-black text-[#E27D8D]">{getFormattedPrice('Elite', userProfile?.residenceCountry).symbol}{getFormattedPrice('Elite', userProfile?.residenceCountry).amount}</span>
                   <span className="text-xs text-gray-500 font-bold mb-1">/mo</span>
                 </div>
                 <ul className="space-y-4 flex-1 mb-8">
                   <li className="flex items-start gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#FF3366] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#E27D8D] flex-shrink-0 mt-0.5" />
                     <span className="font-bold text-white text-xs">25 Elite Matches/Day</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#FF3366] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#E27D8D] flex-shrink-0 mt-0.5" />
                     <span className="text-xs">Deep Emotional Compatibility Map</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#FF3366] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#E27D8D] flex-shrink-0 mt-0.5" />
                     <span className="text-xs">Highest Trust Visibility</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#FF3366] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#E27D8D] flex-shrink-0 mt-0.5" />
                     <span className="text-xs">Invisible & Incognito Mode</span>
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-300">
-                    <CheckCircle2 className="w-4 h-4 text-[#FF3366] flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-[#E27D8D] flex-shrink-0 mt-0.5" />
                     <span className="text-xs">Priority Matchmaking Placement</span>
                   </li>
                 </ul>
@@ -1061,7 +1061,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2" onClick={() => setIsSidebarOpen(false)}>
               <span className="text-2xl font-serif font-black tracking-wider text-[#F5F5F1] flex items-center gap-1">
-                KNOT<span className="text-[#FF3366]">.</span>
+                KNOT<span className="text-[#E27D8D]">.</span>
               </span>
             </Link>
             <button 
@@ -1076,36 +1076,36 @@ export default function Dashboard() {
           <nav className="space-y-2">
             <button 
               onClick={() => { setActiveTab("matches"); setIsSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "matches" ? "bg-[#2D1B4E] text-[#FF3366] border-l-2 border-[#FF3366]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "matches" ? "bg-[#2D1B4E] text-[#E27D8D] border-l-2 border-[#E27D8D]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
             >
               <Compass className="w-4 h-4" /> Daily Matches
             </button>
             <button 
               onClick={() => { setActiveTab("insights"); setIsSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "insights" ? "bg-[#2D1B4E] text-[#FF3366] border-l-2 border-[#FF3366]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "insights" ? "bg-[#2D1B4E] text-[#E27D8D] border-l-2 border-[#E27D8D]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
             >
               <BrainCircuit className="w-4 h-4" /> Insights Dashboard
             </button>
             <button 
               onClick={() => { setActiveTab("coach"); setIsSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "coach" ? "bg-[#2D1B4E] text-[#FF3366] border-l-2 border-[#FF3366]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "coach" ? "bg-[#2D1B4E] text-[#E27D8D] border-l-2 border-[#E27D8D]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
             >
               <Bot className="w-4 h-4" /> AI Coach
             </button>
             <button 
               onClick={() => { setActiveTab("messages"); setIsSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "messages" ? "bg-[#2D1B4E] text-[#FF3366] border-l-2 border-[#FF3366]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "messages" ? "bg-[#2D1B4E] text-[#E27D8D] border-l-2 border-[#E27D8D]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
             >
               <MessageSquare className="w-4 h-4" /> Messages
             </button>
             <button 
               onClick={() => { setActiveTab("profile"); setIsSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "profile" ? "bg-[#2D1B4E] text-[#FF3366] border-l-2 border-[#FF3366]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${activeTab === "profile" ? "bg-[#2D1B4E] text-[#E27D8D] border-l-2 border-[#E27D8D]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
             >
               <User className="w-4 h-4" /> My Profile
             </button>
             {userProfile?.role === 'ADMIN' && (
-              <Link href="/admin" className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold text-gray-400 hover:text-[#FF3366] hover:bg-white/5 transition-all">
+              <Link href="/admin" className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold text-gray-400 hover:text-[#E27D8D] hover:bg-white/5 transition-all">
                 <Shield className="w-4 h-4" /> Admin Panel
               </Link>
             )}
@@ -1162,12 +1162,12 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => setShowNotificationsModal(true)}
-              className="relative p-2 md:p-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#FF3366]/50 text-gray-300 hover:text-[#FF3366] transition-all flex items-center justify-center cursor-pointer"
+              className="relative p-2 md:p-2.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#E27D8D]/50 text-gray-300 hover:text-[#E27D8D] transition-all flex items-center justify-center cursor-pointer"
               title="Activity & Notifications"
             >
               <Bell className="w-4 h-4" />
               {unreadNotifsCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FF3366] text-white text-[9px] font-black flex items-center justify-center shadow-md">
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#E27D8D] text-white text-[9px] font-black flex items-center justify-center shadow-md">
                   {unreadNotifsCount}
                 </span>
               )}
@@ -1187,13 +1187,13 @@ export default function Dashboard() {
           {/* TAB 1: DAILY MATCHES */}
           {activeTab === "matches" && isLoadingMatches && (
             <div className="flex flex-col items-center justify-center h-64 space-y-4">
-              <Compass className="w-8 h-8 text-[#FF3366] animate-spin" />
+              <Compass className="w-8 h-8 text-[#E27D8D] animate-spin" />
               <p className="text-sm text-gray-400">Curating your AI matches...</p>
             </div>
           )}
           {activeTab === "matches" && !isLoadingMatches && matches.length === 0 && (
             <div className="glass-card rounded-[32px] p-10 sm:p-12 border border-white/10 text-center space-y-5 flex flex-col items-center justify-center max-w-lg mx-auto">
-              <div className="w-18 h-18 rounded-full bg-[#FF3366]/12 border border-[#FF3366]/40 flex items-center justify-center text-[#FF3366] mb-2 p-4">
+              <div className="w-18 h-18 rounded-full bg-[#E27D8D]/12 border border-[#E27D8D]/40 flex items-center justify-center text-[#E27D8D] mb-2 p-4">
                 <Compass className="w-9 h-9" />
               </div>
               <h3 className="text-2xl font-serif font-bold text-white">Curating Sovereign Matches</h3>
@@ -1203,7 +1203,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={loadMatchesAndProfile}
-                className="mt-2 px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black bg-[#FF3366] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#FF3366]/20 cursor-pointer"
+                className="mt-2 px-8 py-3.5 rounded-full text-xs uppercase tracking-widest font-black bg-[#E27D8D] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#E27D8D]/20 cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" /> Check for New Candidates
               </button>
@@ -1215,7 +1215,7 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
               {/* Profile Card & Mobile-Style Circular Action Buttons */}
               <div className="md:col-span-7 flex flex-col items-center space-y-5">
-                <div className="w-full glass-card rounded-[32px] overflow-hidden border border-[#FF3366]/30 p-3 sm:p-4 shadow-2xl">
+                <div className="w-full glass-card rounded-[32px] overflow-hidden border border-[#E27D8D]/30 p-3 sm:p-4 shadow-2xl">
                   <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-900 flex items-center justify-center group">
                     {activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl ? (
                       <img 
@@ -1257,7 +1257,7 @@ export default function Dashboard() {
                             <div 
                               key={i} 
                               onClick={(e) => { e.stopPropagation(); setActiveMatchImageIndex(i); }}
-                              className={`h-1 flex-1 rounded-full cursor-pointer transition-all ${i === activeMatchImageIndex ? 'bg-[#FF3366] shadow-md shadow-[#FF3366]/60' : 'bg-white/35'}`} 
+                              className={`h-1 flex-1 rounded-full cursor-pointer transition-all ${i === activeMatchImageIndex ? 'bg-[#E27D8D] shadow-md shadow-[#E27D8D]/60' : 'bg-white/35'}`} 
                             />
                           ))}
                         </div>
@@ -1266,9 +1266,9 @@ export default function Dashboard() {
 
                     {/* Top Compatibility Pill & Gold Verified Badge */}
                     <div className={`absolute ${activeMatch.imageUrls?.length > 1 ? 'top-6' : 'top-4'} left-4 right-4 flex items-center justify-between z-20`}>
-                      <div className="px-3 py-1.5 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#FF3366] shadow-[0_0_10px_rgba(212,175,55,0.25)] flex items-center gap-1.5">
-                        <Heart className="w-3.5 h-3.5 text-[#FF3366] fill-[#FF3366]" />
-                        <span className="text-[11px] font-bold tracking-wider text-[#FF3366]">
+                      <div className="px-3 py-1.5 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#E27D8D] shadow-[0_0_10px_rgba(212,175,55,0.25)] flex items-center gap-1.5">
+                        <Heart className="w-3.5 h-3.5 text-[#E27D8D] fill-[#E27D8D]" />
+                        <span className="text-[11px] font-bold tracking-wider text-[#E27D8D]">
                           {(activeMatch.compatibilityScore || 92) >= 80
                             ? `${activeMatch.compatibilityScore || 92}% ALIGNED`
                             : `${activeMatch.compatibilityScore || 75}% CLOSEST MATCH`}
@@ -1277,15 +1277,15 @@ export default function Dashboard() {
 
                       <div className="flex items-center gap-1.5">
                         {activeMatch.imageUrls?.length > 1 && (
-                          <span className="px-2.5 py-1 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#FF3366]/40 text-[10px] font-bold text-[#FF3366]">
+                          <span className="px-2.5 py-1 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#E27D8D]/40 text-[10px] font-bold text-[#E27D8D]">
                             {activeMatchImageIndex + 1}/{activeMatch.imageUrls.length}
                           </span>
                         )}
-                        <div className="px-2.5 py-1 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#FF3366]/50 flex items-center gap-1.5">
-                          <span className="w-4 h-4 rounded-full bg-gradient-to-br from-[#F3E5AB] via-[#FF3366] to-[#AA7C11] flex items-center justify-center text-black text-[10px] font-black">
+                        <div className="px-2.5 py-1 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#E27D8D]/50 flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-full bg-gradient-to-br from-[#F3E5AB] via-[#E27D8D] to-[#AA7C11] flex items-center justify-center text-black text-[10px] font-black">
                             ✓
                           </span>
-                          <span className="text-[10px] font-bold tracking-wider text-[#FF3366] border border-[#FF3366]/40 rounded px-1.5 py-0.5">
+                          <span className="text-[10px] font-bold tracking-wider text-[#E27D8D] border border-[#E27D8D]/40 rounded px-1.5 py-0.5">
                             GOLD
                           </span>
                         </div>
@@ -1298,16 +1298,16 @@ export default function Dashboard() {
                       className="absolute bottom-0 left-0 right-0 pt-24 pb-5 px-5 bg-gradient-to-t from-black/95 via-black/55 to-transparent z-10 cursor-pointer group/title"
                     >
                       <div className="flex items-center gap-2">
-                        <h3 className="text-2xl font-serif font-bold text-white group-hover/title:text-[#FF3366] transition-colors truncate">
+                        <h3 className="text-2xl font-serif font-bold text-white group-hover/title:text-[#E27D8D] transition-colors truncate">
                           {activeMatch.firstName} {activeMatch.lastName}{formatAgeOrDob(activeMatch.dateOfBirth) ? `, ${formatAgeOrDob(activeMatch.dateOfBirth)}` : ''}
                         </h3>
-                        <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#F3E5AB] via-[#FF3366] to-[#AA7C11] flex items-center justify-center text-black text-xs font-black shrink-0 shadow-sm">
+                        <span className="w-5 h-5 rounded-full bg-gradient-to-br from-[#F3E5AB] via-[#E27D8D] to-[#AA7C11] flex items-center justify-center text-black text-xs font-black shrink-0 shadow-sm">
                           ✓
                         </span>
                       </div>
 
                       <div className="flex items-center gap-1.5 text-xs text-gray-300 font-medium mt-1 truncate">
-                        <Briefcase className="w-3.5 h-3.5 text-[#FF3366] shrink-0" />
+                        <Briefcase className="w-3.5 h-3.5 text-[#E27D8D] shrink-0" />
                         <span className="truncate">{activeMatch.occupation || 'Professional'}</span>
                         <span className="text-gray-500 mx-1">•</span>
                         <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
@@ -1316,7 +1316,7 @@ export default function Dashboard() {
                         </span>
                       </div>
 
-                      <div className="mt-2.5 flex items-center justify-between text-xs font-semibold text-[#FF3366] group-hover/title:underline">
+                      <div className="mt-2.5 flex items-center justify-between text-xs font-semibold text-[#E27D8D] group-hover/title:underline">
                         <span>View Psychological Compatibility & Vows</span>
                         <ChevronRight className="w-4 h-4" />
                       </div>
@@ -1341,9 +1341,9 @@ export default function Dashboard() {
                     type="button"
                     onClick={() => setActiveTab("matchProfile")}
                     title="View Psychological Compatibility & Vows"
-                    className="w-16 h-16 rounded-full bg-[#121721] border-[1.5px] border-[#FF3366]/60 shadow-[0_4px_18px_rgba(212,175,55,0.3)] flex items-center justify-center text-[#FF3366] hover:border-[#FF3366] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    className="w-16 h-16 rounded-full bg-[#121721] border-[1.5px] border-[#E27D8D]/60 shadow-[0_4px_18px_rgba(212,175,55,0.3)] flex items-center justify-center text-[#E27D8D] hover:border-[#E27D8D] hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
-                    <Star className="w-7 h-7 fill-[#FF3366] text-[#FF3366]" />
+                    <Star className="w-7 h-7 fill-[#E27D8D] text-[#E27D8D]" />
                   </button>
 
                   {/* Like & Connect Button (Love / Heart) */}
@@ -1351,9 +1351,9 @@ export default function Dashboard() {
                     type="button"
                     onClick={handleConnect}
                     title="Connect & Initiate Marriage Conversation"
-                    className="w-14 h-14 rounded-full bg-[#121721] border-[1.5px] border-[#FF3366]/50 shadow-[0_4px_16px_rgba(225,29,72,0.3)] flex items-center justify-center text-[#FF3366] hover:border-[#FF3366] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    className="w-14 h-14 rounded-full bg-[#121721] border-[1.5px] border-[#E27D8D]/50 shadow-[0_4px_16px_rgba(225,29,72,0.3)] flex items-center justify-center text-[#E27D8D] hover:border-[#E27D8D] hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
-                    <Heart className="w-6 h-6 fill-[#FF3366] text-[#FF3366]" />
+                    <Heart className="w-6 h-6 fill-[#E27D8D] text-[#E27D8D]" />
                   </button>
                 </div>
               </div>
@@ -1361,16 +1361,16 @@ export default function Dashboard() {
               {/* Match Details & AI Explanations */}
               <div className="md:col-span-5 space-y-6">
                 <div className="glass-card rounded-[28px] p-6 border border-white/10 space-y-6">
-                  <h4 className="text-xs uppercase tracking-widest text-[#FF3366] font-black">Compatibility Profile</h4>
+                  <h4 className="text-xs uppercase tracking-widest text-[#E27D8D] font-black">Compatibility Profile</h4>
                   
                   <div className="space-y-3">
                     <div>
                       <div className="flex justify-between text-xs font-bold mb-1">
                         <span className="text-gray-400">Values Alignment</span>
-                        <span className="text-[#FF3366]">{activeMatch.scores?.valuesAlignment || 95}%</span>
+                        <span className="text-[#E27D8D]">{activeMatch.scores?.valuesAlignment || 95}%</span>
                       </div>
                       <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#FF3366]" style={{ width: `${activeMatch.scores?.valuesAlignment || 95}%` }} />
+                        <div className="h-full bg-[#E27D8D]" style={{ width: `${activeMatch.scores?.valuesAlignment || 95}%` }} />
                       </div>
                     </div>
                     <div>
@@ -1395,8 +1395,8 @@ export default function Dashboard() {
                 </div>
 
                 {/* AI Explanation Glow Box */}
-                <div className="glass-card rounded-[28px] p-6 border border-[#FF3366]/30 shadow-lg shadow-[#FF3366]/5 space-y-4">
-                  <div className="flex items-center gap-2 text-sm text-[#FF3366] font-black">
+                <div className="glass-card rounded-[28px] p-6 border border-[#E27D8D]/30 shadow-lg shadow-[#E27D8D]/5 space-y-4">
+                  <div className="flex items-center gap-2 text-sm text-[#E27D8D] font-black">
                     <Bot className="w-5 h-5 animate-pulse" /> Why You Matched
                   </div>
                   <p className="text-xs text-gray-300 leading-relaxed font-sans">
@@ -1418,7 +1418,7 @@ export default function Dashboard() {
                 <ArrowLeft className="w-5 h-5" /> Back to Curated Match
               </button>
               
-              <div className="glass-card rounded-[32px] overflow-hidden border border-[#FF3366]/30">
+              <div className="glass-card rounded-[32px] overflow-hidden border border-[#E27D8D]/30">
                 <div className="relative h-[400px] md:h-[500px] group">
                   {activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl ? (
                     <img src={activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl} alt={activeMatch.firstName} className="w-full h-full object-cover object-center transition-all duration-500" />
@@ -1455,7 +1455,7 @@ export default function Dashboard() {
                   {/* Tags */}
                   <div className="flex flex-wrap gap-2">
                     <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-gray-300">Archetype: {activeMatch.archetype}</span>
-                    <span className="px-4 py-2 rounded-full bg-[#2D1B4E]/30 border border-[#FF3366]/20 text-xs font-bold text-[#FF3366]">Attachment: {activeMatch.attachment}</span>
+                    <span className="px-4 py-2 rounded-full bg-[#2D1B4E]/30 border border-[#E27D8D]/20 text-xs font-bold text-[#E27D8D]">Attachment: {activeMatch.attachment}</span>
                     <span className="px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-400">Trust Score: {activeMatch.trustScore}%</span>
                     <span className="px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-bold text-blue-400">Readiness: {activeMatch.readiness}%</span>
                   </div>
@@ -1574,7 +1574,7 @@ export default function Dashboard() {
                         <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-3">Ideal Partner Traits</h4>
                         <div className="flex flex-wrap gap-2">
                           {activeMatch.idealPartnerTraits?.map((t: string) => (
-                            <span key={t} className="px-3 py-1.5 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/20 text-xs font-bold text-[#FF3366]">{t}</span>
+                            <span key={t} className="px-3 py-1.5 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/20 text-xs font-bold text-[#E27D8D]">{t}</span>
                           )) || <p className="text-sm text-gray-500 italic">Not listed</p>}
                         </div>
                       </div>
@@ -1606,8 +1606,8 @@ export default function Dashboard() {
           {activeTab === "insights" && (
             <div className="space-y-8">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="p-6 rounded-[24px] glass-card border border-[#FF3366]/20 text-center space-y-2">
-                  <Award className="w-8 h-8 text-[#FF3366] mx-auto" />
+                <div className="p-6 rounded-[24px] glass-card border border-[#E27D8D]/20 text-center space-y-2">
+                  <Award className="w-8 h-8 text-[#E27D8D] mx-auto" />
                   <div className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Readiness Index</div>
                   <div className="text-3xl font-serif font-black text-white">88%</div>
                   <span className="text-[9px] text-[#10B981] font-bold uppercase">Highly Marriage Ready</span>
@@ -1631,7 +1631,7 @@ export default function Dashboard() {
                 <h3 className="text-xl font-serif font-bold">Psychological Alignment Map</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-[#FF3366]">Personality Archetype</h4>
+                    <h4 className="text-sm font-semibold text-[#E27D8D]">Personality Archetype</h4>
                     <p className="text-xs text-gray-400 leading-relaxed">
                       You are registered as an **Intentional Builder**. You approach relationship milestones deliberately, prioritizing family values, structural boundaries, and joint growth curves.
                     </p>
@@ -1651,12 +1651,12 @@ export default function Dashboard() {
           {activeTab === "coach" && (
             <div className="glass-card rounded-[32px] border border-white/10 flex flex-col h-[550px] overflow-hidden">
               <div className="p-4 bg-[#121721]/90 border-b border-white/5 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#FF3366]/10 flex items-center justify-center text-[#FF3366] border border-[#FF3366]/20">
+                <div className="w-10 h-10 rounded-2xl bg-[#E27D8D]/10 flex items-center justify-center text-[#E27D8D] border border-[#E27D8D]/20">
                   <Bot className="w-6 h-6" />
                 </div>
                 <div>
                   <h4 className="text-sm font-bold">Counselor KNOT</h4>
-                  <p className="text-[9px] uppercase tracking-wider text-[#FF3366] font-bold">Active Coaching Session</p>
+                  <p className="text-[9px] uppercase tracking-wider text-[#E27D8D] font-bold">Active Coaching Session</p>
                 </div>
               </div>
 
@@ -1664,7 +1664,7 @@ export default function Dashboard() {
                 {coachMessages.map((m, idx) => (
                   <div key={idx} className={`flex items-start gap-3 ${m.role === "user" ? "justify-end" : ""}`}>
                     {m.role === "ai" && (
-                      <div className="w-8 h-8 rounded-full bg-[#FF3366]/15 flex items-center justify-center text-[#FF3366] text-xs font-bold flex-shrink-0">AI</div>
+                      <div className="w-8 h-8 rounded-full bg-[#E27D8D]/15 flex items-center justify-center text-[#E27D8D] text-xs font-bold flex-shrink-0">AI</div>
                     )}
                     <div className={`p-4 rounded-[22px] text-xs leading-relaxed max-w-[80%] ${
                       m.role === "user" 
@@ -1685,11 +1685,11 @@ export default function Dashboard() {
                   onChange={e => setCoachInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && handleSendCoachMessage()}
                   placeholder="Ask for advice on attachment, relocation, timelines..."
-                  className="flex-1 bg-white/5 border border-white/5 rounded-full py-3 px-6 text-xs text-white focus:outline-none focus:border-[#FF3366]/50"
+                  className="flex-1 bg-white/5 border border-white/5 rounded-full py-3 px-6 text-xs text-white focus:outline-none focus:border-[#E27D8D]/50"
                 />
                 <button 
                   onClick={handleSendCoachMessage}
-                  className="w-10 h-10 rounded-full bg-[#2D1B4E] flex items-center justify-center text-white hover:bg-[#FF3366] hover:text-black transition-colors"
+                  className="w-10 h-10 rounded-full bg-[#2D1B4E] flex items-center justify-center text-white hover:bg-[#E27D8D] hover:text-black transition-colors"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -1709,7 +1709,7 @@ export default function Dashboard() {
                     <button 
                       key={m.partner?.id}
                       onClick={() => setActiveChatId(m.partner?.id || null)}
-                      className={`w-full flex items-center gap-3 p-3 rounded-2xl border text-left transition-all ${activeChatId === m.partner?.id ? "bg-[#2D1B4E]/30 border-[#FF3366]/20" : "bg-white/[0.02] border-white/5 hover:bg-white/5"}`}
+                      className={`w-full flex items-center gap-3 p-3 rounded-2xl border text-left transition-all ${activeChatId === m.partner?.id ? "bg-[#2D1B4E]/30 border-[#E27D8D]/20" : "bg-white/[0.02] border-white/5 hover:bg-white/5"}`}
                     >
                       <div className="w-10 h-10 rounded-full bg-gray-800 overflow-hidden flex-shrink-0">
                         {m.partner?.photoUrl ? (
@@ -1776,21 +1776,21 @@ export default function Dashboard() {
 
                 {/* AI Safety/Prompt Indicator */}
                 {aiChatTip && (
-                  <div className="p-3 bg-[#FF3366]/10 border-t border-[#FF3366]/20 text-[10px] text-[#FF3366] font-semibold flex items-center gap-2">
+                  <div className="p-3 bg-[#E27D8D]/10 border-t border-[#E27D8D]/20 text-[10px] text-[#E27D8D] font-semibold flex items-center gap-2">
                     <Bot className="w-4 h-4 flex-shrink-0 animate-bounce" /> {aiChatTip}
                   </div>
                 )}
 
                 {isMessageLimitReached ? (
-                  <div className="p-4 bg-[#121721]/95 border-t border-[#FF3366]/40 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="p-4 bg-[#121721]/95 border-t border-[#E27D8D]/40 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <div className="flex items-center gap-2.5 text-xs text-gray-300">
-                      <Lock className="w-4 h-4 text-[#FF3366] flex-shrink-0" />
+                      <Lock className="w-4 h-4 text-[#E27D8D] flex-shrink-0" />
                       <span>Free tier messaging limit reached. Upgrade to continue unlimited conversations.</span>
                     </div>
                     <button 
                       type="button"
                       onClick={() => setShowSubscriptionModal(true)}
-                      className="px-4 py-2 rounded-xl bg-[#FF3366] text-black text-xs font-black uppercase tracking-wider hover:bg-[#E5C158] transition-all flex items-center gap-1.5 shadow-md shadow-[#FF3366]/20 flex-shrink-0 cursor-pointer"
+                      className="px-4 py-2 rounded-xl bg-[#E27D8D] text-black text-xs font-black uppercase tracking-wider hover:bg-[#E5C158] transition-all flex items-center gap-1.5 shadow-md shadow-[#E27D8D]/20 flex-shrink-0 cursor-pointer"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>Upgrade Plan</span>
@@ -1804,7 +1804,7 @@ export default function Dashboard() {
                       onChange={e => setChatInput(e.target.value)}
                       onKeyDown={e => e.key === "Enter" && handleSendChatMessage()}
                       placeholder="Type an emotionally authentic message..."
-                      className="flex-1 bg-white/5 border border-white/5 rounded-full py-3 px-6 text-xs text-white focus:outline-none focus:border-[#FF3366]/50"
+                      className="flex-1 bg-white/5 border border-white/5 rounded-full py-3 px-6 text-xs text-white focus:outline-none focus:border-[#E27D8D]/50"
                     />
                     <button 
                       onClick={handleSendChatMessage}
@@ -1863,7 +1863,7 @@ export default function Dashboard() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
                     <button 
                       onClick={() => setShowPreferencesModal(true)}
-                      className="w-full py-2.5 px-3 rounded-xl bg-[#FF3366]/15 border border-[#FF3366]/40 text-xs font-bold text-[#FF3366] hover:bg-[#FF3366]/25 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                      className="w-full py-2.5 px-3 rounded-xl bg-[#E27D8D]/15 border border-[#E27D8D]/40 text-xs font-bold text-[#E27D8D] hover:bg-[#E27D8D]/25 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                     >
                       <Sliders className="w-3.5 h-3.5" /> Match Preferences
                     </button>
@@ -1880,7 +1880,7 @@ export default function Dashboard() {
                 <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-3 flex flex-col justify-center">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black mb-1">Identity Verification</h4>
-                    <span className="text-[10px] text-[#FF3366] font-bold">Didit Sovereign KYC</span>
+                    <span className="text-[10px] text-[#E27D8D] font-bold">Didit Sovereign KYC</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span>Government ID Scan</span>
@@ -1893,7 +1893,7 @@ export default function Dashboard() {
                   {userProfile?.isVerified === false ? (
                     <button
                       onClick={() => setShowDiditModal(true)}
-                      className="mt-3 py-2.5 px-4 rounded-xl text-xs font-black bg-[#FF3366] text-black hover:bg-[#E5C158] transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                      className="mt-3 py-2.5 px-4 rounded-xl text-xs font-black bg-[#E27D8D] text-black hover:bg-[#E5C158] transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                     >
                       <ShieldCheck className="w-4 h-4" /> Verify with Didit
                     </button>
@@ -1916,13 +1916,13 @@ export default function Dashboard() {
                     <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group">
                       <img src={photo} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
                       {idx === primaryPhotoIndex ? (
-                        <div className="absolute top-2 left-2 bg-[#FF3366] px-2 py-0.5 rounded-md text-[8px] font-black uppercase text-black z-10">
+                        <div className="absolute top-2 left-2 bg-[#E27D8D] px-2 py-0.5 rounded-md text-[8px] font-black uppercase text-black z-10">
                           Primary
                         </div>
                       ) : (
                         <button
                           onClick={() => setPrimaryPhotoIndex(idx)}
-                          className="absolute bottom-2 left-2 bg-black/70 hover:bg-[#FF3366] hover:text-black text-[8px] font-black uppercase text-white px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          className="absolute bottom-2 left-2 bg-black/70 hover:bg-[#E27D8D] hover:text-black text-[8px] font-black uppercase text-white px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         >
                           Set Primary
                         </button>
@@ -1940,7 +1940,7 @@ export default function Dashboard() {
                     </div>
                   ))}
                   {userPhotos.length < 5 && (
-                    <button onClick={() => router.push('/edit-profile')} className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 hover:border-[#FF3366]/50 hover:bg-[#FF3366]/5 transition-all">
+                    <button onClick={() => router.push('/edit-profile')} className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 hover:border-[#E27D8D]/50 hover:bg-[#E27D8D]/5 transition-all">
                       <Camera className="w-6 h-6 text-gray-400" />
                       <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Add Photo</span>
                     </button>
@@ -1955,7 +1955,7 @@ export default function Dashboard() {
                   <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black">Psychological Profile</h4>
                   <div className="flex flex-wrap gap-2">
                     <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-gray-300 font-medium">✔ The Intentional Builder</span>
-                    <span className="px-3 py-1.5 rounded-full bg-[#2D1B4E]/30 border border-[#FF3366]/20 text-xs text-[#FF3366] font-medium">✔ Secure Attachment</span>
+                    <span className="px-3 py-1.5 rounded-full bg-[#2D1B4E]/30 border border-[#E27D8D]/20 text-xs text-[#E27D8D] font-medium">✔ Secure Attachment</span>
                   </div>
                 </div>
 
@@ -1975,7 +1975,7 @@ export default function Dashboard() {
                   </div>
 
                   <div className="p-5 rounded-2xl bg-[#121721] border border-white/10">
-                    <h5 className="text-[10px] text-[#FF3366] uppercase tracking-widest font-black mb-3">Current Residence</h5>
+                    <h5 className="text-[10px] text-[#E27D8D] uppercase tracking-widest font-black mb-3">Current Residence</h5>
                     <div className="grid grid-cols-3 gap-2 mb-4">
                       <div><div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Country</div><div className="text-sm text-white font-bold">{userProfile?.residenceCountry || "USA"}</div></div>
                       <div><div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">State</div><div className="text-sm text-white font-bold">{userProfile?.residenceState || "MA"}</div></div>
@@ -2043,9 +2043,9 @@ export default function Dashboard() {
                   <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
                     <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-2">Ideal Partner Traits</div>
                     <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1.5 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30 text-[#FF3366] text-[10px] font-bold uppercase tracking-wider">Emotionally Available</span>
-                      <span className="px-3 py-1.5 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30 text-[#FF3366] text-[10px] font-bold uppercase tracking-wider">Loyal</span>
-                      <span className="px-3 py-1.5 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30 text-[#FF3366] text-[10px] font-bold uppercase tracking-wider">Driven</span>
+                      <span className="px-3 py-1.5 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 text-[#E27D8D] text-[10px] font-bold uppercase tracking-wider">Emotionally Available</span>
+                      <span className="px-3 py-1.5 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 text-[#E27D8D] text-[10px] font-bold uppercase tracking-wider">Loyal</span>
+                      <span className="px-3 py-1.5 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 text-[#E27D8D] text-[10px] font-bold uppercase tracking-wider">Driven</span>
                     </div>
                   </div>
 
@@ -2075,13 +2075,13 @@ export default function Dashboard() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs">
                         <span>Active Plan</span>
-                        <span className="text-[#FF3366] font-bold">Premium Alignment (Live)</span>
+                        <span className="text-[#E27D8D] font-bold">Premium Alignment (Live)</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span>Renews On</span>
                         <span className="text-gray-400">June 16, 2026</span>
                       </div>
-                      <div className="mt-2 p-2.5 rounded-xl bg-[#FF3366]/10 border border-[#FF3366]/20 text-[10px] text-[#FF3366] font-black text-center uppercase tracking-wide">
+                      <div className="mt-2 p-2.5 rounded-xl bg-[#E27D8D]/10 border border-[#E27D8D]/20 text-[10px] text-[#E27D8D] font-black text-center uppercase tracking-wide">
                         🌟 Premium Membership Active
                       </div>
                     </div>
@@ -2093,7 +2093,7 @@ export default function Dashboard() {
                       </div>
                       <button
                         onClick={() => setShowSubscriptionModal(true)}
-                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#FF3366] to-[#AA7C11] text-[#0A0E14] font-black text-xs uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#E27D8D] to-[#AA7C11] text-[#0A0E14] font-black text-xs uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                       >
                         <Sparkles className="w-4 h-4" /> Upgrade to Premium
                       </button>
@@ -2111,21 +2111,21 @@ export default function Dashboard() {
       {/* Mutual Match Modal */}
       {showMatchModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="glass-card rounded-[36px] max-w-sm w-full p-8 border border-[#FF3366]/30 text-center space-y-6 animate-in fade-in zoom-in duration-300">
-            <div className="w-20 h-20 mx-auto rounded-full bg-[#FF3366]/15 flex items-center justify-center text-[#FF3366] animate-bounce">
+          <div className="glass-card rounded-[36px] max-w-sm w-full p-8 border border-[#E27D8D]/30 text-center space-y-6 animate-in fade-in zoom-in duration-300">
+            <div className="w-20 h-20 mx-auto rounded-full bg-[#E27D8D]/15 flex items-center justify-center text-[#E27D8D] animate-bounce">
               <Heart className="w-10 h-10 fill-current" />
             </div>
             
             <div className="space-y-2">
               <h3 className="text-2xl font-serif font-black text-white">Mutual Match!</h3>
               <p className="text-xs text-gray-300 font-sans">
-                Congratulations! You and <span className="text-[#FF3366] font-bold">{connectedMatchName}</span> are mutually aligned and marriage ready.
+                Congratulations! You and <span className="text-[#E27D8D] font-bold">{connectedMatchName}</span> are mutually aligned and marriage ready.
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-2">
               <div className="text-[10px] text-gray-400 uppercase tracking-widest font-black">Compatibility Score</div>
-              <div className="text-3xl font-serif font-black text-[#FF3366]">
+              <div className="text-3xl font-serif font-black text-[#E27D8D]">
                 {isCalculatingMatch ? <span className="text-xl animate-pulse text-gray-400">Analyzing...</span> : `${matchCompatibility?.compatibilityScore || 94}%`}
               </div>
             </div>
@@ -2165,7 +2165,7 @@ export default function Dashboard() {
       {/* Didit Sovereign KYC Verification Modal */}
       {showDiditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="glass-card rounded-[32px] max-w-md w-full p-6 sm:p-8 border border-[#FF3366]/40 text-center space-y-5 animate-in fade-in zoom-in duration-300 relative">
+          <div className="glass-card rounded-[32px] max-w-md w-full p-6 sm:p-8 border border-[#E27D8D]/40 text-center space-y-5 animate-in fade-in zoom-in duration-300 relative">
             <button
               onClick={() => {
                 setShowDiditModal(false);
@@ -2176,13 +2176,13 @@ export default function Dashboard() {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-[#FF3366]/15 border border-[#FF3366]/30 flex items-center justify-center text-[#FF3366]">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-[#E27D8D]/15 border border-[#E27D8D]/30 flex items-center justify-center text-[#E27D8D]">
               <ShieldCheck className="w-8 h-8" />
             </div>
 
             <div className="space-y-2">
               <h3 className="text-xl font-serif font-black text-white">Didit Sovereign Identity Verification</h3>
-              <p className="text-xs uppercase tracking-widest text-[#FF3366] font-bold">
+              <p className="text-xs uppercase tracking-widest text-[#E27D8D] font-bold">
                 Completed Exclusively on KNOT Mobile App
               </p>
             </div>
@@ -2193,7 +2193,7 @@ export default function Dashboard() {
 
             <div className="bg-[#121721] border border-white/10 rounded-2xl p-4 text-left space-y-3">
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30 flex items-center justify-center text-[#FF3366] text-xs font-bold shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 flex items-center justify-center text-[#E27D8D] text-xs font-bold shrink-0 mt-0.5">
                   1
                 </div>
                 <div className="text-xs text-gray-300">
@@ -2202,7 +2202,7 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30 flex items-center justify-center text-[#FF3366] text-xs font-bold shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 flex items-center justify-center text-[#E27D8D] text-xs font-bold shrink-0 mt-0.5">
                   2
                 </div>
                 <div className="text-xs text-gray-300">
@@ -2211,23 +2211,23 @@ export default function Dashboard() {
               </div>
 
               <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-[#FF3366]/10 border border-[#FF3366]/30 flex items-center justify-center text-[#FF3366] text-xs font-bold shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 flex items-center justify-center text-[#E27D8D] text-xs font-bold shrink-0 mt-0.5">
                   3
                 </div>
                 <div className="text-xs text-gray-300">
-                  <span className="font-bold text-white">Verify in Profile:</span> Navigate to <span className="text-[#FF3366] font-semibold">Profile &gt; Sovereign Identity Verification</span> to complete the 60-second ID scan and selfie liveness check.
+                  <span className="font-bold text-white">Verify in Profile:</span> Navigate to <span className="text-[#E27D8D] font-semibold">Profile &gt; Sovereign Identity Verification</span> to complete the 60-second ID scan and selfie liveness check.
                 </div>
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#FF3366]/10 border border-[#FF3366]/20 text-[11px] text-gray-300 text-left">
+            <div className="p-3 rounded-xl bg-[#E27D8D]/10 border border-[#E27D8D]/20 text-[11px] text-gray-300 text-left">
               🔒 Once verified on the mobile app, your verified Gold Trust Seal and public visibility will sync automatically to this web dashboard.
             </div>
 
             <div className="pt-2 flex flex-col gap-2">
               <button
                 onClick={() => setShowDiditModal(false)}
-                className="w-full py-3.5 rounded-xl text-xs font-black bg-[#FF3366] text-black hover:bg-[#E5C158] transition flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                className="w-full py-3.5 rounded-xl text-xs font-black bg-[#E27D8D] text-black hover:bg-[#E5C158] transition flex items-center justify-center gap-2 cursor-pointer shadow-lg"
               >
                 <CheckCircle2 className="w-4 h-4" /> I Understand — Proceed on Mobile
               </button>
@@ -2239,10 +2239,10 @@ export default function Dashboard() {
             {/* Partner Match Preferences & Settings Modal */}
       {showPreferencesModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-2xl bg-[#0F141C] border border-[#FF3366]/40 rounded-[28px] p-6 sm:p-8 shadow-2xl space-y-6 my-8 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-[#0F141C] border border-[#E27D8D]/40 rounded-[28px] p-6 sm:p-8 shadow-2xl space-y-6 my-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#FF3366]/15 border border-[#FF3366]/40 flex items-center justify-center text-[#FF3366]">
+                <div className="w-10 h-10 rounded-full bg-[#E27D8D]/15 border border-[#E27D8D]/40 flex items-center justify-center text-[#E27D8D]">
                   <Sliders className="w-5 h-5" />
                 </div>
                 <div>
@@ -2263,7 +2263,7 @@ export default function Dashboard() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <label className="font-bold text-gray-300 uppercase tracking-wider text-[11px]">Partner Age Range</label>
-                  <span className="text-[#FF3366] font-bold">{prefAgeMin} - {prefAgeMax} Years Old</span>
+                  <span className="text-[#E27D8D] font-bold">{prefAgeMin} - {prefAgeMax} Years Old</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -2274,7 +2274,7 @@ export default function Dashboard() {
                       max="70"
                       value={prefAgeMin}
                       onChange={(e) => setPrefAgeMin(Math.min(parseInt(e.target.value) || 18, prefAgeMax))}
-                      className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#FF3366] outline-none"
+                      className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E27D8D] outline-none"
                     />
                   </div>
                   <div>
@@ -2285,7 +2285,7 @@ export default function Dashboard() {
                       max="75"
                       value={prefAgeMax}
                       onChange={(e) => setPrefAgeMax(Math.max(parseInt(e.target.value) || 45, prefAgeMin))}
-                      className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#FF3366] outline-none"
+                      className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E27D8D] outline-none"
                     />
                   </div>
                 </div>
@@ -2300,7 +2300,7 @@ export default function Dashboard() {
                       key={status}
                       type="button"
                       onClick={() => setPrefChildrenStatus(status)}
-                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${prefChildrenStatus === status ? 'bg-[#FF3366] text-black border-[#FF3366] font-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${prefChildrenStatus === status ? 'bg-[#E27D8D] text-black border-[#E27D8D] font-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
                     >
                       {status}
                     </button>
@@ -2317,7 +2317,7 @@ export default function Dashboard() {
                       key={desire}
                       type="button"
                       onClick={() => setPrefChildrenDesire(desire)}
-                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${prefChildrenDesire === desire ? 'bg-[#FF3366] text-black border-[#FF3366] font-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${prefChildrenDesire === desire ? 'bg-[#E27D8D] text-black border-[#E27D8D] font-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
                     >
                       {desire}
                     </button>
@@ -2334,7 +2334,7 @@ export default function Dashboard() {
                       key={time}
                       type="button"
                       onClick={() => setPrefTimeline(time)}
-                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${prefTimeline === time ? 'bg-[#FF3366] text-black border-[#FF3366] font-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${prefTimeline === time ? 'bg-[#E27D8D] text-black border-[#E27D8D] font-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
                     >
                       {time}
                     </button>
@@ -2351,7 +2351,7 @@ export default function Dashboard() {
                     placeholder="e.g. Nigeria, Ghana, USA, Jamaica, Any"
                     value={prefOrigin}
                     onChange={(e) => setPrefOrigin(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#FF3366] outline-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E27D8D] outline-none"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -2361,7 +2361,7 @@ export default function Dashboard() {
                     placeholder="e.g. United States, United Kingdom, Canada"
                     value={prefResidence}
                     onChange={(e) => setPrefResidence(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#FF3366] outline-none"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E27D8D] outline-none"
                   />
                 </div>
               </div>
@@ -2383,7 +2383,7 @@ export default function Dashboard() {
                             setPrefTraits([...prefTraits, trait]);
                           }
                         }}
-                        className={`py-1.5 px-3 rounded-full text-xs font-semibold border transition-all cursor-pointer ${isSelected ? 'bg-[#FF3366]/20 border-[#FF3366] text-[#FF3366] font-bold' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
+                        className={`py-1.5 px-3 rounded-full text-xs font-semibold border transition-all cursor-pointer ${isSelected ? 'bg-[#E27D8D]/20 border-[#E27D8D] text-[#E27D8D] font-bold' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
                       >
                         {isSelected ? '✓ ' : '+ '}{trait}
                       </button>
@@ -2405,7 +2405,7 @@ export default function Dashboard() {
                 type="button"
                 disabled={prefSaving}
                 onClick={handleSavePreferences}
-                className="px-7 py-3 rounded-full text-xs font-black uppercase tracking-wider bg-[#FF3366] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#FF3366]/25 cursor-pointer disabled:opacity-50"
+                className="px-7 py-3 rounded-full text-xs font-black uppercase tracking-wider bg-[#E27D8D] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#E27D8D]/25 cursor-pointer disabled:opacity-50"
               >
                 <Sparkles className="w-4 h-4" /> {prefSaving ? "Saving..." : "Save Preferences & Recalibrate Matches ✨"}
               </button>
@@ -2416,15 +2416,15 @@ export default function Dashboard() {
 
       {/* Auto-Dismissing Daily Limit Notice Toast */}
       {limitNoticeMessage && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-[#121721] border border-[#FF3366] text-white px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-fade-in">
-          <Sparkles className="w-5 h-5 text-[#FF3366] flex-shrink-0" />
+        <div className="fixed bottom-6 right-6 z-50 max-w-md bg-[#121721] border border-[#E27D8D] text-white px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-fade-in">
+          <Sparkles className="w-5 h-5 text-[#E27D8D] flex-shrink-0" />
           <span className="text-xs text-gray-200">{limitNoticeMessage}</span>
           <button
             onClick={() => {
               setLimitNoticeMessage(null);
               setShowSubscriptionModal(true);
             }}
-            className="ml-auto px-3.5 py-1.5 rounded-full bg-[#FF3366] text-black text-[10px] font-black uppercase tracking-wider hover:bg-[#E5C158] whitespace-nowrap cursor-pointer transition shadow-md"
+            className="ml-auto px-3.5 py-1.5 rounded-full bg-[#E27D8D] text-black text-[10px] font-black uppercase tracking-wider hover:bg-[#E5C158] whitespace-nowrap cursor-pointer transition shadow-md"
           >
             Upgrade ✨
           </button>
