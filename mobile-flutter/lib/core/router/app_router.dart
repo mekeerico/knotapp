@@ -16,6 +16,7 @@ import '../../features/insights/presentation/insights_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/profile/presentation/edit_profile_screen.dart';
 import '../../features/profile/presentation/manage_photos_screen.dart';
+import '../../features/profile/presentation/partner_preferences_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/verification/presentation/didit_verification_screen.dart';
 import '../../features/home/presentation/main_navigation_shell.dart';
@@ -111,6 +112,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/manage-photos',
         builder: (context, state) => const ManagePhotosScreen(),
+      ),
+      GoRoute(
+        path: '/partner-preferences',
+        builder: (context, state) => const PartnerPreferencesScreen(),
       ),
       GoRoute(
         path: '/paywall',

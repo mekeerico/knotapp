@@ -98,6 +98,18 @@ class SecureStorageService {
 
   static const String dailyViewCountKey = 'knot_daily_view_count';
   static const String dailyViewDateKey = 'knot_daily_view_date';
+  static const String lastUpgradeReminderDateKey = 'knot_last_upgrade_reminder_date';
+
+  Future<bool> hasSeenUpgradeReminderToday() async {
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    final lastDate = await _storage.read(key: lastUpgradeReminderDateKey);
+    return lastDate == today;
+  }
+
+  Future<void> markUpgradeReminderSeenToday() async {
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    await _storage.write(key: lastUpgradeReminderDateKey, value: today);
+  }
 
   Future<int> getDailyViewCount() async {
     final today = DateTime.now().toIso8601String().substring(0, 10);

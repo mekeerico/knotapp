@@ -41,7 +41,7 @@ export class MatchesService {
       valuesScore += 8;
     }
     if (user.childrenPreference && cand.childrenPreference && user.childrenPreference === cand.childrenPreference) {
-      valuesScore += 4;
+      valuesScore += 6;
     }
 
     let lifestyleScore = 82;
@@ -53,6 +53,60 @@ export class MatchesService {
     }
     if (user.drinking && cand.drinking && user.drinking === cand.drinking) {
       lifestyleScore += 3;
+    }
+
+    // Dynamic Partner Location & Heritage Preferences
+    if (user.preferredResidenceCountry && cand.residenceCountry && user.preferredResidenceCountry.toLowerCase() === cand.residenceCountry.toLowerCase()) {
+      lifestyleScore += 8;
+    }
+    if (user.preferredOriginCountry && cand.originCountry && user.preferredOriginCountry.toLowerCase() === cand.originCountry.toLowerCase()) {
+      valuesScore += 8;
+    }
+
+    // Dynamic Partner Age Range & Kids Status Check (from marriageExpectations or profile)
+    let candAge: number | null = null;
+    if (cand.dateOfBirth) {
+      const d = new Date(cand.dateOfBirth);
+      if (!isNaN(d.getTime())) {
+        const diffMs = Date.now() - d.getTime();
+        candAge = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 365.25));
+      }
+    }
+
+    // Check for age range in expectations string or JSON (e.g. "Age 24-35" or {minAge, maxAge})
+    const expText = (user.marriageExpectations || '').toLowerCase();
+    const ageMatch = expText.match(/(\d{2})\s*-\s*(\d{2})/);
+    let minAge = 20;
+    let maxAge = 55;
+    if (ageMatch) {
+      minAge = parseInt(ageMatch[1], 10);
+      maxAge = parseInt(ageMatch[2], 10);
+    }
+    if (candAge !== null) {
+      if (candAge >= minAge && candAge <= maxAge) {
+        lifestyleScore += 6;
+      } else if (candAge < minAge - 3 || candAge > maxAge + 5) {
+        lifestyleScore -= 6;
+      }
+    }
+
+    // Partner Kids Preference Check
+    if (expText.includes('no kids') || expText.includes('no children')) {
+      if (cand.childrenStatus && cand.childrenStatus.toLowerCase().includes('no')) {
+        valuesScore += 6;
+      }
+    } else if (expText.includes('has kids') || expText.includes('has children')) {
+      if (cand.childrenStatus && !cand.childrenStatus.toLowerCase().includes('no')) {
+        valuesScore += 6;
+      }
+    }
+
+    // Ideal Partner Traits Alignment
+    if (Array.isArray(user.idealPartnerTraits) && user.idealPartnerTraits.length > 0 && Array.isArray(cand.idealPartnerTraits)) {
+      const matched = user.idealPartnerTraits.filter((t: string) => cand.idealPartnerTraits.includes(t));
+      if (matched.length > 0) {
+        valuesScore += Math.min(8, matched.length * 3);
+      }
     }
 
     let emotionalScore = 85;

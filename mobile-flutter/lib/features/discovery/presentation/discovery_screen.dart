@@ -45,31 +45,57 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
             backgroundColor: AppColors.darkSlate,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(16),
               side: const BorderSide(color: AppColors.champagneGold, width: 1.2),
             ),
-            duration: const Duration(seconds: 4),
+            duration: const Duration(seconds: 8),
             content: Row(
               children: [
                 const Icon(Icons.info_outline, color: AppColors.champagneGold, size: 20),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     message,
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textPure,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    context.push('/paywall');
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.champagneGold,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'UPGRADE ✨',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.close, color: AppColors.textSubtle, size: 18),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  },
+                  tooltip: 'Dismiss',
+                ),
               ],
-            ),
-            action: SnackBarAction(
-              label: 'UPGRADE ✨',
-              textColor: AppColors.champagneGold,
-              onPressed: () {
-                context.push('/paywall');
-              },
             ),
           ),
         );
@@ -97,8 +123,6 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                     ? _buildEmptyRegistry(notifier, authState.user?.gender)
                     : Column(
                         children: [
-                          if (!(authState.user?.isPremium ?? false))
-                            _buildFreeTierReminderPill(context, state, notifier),
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -392,77 +416,6 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                 ),
               ],
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFreeTierReminderPill(
-    BuildContext context,
-    DiscoveryState state,
-    DiscoveryNotifier notifier,
-  ) {
-    final remaining = state.remainingDailyViews;
-    final isOut = state.hasExceededLimit || remaining <= 0;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: GestureDetector(
-        onTap: () => context.push('/paywall'),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-          decoration: BoxDecoration(
-            color: AppColors.darkSlate,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isOut ? AppColors.roseGlow : AppColors.champagneGold.withOpacity(0.5),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: (isOut ? AppColors.roseGlow : AppColors.champagneGold).withOpacity(0.12),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isOut ? Icons.lock_clock : Icons.stars_rounded,
-                size: 15,
-                color: isOut ? AppColors.roseGlow : AppColors.champagneGold,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                isOut
-                    ? 'Daily Cap Reached (${state.viewsToday}/${state.dailyLimit})'
-                    : 'Free Tier: $remaining of ${state.dailyLimit} daily matches left',
-                style: AppTypography.bodySmall.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: isOut ? AppColors.roseGlow : AppColors.textPure,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.champagneGold,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  'UPGRADE ✨',
-                  style: AppTypography.bodySmall.copyWith(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-            ],
           ),
         ),
       ),

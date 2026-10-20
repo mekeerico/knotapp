@@ -157,6 +157,32 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     );
   }
 
+  Future<String?> _checkAndGetDailyNotice(UserModel? user, int limit, int currentCount) async {
+    final storage = _ref.read(secureStorageProvider);
+    final hasSeenToday = await storage.hasSeenUpgradeReminderToday();
+    if (hasSeenToday) {
+      return null;
+    }
+
+    // 1. Check daily view limit reached
+    if (currentCount >= limit) {
+      await storage.markUpgradeReminderSeenToday();
+
+      final tier = user?.subscriptionTier.trim().toLowerCase() ?? 'essential';
+      if (tier.contains('executive')) {
+        return "You've reviewed your 100 daily Executive matches. Your curated deck refreshes at midnight.";
+      } else if (tier.contains('elite')) {
+        return "You've completed your 25 daily Elite matches. Upgrade to Executive for 100 verified candidates daily.";
+      } else if (tier.contains('premium') || (user?.isPremium ?? false)) {
+        return "You've completed your 15 daily Premium matches. Upgrade to Elite or Executive for 25 to 100 candidates daily.";
+      } else {
+        return "You've reviewed your $limit daily matches. Upgrade your tier to unlock 15+ verified candidates daily.";
+      }
+    }
+
+    return null;
+  }
+
   Future<void> likeCandidate(MatchProfile candidate) async {
     final storage = _ref.read(secureStorageProvider);
     final authState = _ref.read(authProvider);
@@ -170,15 +196,14 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
 
     final nextCount = await storage.incrementDailyViewCount();
     final reachedOrExceeded = nextCount >= limit;
+    final noticeMsg = await _checkAndGetDailyNotice(authState.user, limit, nextCount);
 
     state = state.copyWith(
       matchedCandidate: candidate,
       viewsToday: nextCount,
       dailyLimit: limit,
       hasExceededLimit: reachedOrExceeded,
-      limitNoticeMessage: reachedOrExceeded
-          ? "You've reviewed your $limit daily matches. Upgrade to unlock 15+ verified candidates daily."
-          : null,
+      limitNoticeMessage: noticeMsg,
     );
   }
 
@@ -195,14 +220,13 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
 
     final nextCount = await storage.incrementDailyViewCount();
     final reachedOrExceeded = nextCount >= limit;
+    final noticeMsg = await _checkAndGetDailyNotice(authState.user, limit, nextCount);
 
     state = state.copyWith(
       viewsToday: nextCount,
       dailyLimit: limit,
       hasExceededLimit: reachedOrExceeded,
-      limitNoticeMessage: reachedOrExceeded
-          ? "You've reviewed your $limit daily matches. Upgrade to unlock 15+ verified candidates daily."
-          : null,
+      limitNoticeMessage: noticeMsg,
     );
   }
 

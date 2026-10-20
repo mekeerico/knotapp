@@ -8,7 +8,7 @@ import {
   Settings, LogOut, Send, AlertTriangle, Shield, CheckCircle2,
   TrendingUp, Award, Activity, Compass, BrainCircuit, HeartHandshake,
   Menu, X, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, Camera, Loader2,
-  Star, Briefcase, MapPin, RefreshCw, Lock, Bell
+  Star, Briefcase, MapPin, RefreshCw, Lock, Bell, Sliders
 } from "lucide-react";
 import { getApiUrl } from "../../services/api";
 
@@ -58,6 +58,18 @@ export default function Dashboard() {
   const [isMessageLimitReached, setIsMessageLimitReached] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [limitNoticeMessage, setLimitNoticeMessage] = useState<string | null>(null);
+  const [showPreferencesModal, setShowPreferencesModal] = useState(false);
+  const [prefSaving, setPrefSaving] = useState(false);
+  const [prefAgeMin, setPrefAgeMin] = useState(22);
+  const [prefAgeMax, setPrefAgeMax] = useState(42);
+  const [prefChildrenStatus, setPrefChildrenStatus] = useState("Open to either");
+  const [prefChildrenDesire, setPrefChildrenDesire] = useState("Open to children");
+  const [prefTimeline, setPrefTimeline] = useState("1-2 Years");
+  const [prefOrigin, setPrefOrigin] = useState("");
+  const [prefResidence, setPrefResidence] = useState("");
+  const [prefCity, setPrefCity] = useState("");
+  const [prefReligion, setPrefReligion] = useState("Christian");
+  const [prefTraits, setPrefTraits] = useState<string[]>(["Emotionally mature", "Family-oriented", "Loyal & Devoted"]);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
 
   // In-App Notification Center States
@@ -189,6 +201,27 @@ export default function Dashboard() {
       if (profileRes.ok) {
         profileData = await profileRes.json();
         setUserProfile(profileData);
+        if (profileData.preferredOriginCountry) setPrefOrigin(profileData.preferredOriginCountry);
+        if (profileData.preferredResidenceCountry) setPrefResidence(profileData.preferredResidenceCountry);
+        if (profileData.preferredResidenceCity) setPrefCity(profileData.preferredResidenceCity);
+        if (profileData.childrenPreference) setPrefChildrenDesire(profileData.childrenPreference);
+        if (profileData.marriageTimeline) setPrefTimeline(profileData.marriageTimeline);
+        if (profileData.religion) setPrefReligion(profileData.religion);
+        if (profileData.idealPartnerTraits && Array.isArray(profileData.idealPartnerTraits) && profileData.idealPartnerTraits.length > 0) {
+          setPrefTraits(profileData.idealPartnerTraits);
+        }
+        if (profileData.marriageExpectations) {
+          const ageM = profileData.marriageExpectations.match(/(\d{2})\s*-\s*(\d{2})/);
+          if (ageM) {
+            setPrefAgeMin(parseInt(ageM[1], 10));
+            setPrefAgeMax(parseInt(ageM[2], 10));
+          }
+          if (profileData.marriageExpectations.toLowerCase().includes('no kids') || profileData.marriageExpectations.toLowerCase().includes('no children')) {
+            setPrefChildrenStatus("No children yet");
+          } else if (profileData.marriageExpectations.toLowerCase().includes('has kids') || profileData.marriageExpectations.toLowerCase().includes('has children')) {
+            setPrefChildrenStatus("Has children");
+          }
+        }
         if (profileData.profileImages && profileData.profileImages.length > 0) {
           const sorted = [...profileData.profileImages].sort((a: any, b: any) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
           setUserPhotos(sorted.map((img: any) => resolveImageUrl(img.url)));
@@ -469,6 +502,47 @@ export default function Dashboard() {
     }
   };
 
+  const handleSavePreferences = async () => {
+    setPrefSaving(true);
+    try {
+      const token = localStorage.getItem('knot_token');
+      const API_URL = getApiUrl();
+      const expectations = `Age ${prefAgeMin}-${prefAgeMax} | ${prefChildrenStatus} | Seeking intentional marriage alignment`;
+      const updated = {
+        ...userProfile,
+        preferredOriginCountry: prefOrigin,
+        preferredResidenceCountry: prefResidence,
+        preferredResidenceCity: prefCity,
+        childrenPreference: prefChildrenDesire,
+        marriageTimeline: prefTimeline,
+        religion: prefReligion,
+        idealPartnerTraits: prefTraits,
+        marriageExpectations: expectations,
+      };
+      const res = await fetch(`${API_URL}/users/${userProfile?.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(updated),
+      });
+      if (res.ok) {
+        setUserProfile(updated);
+        setShowPreferencesModal(false);
+        alert("✨ Partner Preferences Saved! Matchmaking algorithm has updated your recommendations.");
+        loadMatchesAndProfile();
+      } else {
+        alert("Could not save preferences. Please check your network connection.");
+      }
+    } catch (err) {
+      console.error("Save preferences error", err);
+      alert("Error saving preferences.");
+    } finally {
+      setPrefSaving(false);
+    }
+  };
+
   const getDailyLimit = () => {
     switch (userProfile?.subscriptionTier) {
       case 'Executive': return 100;
@@ -489,12 +563,23 @@ export default function Dashboard() {
     // Always execute the action so user can freely view and loop their matches
     action();
 
-    // Flash a temporary auto-dismissing notification if limit reached
-    if (nextCount === limit) {
-      setLimitNoticeMessage(`You have completed your daily limit of ${limit} matches. Upgrade to explore more verified candidates.`);
-      setTimeout(() => {
-        setLimitNoticeMessage(null);
-      }, 4000);
+    // Check once-a-day reminder across all tiers
+    if (typeof window !== 'undefined' && nextCount >= limit) {
+      const reminderKey = 'knot_upgrade_notice_shown_' + new Date().toISOString().slice(0, 10);
+      const alreadyShown = localStorage.getItem(reminderKey);
+      if (!alreadyShown) {
+        localStorage.setItem(reminderKey, 'true');
+        const tier = (userProfile?.subscriptionTier || 'Free').trim();
+        let msg = `You have reviewed your ${limit} daily matches. Upgrade your tier to unlock 15+ verified candidates daily.`;
+        if (tier.toLowerCase().includes('executive')) {
+          msg = `You have completed your 100 daily Executive matches. Your curated deck refreshes at midnight.`;
+        } else if (tier.toLowerCase().includes('elite')) {
+          msg = `You have completed your 25 daily Elite matches. Upgrade to Executive for 100 candidates daily.`;
+        } else if (tier.toLowerCase().includes('premium')) {
+          msg = `You have completed your 15 daily Premium matches. Upgrade to Elite or Executive for 25 to 100 candidates daily.`;
+        }
+        setLimitNoticeMessage(msg);
+      }
     }
   };
 
@@ -1126,30 +1211,6 @@ export default function Dashboard() {
           )}
           {activeTab === "matches" && !isLoadingMatches && activeMatch && (
             <div className="space-y-4">
-              {/* Daily Limit Floating Pill */}
-              <div className="flex items-center justify-between px-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs uppercase tracking-wider font-bold text-gray-400">Curated Matches</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 font-semibold">
-                    {userProfile?.subscriptionTier || 'Free'} Plan
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowSubscriptionModal(true)}
-                  className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#121721] border border-[#D4AF37]/50 hover:border-[#D4AF37] text-xs font-semibold text-gray-200 hover:text-white transition-all shadow-[0_0_12px_rgba(212,175,55,0.12)] group cursor-pointer"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-[#D4AF37] group-hover:scale-110 transition-transform" />
-                  <span>
-                    {matchesViewedToday >= getDailyLimit()
-                      ? `Daily Cap Reached (${getDailyLimit()}/${getDailyLimit()})`
-                      : `Free Tier: ${Math.max(0, getDailyLimit() - matchesViewedToday)} of ${getDailyLimit()} daily matches left`}
-                  </span>
-                  <span className="px-1.5 py-0.5 rounded bg-[#D4AF37] text-black text-[10px] font-black uppercase tracking-wider ml-1">
-                    Upgrade ✨
-                  </span>
-                </button>
-              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
               {/* Profile Card & Mobile-Style Circular Action Buttons */}
@@ -1799,12 +1860,20 @@ export default function Dashboard() {
                       )}
                     </div>
                   </div>
-                  <button 
-                    onClick={() => router.push('/edit-profile')}
-                    className="w-full mt-2 py-2.5 rounded-xl bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Settings className="w-3.5 h-3.5" /> Edit Profile Data
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                    <button 
+                      onClick={() => setShowPreferencesModal(true)}
+                      className="w-full py-2.5 px-3 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-xs font-bold text-[#D4AF37] hover:bg-[#D4AF37]/25 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+                    >
+                      <Sliders className="w-3.5 h-3.5" /> Match Preferences
+                    </button>
+                    <button 
+                      onClick={() => router.push('/edit-profile')}
+                      className="w-full py-2.5 px-3 rounded-xl bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:bg-white/20 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <Settings className="w-3.5 h-3.5" /> Edit My Profile
+                    </button>
+                  </div>
                 </div>
 
                 {/* Identity Verification */}
@@ -2167,16 +2236,204 @@ export default function Dashboard() {
         </div>
       )}
 
+            {/* Partner Match Preferences & Settings Modal */}
+      {showPreferencesModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-[#0F141C] border border-[#D4AF37]/40 rounded-[28px] p-6 sm:p-8 shadow-2xl space-y-6 my-8 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-serif font-bold text-white">Partner Match Preferences</h3>
+                  <p className="text-xs text-gray-400">Customize what you desire in a future spouse to recalibrate your AI recommendations.</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowPreferencesModal(false)}
+                className="p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-6 text-left">
+              {/* Age Range */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <label className="font-bold text-gray-300 uppercase tracking-wider text-[11px]">Partner Age Range</label>
+                  <span className="text-[#D4AF37] font-bold">{prefAgeMin} - {prefAgeMax} Years Old</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[10px] text-gray-500 uppercase tracking-widest">Min Age</span>
+                    <input 
+                      type="number"
+                      min="18"
+                      max="70"
+                      value={prefAgeMin}
+                      onChange={(e) => setPrefAgeMin(Math.min(parseInt(e.target.value) || 18, prefAgeMax))}
+                      className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-gray-500 uppercase tracking-widest">Max Age</span>
+                    <input 
+                      type="number"
+                      min="18"
+                      max="75"
+                      value={prefAgeMax}
+                      onChange={(e) => setPrefAgeMax(Math.max(parseInt(e.target.value) || 45, prefAgeMin))}
+                      className="w-full mt-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#D4AF37] outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Partner Children Status */}
+              <div className="space-y-2">
+                <label className="font-bold text-gray-300 uppercase tracking-wider text-[11px]">Partner Children Status</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["No children yet", "Has children", "Open to either"].map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setPrefChildrenStatus(status)}
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${prefChildrenStatus === status ? 'bg-[#D4AF37] text-black border-[#D4AF37] font-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
+                    >
+                      {status}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Openness to Future Children */}
+              <div className="space-y-2">
+                <label className="font-bold text-gray-300 uppercase tracking-wider text-[11px]">Desire for Future Children</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {["Wants children", "Open to children", "Does not want children"].map((desire) => (
+                    <button
+                      key={desire}
+                      type="button"
+                      onClick={() => setPrefChildrenDesire(desire)}
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${prefChildrenDesire === desire ? 'bg-[#D4AF37] text-black border-[#D4AF37] font-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
+                    >
+                      {desire}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Marriage Timeline */}
+              <div className="space-y-2">
+                <label className="font-bold text-gray-300 uppercase tracking-wider text-[11px]">Marriage Horizon / Vow Timeline</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {["ASAP (Within 6 months)", "Within 1 year", "1-2 Years", "2+ Years"].map((time) => (
+                    <button
+                      key={time}
+                      type="button"
+                      onClick={() => setPrefTimeline(time)}
+                      className={`py-2 px-3 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${prefTimeline === time ? 'bg-[#D4AF37] text-black border-[#D4AF37] font-black' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'}`}
+                    >
+                      {time}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Location & Heritage */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="font-bold text-gray-300 uppercase tracking-wider text-[11px]">Preferred Heritage / Origin</label>
+                  <input 
+                    type="text"
+                    placeholder="e.g. Nigeria, Ghana, USA, Jamaica, Any"
+                    value={prefOrigin}
+                    onChange={(e) => setPrefOrigin(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#D4AF37] outline-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="font-bold text-gray-300 uppercase tracking-wider text-[11px]">Preferred Residence Country</label>
+                  <input 
+                    type="text"
+                    placeholder="e.g. United States, United Kingdom, Canada"
+                    value={prefResidence}
+                    onChange={(e) => setPrefResidence(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#D4AF37] outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Ideal Partner Traits */}
+              <div className="space-y-2">
+                <label className="font-bold text-gray-300 uppercase tracking-wider text-[11px]">Key Partner Traits</label>
+                <div className="flex flex-wrap gap-2">
+                  {["Emotionally mature", "Family-oriented", "Faith-driven", "Ambitious & Driven", "Loyal & Devoted", "Health-conscious", "Kind & Empathetic", "Financial Wisdom", "Honest & Direct"].map((trait) => {
+                    const isSelected = prefTraits.includes(trait);
+                    return (
+                      <button
+                        key={trait}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setPrefTraits(prefTraits.filter(t => t !== trait));
+                          } else {
+                            setPrefTraits([...prefTraits, trait]);
+                          }
+                        }}
+                        className={`py-1.5 px-3 rounded-full text-xs font-semibold border transition-all cursor-pointer ${isSelected ? 'bg-[#D4AF37]/20 border-[#D4AF37] text-[#D4AF37] font-bold' : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'}`}
+                      >
+                        {isSelected ? '✓ ' : '+ '}{trait}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-white/10 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowPreferencesModal(false)}
+                className="px-5 py-2.5 rounded-full text-xs font-bold text-gray-400 hover:text-white transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={prefSaving}
+                onClick={handleSavePreferences}
+                className="px-7 py-3 rounded-full text-xs font-black uppercase tracking-wider bg-[#D4AF37] text-black hover:bg-[#E5C158] transition-all flex items-center gap-2 shadow-lg shadow-[#D4AF37]/25 cursor-pointer disabled:opacity-50"
+              >
+                <Sparkles className="w-4 h-4" /> {prefSaving ? "Saving..." : "Save Preferences & Recalibrate Matches ✨"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Auto-Dismissing Daily Limit Notice Toast */}
       {limitNoticeMessage && (
         <div className="fixed bottom-6 right-6 z-50 max-w-md bg-[#121721] border border-[#D4AF37] text-white px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3 animate-fade-in">
           <Sparkles className="w-5 h-5 text-[#D4AF37] flex-shrink-0" />
           <span className="text-xs text-gray-200">{limitNoticeMessage}</span>
           <button
-            onClick={() => setShowSubscriptionModal(true)}
+            onClick={() => {
+              setLimitNoticeMessage(null);
+              setShowSubscriptionModal(true);
+            }}
             className="ml-auto px-3.5 py-1.5 rounded-full bg-[#D4AF37] text-black text-[10px] font-black uppercase tracking-wider hover:bg-[#E5C158] whitespace-nowrap cursor-pointer transition shadow-md"
           >
             Upgrade ✨
+          </button>
+          <button
+            onClick={() => setLimitNoticeMessage(null)}
+            className="p-1 rounded-full text-gray-400 hover:text-white transition-colors cursor-pointer"
+            title="Dismiss notice"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}

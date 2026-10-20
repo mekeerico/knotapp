@@ -44,14 +44,23 @@ class ProfileScreen extends ConsumerWidget {
               left: 20,
               right: 20,
             ),
-            child: Center(
-              child: Text(
-                'SOVEREIGN IDENTITY',
-                style: AppTypography.headingMedium.copyWith(
-                  letterSpacing: 1.5,
-                  color: AppColors.champagneGold,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const SizedBox(width: 40),
+                Text(
+                  'SOVEREIGN IDENTITY',
+                  style: AppTypography.headingMedium.copyWith(
+                    letterSpacing: 1.5,
+                    color: AppColors.champagneGold,
+                  ),
                 ),
-              ),
+                IconButton(
+                  icon: const Icon(Icons.tune_rounded, color: AppColors.champagneGold, size: 22),
+                  onPressed: () => context.push('/partner-preferences'),
+                  tooltip: 'Partner Match Preferences',
+                ),
+              ],
             ),
           ),
           floatingContent: Container(
@@ -213,6 +222,13 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 // Profile Actions Menu
+                _buildMenuItem(
+                  context,
+                  title: 'Partner Match Preferences',
+                  icon: Icons.tune_rounded,
+                  onTap: () => context.push('/partner-preferences'),
+                ),
+                const SizedBox(height: 12),
                 _buildMenuItem(
                   context,
                   title: 'Edit Your Profile',
