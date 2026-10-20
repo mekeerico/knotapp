@@ -22,7 +22,7 @@ export default function DataDeletionPage() {
       <div className="max-w-3xl mx-auto glass-card rounded-2xl p-8 md:p-12 relative overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#E27D8D] rounded-full blur-[100px] opacity-20"></div>
-        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-[#D4AF37] rounded-full blur-[100px] opacity-10"></div>
+        <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-[#E11D48] rounded-full blur-[100px] opacity-10"></div>
         
         <div className="relative z-10">
           <h1 className="text-3xl md:text-4xl font-serif mb-2 gold-gradient-text">Account Data Deletion Request</h1>
@@ -65,7 +65,7 @@ export default function DataDeletionPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-[#121721] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-colors"
+                  className="w-full bg-[#121721] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#E11D48] focus:ring-1 focus:ring-[#E11D48] transition-colors"
                   placeholder="name@example.com"
                 />
               </div>
@@ -79,7 +79,7 @@ export default function DataDeletionPage() {
                   rows={4}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full bg-[#121721] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition-colors resize-none"
+                  className="w-full bg-[#121721] border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#E11D48] focus:ring-1 focus:ring-[#E11D48] transition-colors resize-none"
                   placeholder="Tell us why you're leaving..."
                 />
               </div>

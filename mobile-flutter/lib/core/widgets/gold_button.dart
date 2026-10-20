@@ -41,7 +41,7 @@ class GoldButton extends StatelessWidget {
             ? []
             : [
                 BoxShadow(
-                  color: AppColors.champagneGold.withOpacity(0.35),
+                  color: AppColors.champagneGold.withValues(alpha: 0.35),
                   blurRadius: 18,
                   offset: const Offset(0, 4),
                 ),
@@ -65,7 +65,7 @@ class GoldButton extends StatelessWidget {
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        isSecondary ? AppColors.champagneGold : AppColors.obsidianBlack,
+                        isSecondary ? AppColors.champagneGold : AppColors.textPure,
                       ),
                     ),
                   )
@@ -79,7 +79,7 @@ class GoldButton extends StatelessWidget {
                           size: 20,
                           color: isSecondary
                               ? AppColors.champagneGold
-                              : AppColors.obsidianBlack,
+                              : AppColors.textPure,
                         ),
                         const SizedBox(width: 8),
                       ],
@@ -88,7 +88,7 @@ class GoldButton extends StatelessWidget {
                         style: AppTypography.button.copyWith(
                           color: isSecondary
                               ? AppColors.champagneGold
-                              : AppColors.obsidianBlack,
+                              : AppColors.textPure,
                         ),
                       ),
                     ],

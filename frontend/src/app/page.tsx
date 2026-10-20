@@ -17,16 +17,16 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 md:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-xl md:text-2xl font-serif font-black tracking-wider text-[#F5F5F1] flex items-center gap-1">
-              KNOT<span className="text-[#D4AF37]">.</span>
+              KNOT<span className="text-[#E11D48]">.</span>
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-            <Link href="#features" className="hover:text-[#D4AF37] transition-colors">Platform</Link>
-            <Link href="#trust" className="hover:text-[#D4AF37] transition-colors">Trust Architecture</Link>
-            <Link href="#coach" className="hover:text-[#D4AF37] transition-colors">AI Coach</Link>
+            <Link href="#features" className="hover:text-[#E11D48] transition-colors">Platform</Link>
+            <Link href="#trust" className="hover:text-[#E11D48] transition-colors">Trust Architecture</Link>
+            <Link href="#coach" className="hover:text-[#E11D48] transition-colors">AI Coach</Link>
           </nav>
           <div className="flex items-center gap-3 md:gap-4">
-            <Link href="/login" className="text-sm font-semibold hover:text-[#D4AF37] transition-colors">
+            <Link href="/login" className="text-sm font-semibold hover:text-[#E11D48] transition-colors">
               Sign In
             </Link>
             <Link href="/login" className="px-4 py-2 md:px-5 md:py-2.5 rounded-full text-xs md:text-sm font-black rose-glow-btn text-white">
@@ -40,7 +40,7 @@ export default function Home() {
       <section className="relative pt-24 pb-16 md:pt-48 md:pb-36 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center">
           <div className="lg:col-span-7 space-y-8 text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] sm:text-xs font-semibold tracking-wider text-[#D4AF37] uppercase">
+            <div className="inline-flex items-center gap-2 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] sm:text-xs font-semibold tracking-wider text-[#E11D48] uppercase">
               <Sparkles className="w-3.5 h-3.5" /> ANTI-FRAUD | AI MATCHMAKING | HIGH-TRUST
             </div>
             <h1 className="text-3xl sm:text-5xl md:text-7xl font-serif font-black text-[#F5F5F1] leading-tight">
@@ -65,7 +65,7 @@ export default function Home() {
               </div>
               <div className="hidden sm:block h-8 w-px bg-white/10" />
               <div>
-                <h4 className="text-2xl font-black text-[#D4AF37]">94%</h4>
+                <h4 className="text-2xl font-black text-[#E11D48]">94%</h4>
                 <p className="text-xs text-gray-500 uppercase tracking-widest mt-1">Success Match Index</p>
               </div>
               <div className="hidden sm:block h-8 w-px bg-white/10" />
@@ -82,7 +82,7 @@ export default function Home() {
             <div className="absolute w-72 h-72 rounded-full bg-[#2D1B4E]/50 blur-3xl -z-10 orb-pulse-animation" />
             
             {/* Custom Interactive Mockup Card */}
-            <div className="w-full max-w-sm rounded-[36px] glass-card p-6 relative overflow-hidden border border-white/10 hover:border-[#D4AF37]/30 transition-all duration-500">
+            <div className="w-full max-w-sm rounded-[36px] glass-card p-6 relative overflow-hidden border border-white/10 hover:border-[#E11D48]/30 transition-all duration-500">
               <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden mb-6">
                 <img 
                   src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80" 
@@ -96,11 +96,11 @@ export default function Home() {
                   <div className="flex items-end justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Gabriel, 29</h3>
-                      <p className="text-xs text-[#D4AF37]">Architect • Intentional Builder</p>
+                      <p className="text-xs text-[#E11D48]">Architect • Intentional Builder</p>
                     </div>
-                    <div className="bg-[#D4AF37]/20 border border-[#D4AF37] px-2.5 py-1 rounded-lg text-center">
+                    <div className="bg-[#E11D48]/20 border border-[#E11D48] px-2.5 py-1 rounded-lg text-center">
                       <div className="text-[9px] uppercase tracking-wider text-gray-300 font-bold">Match Score</div>
-                      <div className="text-base font-black text-[#D4AF37]">96%</div>
+                      <div className="text-base font-black text-[#E11D48]">96%</div>
                     </div>
                   </div>
                 </div>
@@ -108,13 +108,13 @@ export default function Home() {
               <div className="space-y-4">
                 <div className="flex flex-wrap gap-2">
                   <span className="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-xs text-gray-300">✔ Family-Oriented</span>
-                  <span className="px-3 py-1 rounded-full bg-[#2D1B4E]/30 border border-[#D4AF37]/20 text-xs text-[#D4AF37]">✔ Secure Attachment</span>
+                  <span className="px-3 py-1 rounded-full bg-[#2D1B4E]/30 border border-[#E11D48]/20 text-xs text-[#E11D48]">✔ Secure Attachment</span>
                   <span className="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-xs text-gray-300">✔ Marriage-Focused</span>
                 </div>
                 
                 {/* AI Explanation Explanation */}
                 <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs text-[#D4AF37] font-bold">
+                  <div className="flex items-center gap-1.5 text-xs text-[#E11D48] font-bold">
                     <Bot className="w-3.5 h-3.5" /> Why You Matched
                   </div>
                   <p className="text-xs text-gray-400 leading-relaxed">
@@ -137,7 +137,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="p-8 rounded-[28px] glass-card space-y-6 hover:translate-y-[-4px] transition-transform duration-300">
-              <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/20">
+              <div className="w-12 h-12 rounded-2xl bg-[#E11D48]/10 flex items-center justify-center text-[#E11D48] border border-[#E11D48]/20">
                 <HeartHandshake className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold text-white">Compatibility AI</h3>
@@ -260,7 +260,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto rounded-[36px] glass-card overflow-hidden border border-white/5 grid grid-cols-1 md:grid-cols-12">
             <div className="md:col-span-5 bg-[#2D1B4E]/20 p-8 flex flex-col justify-between text-left space-y-8">
               <div className="space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/20">
+                <div className="w-12 h-12 rounded-2xl bg-[#E11D48]/10 flex items-center justify-center text-[#E11D48] border border-[#E11D48]/20">
                   <Bot className="w-6 h-6" />
                 </div>
                 <h3 className="text-2xl font-serif font-bold text-white">Empathetic Intelligence</h3>
@@ -281,7 +281,7 @@ export default function Home() {
               {/* Fake Coach chat history interface mockup */}
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] flex-shrink-0 text-xs font-bold border border-[#D4AF37]/20">AI</div>
+                  <div className="w-8 h-8 rounded-full bg-[#E11D48]/10 flex items-center justify-center text-[#E11D48] flex-shrink-0 text-xs font-bold border border-[#E11D48]/20">AI</div>
                   <div className="p-4 rounded-[22px] rounded-tl-none bg-white/5 border border-white/5 text-xs text-gray-300 max-w-sm">
                     "I noticed both of you value travel and family traditions. Would you like a prompt to start the conversation?"
                   </div>
@@ -293,10 +293,10 @@ export default function Home() {
                   <div className="w-8 h-8 rounded-full bg-[#E27D8D] flex items-center justify-center text-white flex-shrink-0 text-xs font-bold">ME</div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] flex-shrink-0 text-xs font-bold border border-[#D4AF37]/20">AI</div>
+                  <div className="w-8 h-8 rounded-full bg-[#E11D48]/10 flex items-center justify-center text-[#E11D48] flex-shrink-0 text-xs font-bold border border-[#E11D48]/20">AI</div>
                   <div className="p-4 rounded-[22px] rounded-tl-none bg-white/5 border border-white/5 text-xs text-gray-300 max-w-sm space-y-2">
                     <p>"Here is a custom icebreaker based on your high values alignment:"</p>
-                    <p className="italic text-[#D4AF37] font-semibold font-serif">
+                    <p className="italic text-[#E11D48] font-semibold font-serif">
                       "Since you both love exploring historical towns, what is one memory from a childhood trip that inspired your current love for history?"
                     </p>
                   </div>
@@ -315,9 +315,9 @@ export default function Home() {
             <span className="text-xs">© 2026 KNOT AI Relationship Systems.</span>
           </div>
           <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-medium text-gray-400">
-            <Link href="/terms" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
-            <Link href="/privacy" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>
-            <Link href="/community-guidelines" className="hover:text-[#D4AF37] transition-colors">Community Guidelines & Safety Standards</Link>
+            <Link href="/terms" className="hover:text-[#E11D48] transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-[#E11D48] transition-colors">Privacy Policy</Link>
+            <Link href="/community-guidelines" className="hover:text-[#E11D48] transition-colors">Community Guidelines & Safety Standards</Link>
           </div>
         </div>
       </footer>

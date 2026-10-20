@@ -55,7 +55,7 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
       case NotificationCategory.message:
         return AppColors.champagneGold;
       case NotificationCategory.tierLimit:
-        return const Color(0xFFD4AF37);
+        return AppColors.champagneGold;
       case NotificationCategory.verification:
         return const Color(0xFF10B981);
       case NotificationCategory.system:

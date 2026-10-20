@@ -7,11 +7,11 @@ class AppColors {
   static const Color darkCard = Color(0xFF171E2D);
   static const Color darkCardElevated = Color(0xFF1E273A);
   
-  // Luxury Accents
-  static const Color champagneGold = Color(0xFFD4AF37);
-  static const Color goldLight = Color(0xFFF5DE88);
-  static const Color goldDark = Color(0xFFAA820A);
-  static const Color deepGold = Color(0xFFAA820A);
+  // Romantic Matrimonial Accents (Velvet Rose & Crimson, replacing shouting gold/yellow)
+  static const Color champagneGold = Color(0xFFE11D48); // Velvet Rose
+  static const Color goldLight = Color(0xFFFB7185);     // Soft Rose Blush
+  static const Color goldDark = Color(0xFFBE123C);      // Deep Crimson
+  static const Color deepGold = Color(0xFFBE123C);
   static const Color roseGlow = Color(0xFFE11D48);
   static const Color emeraldVerified = Color(0xFF10B981);
   static const Color emeraldSuccess = Color(0xFF10B981);
@@ -19,8 +19,8 @@ class AppColors {
   
   // Borders & Glows
   static const Color borderSubtle = Color(0xFF232D3F);
-  static const Color borderGold = Color(0x33D4AF37); // 20% opacity
-  static const Color borderGoldStrong = Color(0x66D4AF37); // 40% opacity
+  static const Color borderGold = Color(0x33E11D48); // 20% rose glow
+  static const Color borderGoldStrong = Color(0x66E11D48); // 40% rose glow
   static const Color borderGlass = Color(0x1AFFFFFF); // 10% white
   static const Color glassBorder = Color(0x1AFFFFFF); // 10% white
   
@@ -29,11 +29,11 @@ class AppColors {
   static const Color textMuted = Color(0xFF94A3B8);
   static const Color textSecondary = Color(0xFF94A3B8);
   static const Color textSubtle = Color(0xFF64748B);
-  static const Color textGold = Color(0xFFD4AF37);
+  static const Color textGold = Color(0xFFFB7185); // Soft Rose text
 
   // Gradients
   static const LinearGradient goldGradient = LinearGradient(
-    colors: [Color(0xFFE5C058), Color(0xFFD4AF37), Color(0xFFAA820A)],
+    colors: [Color(0xFFFB7185), Color(0xFFE11D48), Color(0xFFBE123C)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -52,11 +52,11 @@ class AppColors {
 
   static const LinearGradient scannerGlowGradient = LinearGradient(
     colors: [
-      Color(0x00D4AF37),
-      Color(0x80D4AF37),
-      Color(0xFFD4AF37),
-      Color(0x80D4AF37),
-      Color(0x00D4AF37),
+      Color(0x00E11D48),
+      Color(0x80E11D48),
+      Color(0xFFE11D48),
+      Color(0x80E11D48),
+      Color(0x00E11D48),
     ],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,

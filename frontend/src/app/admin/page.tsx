@@ -50,7 +50,7 @@ const MultiSelectDropdown = ({ label, options, values, onChange, placeholder }: 
               className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-0"
               onClick={() => toggleOption(opt)}
             >
-              <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${values.includes(opt) ? 'bg-[#D4AF37] border-[#D4AF37]' : 'border-white/20'}`}>
+              <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${values.includes(opt) ? 'bg-[#E11D48] border-[#E11D48]' : 'border-white/20'}`}>
                 {values.includes(opt) && <Check className="w-3 h-3 text-black" strokeWidth={3} />}
               </div>
               <span className="text-xs text-gray-300">{opt}</span>
@@ -317,7 +317,7 @@ export default function AdminDashboard() {
         <div className="flex items-center justify-between mb-12">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-2xl font-serif font-black tracking-wider text-[#F5F5F1] flex items-center gap-1">
-              KNOT<span className="text-[#D4AF37]">.</span>
+              KNOT<span className="text-[#E11D48]">.</span>
             </span>
           </Link>
           <button 
@@ -330,7 +330,7 @@ export default function AdminDashboard() {
         </div>
         <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-4">Admin Hub</div>
         <nav className="space-y-2 flex-1">
-          <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 text-[#D4AF37] font-semibold text-sm" onClick={() => setIsSidebarOpen(false)}>
+          <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 text-[#E11D48] font-semibold text-sm" onClick={() => setIsSidebarOpen(false)}>
             <Users className="w-4 h-4" /> Users
           </Link>
         </nav>
@@ -368,7 +368,7 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-4">
             <button 
               onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2 rounded-xl text-sm font-bold bg-[#D4AF37]/10 text-[#D4AF37] border border-[#D4AF37]/30 hover:bg-[#D4AF37]/20 transition-colors flex items-center gap-2"
+              className="px-4 py-2 rounded-xl text-sm font-bold bg-[#E11D48]/10 text-[#E11D48] border border-[#E11D48]/30 hover:bg-[#E11D48]/20 transition-colors flex items-center gap-2"
             >
               <Plus className="w-4 h-4" /> Add User
             </button>
@@ -376,7 +376,7 @@ export default function AdminDashboard() {
         </header>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-20 text-[#D4AF37]">
+          <div className="flex items-center justify-center py-20 text-[#E11D48]">
             <Loader2 className="w-8 h-8 animate-spin" />
           </div>
         ) : error ? (
@@ -433,7 +433,7 @@ export default function AdminDashboard() {
                           <div>
                             <div className="font-bold text-white text-sm flex items-center gap-2">
                               {displayName}
-                              {user.role === 'ADMIN' && <span className="text-[9px] font-black uppercase bg-[#D4AF37]/20 text-[#D4AF37] px-1.5 py-0.5 rounded">Admin</span>}
+                              {user.role === 'ADMIN' && <span className="text-[9px] font-black uppercase bg-[#E11D48]/20 text-[#E11D48] px-1.5 py-0.5 rounded">Admin</span>}
                               {user.isSuspended && <span className="text-[9px] font-black uppercase bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded">Suspended</span>}
                             </div>
                             {user.isVerified && <span className="text-[9px] text-emerald-400 font-bold">✓ Verified</span>}
@@ -533,22 +533,22 @@ export default function AdminDashboard() {
 
               {/* Account Credentials */}
               <div className="space-y-3">
-                <span className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-black block">Account Credentials</span>
+                <span className="text-[10px] uppercase tracking-widest text-[#E11D48] font-black block">Account Credentials</span>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Email Address *</label>
-                    <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="user@email.com" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="user@email.com" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Password *</label>
-                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min 6 characters" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min 6 characters" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                 </div>
               </div>
 
               {/* Personal Details */}
               <div className="space-y-3 pt-3 border-t border-white/5">
-                <span className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-black block">Personal Details</span>
+                <span className="text-[10px] uppercase tracking-widest text-[#E11D48] font-black block">Personal Details</span>
                 
                 {/* Profile Photo */}
                 <div className="mb-4 flex items-center gap-4">
@@ -560,34 +560,34 @@ export default function AdminDashboard() {
                     )}
                   </div>
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-bold block mb-1">Profile Photo</label>
-                    <input type="file" accept="image/*" onChange={handlePhotoUpload} className="text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#D4AF37]/10 file:text-[#D4AF37] hover:file:bg-[#D4AF37]/20" />
+                    <label className="text-[10px] uppercase tracking-widest text-[#E11D48] font-bold block mb-1">Profile Photo</label>
+                    <input type="file" accept="image/*" onChange={handlePhotoUpload} className="text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-[#E11D48]/10 file:text-[#E11D48] hover:file:bg-[#E11D48]/20" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">First Name *</label>
-                    <input type="text" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} placeholder="John" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="text" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} placeholder="John" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Last Name *</label>
-                    <input type="text" value={newLastName} onChange={e => setNewLastName(e.target.value)} placeholder="Doe" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="text" value={newLastName} onChange={e => setNewLastName(e.target.value)} placeholder="Doe" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Date of Birth</label>
-                    <input type="date" value={newDateOfBirth} onChange={e => setNewDateOfBirth(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="date" value={newDateOfBirth} onChange={e => setNewDateOfBirth(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Occupation</label>
-                    <input type="text" value={newOccupation} onChange={e => setNewOccupation(e.target.value)} placeholder="e.g. Software Engineer" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="text" value={newOccupation} onChange={e => setNewOccupation(e.target.value)} placeholder="e.g. Software Engineer" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Religion / Faith</label>
-                  <select value={newReligion} onChange={e => setNewReligion(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50">
+                  <select value={newReligion} onChange={e => setNewReligion(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50">
                     <option value="">Select Religion</option>
                     <option value="Christian">Christian</option>
                     <option value="Muslim">Muslim</option>
@@ -601,27 +601,27 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Bio</label>
-                  <textarea value={newBio} onChange={e => setNewBio(e.target.value)} rows={2} placeholder="Short bio about this user..." className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50 resize-none" />
+                  <textarea value={newBio} onChange={e => setNewBio(e.target.value)} rows={2} placeholder="Short bio about this user..." className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50 resize-none" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Education</label>
-                    <input type="text" value={newEducation} onChange={e => setNewEducation(e.target.value)} placeholder="e.g. BSc Computer Science" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="text" value={newEducation} onChange={e => setNewEducation(e.target.value)} placeholder="e.g. BSc Computer Science" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Cultural Background</label>
-                    <input type="text" value={newCulturalBackground} onChange={e => setNewCulturalBackground(e.target.value)} placeholder="e.g. Hispanic, Yoruba" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="text" value={newCulturalBackground} onChange={e => setNewCulturalBackground(e.target.value)} placeholder="e.g. Hispanic, Yoruba" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                 </div>
               </div>
 
               {/* Current Residence */}
               <div className="space-y-3 pt-3 border-t border-white/5">
-                <span className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-black block">Current Residence</span>
+                <span className="text-[10px] uppercase tracking-widest text-[#E11D48] font-black block">Current Residence</span>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="text-[9px] uppercase text-gray-500 font-bold block mb-1">Country</label>
-                    <select value={newResidenceCountry} onChange={e => { setNewResidenceCountry(e.target.value); setNewResidenceState(""); setNewResidenceCity(""); }} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50">
+                    <select value={newResidenceCountry} onChange={e => { setNewResidenceCountry(e.target.value); setNewResidenceState(""); setNewResidenceCity(""); }} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50">
                       <option value="">Select</option>
                       {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
@@ -629,28 +629,28 @@ export default function AdminDashboard() {
                   <div>
                     <label className="text-[9px] uppercase text-gray-500 font-bold block mb-1">State / Province</label>
                     {newResidenceStates.length > 0 ? (
-                      <select value={newResidenceState} onChange={e => setNewResidenceState(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50">
+                      <select value={newResidenceState} onChange={e => setNewResidenceState(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50">
                         <option value="">Select</option>
                         {newResidenceStates.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     ) : (
-                      <input type="text" value={newResidenceState} onChange={e => setNewResidenceState(e.target.value)} placeholder="State" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                      <input type="text" value={newResidenceState} onChange={e => setNewResidenceState(e.target.value)} placeholder="State" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50" />
                     )}
                   </div>
                   <div>
                     <label className="text-[9px] uppercase text-gray-500 font-bold block mb-1">City / Town</label>
-                    <input type="text" value={newResidenceCity} onChange={e => setNewResidenceCity(e.target.value)} placeholder="City" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="text" value={newResidenceCity} onChange={e => setNewResidenceCity(e.target.value)} placeholder="City" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                 </div>
               </div>
 
               {/* Heritage & Origin */}
               <div className="space-y-3 pt-3 border-t border-white/5">
-                <span className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-black block">Heritage & Origin</span>
+                <span className="text-[10px] uppercase tracking-widest text-[#E11D48] font-black block">Heritage & Origin</span>
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="text-[9px] uppercase text-gray-500 font-bold block mb-1">Country</label>
-                    <select value={newOriginCountry} onChange={e => { setNewOriginCountry(e.target.value); setNewOriginState(""); setNewOriginCity(""); }} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50">
+                    <select value={newOriginCountry} onChange={e => { setNewOriginCountry(e.target.value); setNewOriginState(""); setNewOriginCity(""); }} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50">
                       <option value="">Select</option>
                       {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
@@ -658,17 +658,17 @@ export default function AdminDashboard() {
                   <div>
                     <label className="text-[9px] uppercase text-gray-500 font-bold block mb-1">State / Province</label>
                     {newOriginStates.length > 0 ? (
-                      <select value={newOriginState} onChange={e => setNewOriginState(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50">
+                      <select value={newOriginState} onChange={e => setNewOriginState(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50">
                         <option value="">Select</option>
                         {newOriginStates.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
                     ) : (
-                      <input type="text" value={newOriginState} onChange={e => setNewOriginState(e.target.value)} placeholder="State" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                      <input type="text" value={newOriginState} onChange={e => setNewOriginState(e.target.value)} placeholder="State" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50" />
                     )}
                   </div>
                   <div>
                     <label className="text-[9px] uppercase text-gray-500 font-bold block mb-1">City / Town</label>
-                    <input type="text" value={newOriginCity} onChange={e => setNewOriginCity(e.target.value)} placeholder="City" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="text" value={newOriginCity} onChange={e => setNewOriginCity(e.target.value)} placeholder="City" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                 </div>
                 <MultiSelectDropdown 
@@ -682,11 +682,11 @@ export default function AdminDashboard() {
 
               {/* Lifestyle & Preferences */}
               <div className="space-y-3 pt-3 border-t border-white/5">
-                <span className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-black block">Lifestyle & Preferences</span>
+                <span className="text-[10px] uppercase tracking-widest text-[#E11D48] font-black block">Lifestyle & Preferences</span>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Marital Status</label>
-                    <select value={newMaritalStatus} onChange={e => setNewMaritalStatus(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50">
+                    <select value={newMaritalStatus} onChange={e => setNewMaritalStatus(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50">
                       <option value="">Select</option>
                       <option value="Never Married">Never Married</option>
                       <option value="Divorced">Divorced</option>
@@ -696,7 +696,7 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Children Status</label>
-                    <select value={newChildrenStatus} onChange={e => setNewChildrenStatus(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50">
+                    <select value={newChildrenStatus} onChange={e => setNewChildrenStatus(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50">
                       <option value="">Select</option>
                       <option value="No kids">No kids</option>
                       <option value="Has kids">Has kids</option>
@@ -706,7 +706,7 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Smoking</label>
-                    <select value={newSmoking} onChange={e => setNewSmoking(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50">
+                    <select value={newSmoking} onChange={e => setNewSmoking(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50">
                       <option value="">Select</option>
                       <option value="Non-smoker">Non-smoker</option>
                       <option value="Occasional">Occasional</option>
@@ -715,7 +715,7 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Drinking</label>
-                    <select value={newDrinking} onChange={e => setNewDrinking(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]/50">
+                    <select value={newDrinking} onChange={e => setNewDrinking(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:outline-none focus:border-[#E11D48]/50">
                       <option value="">Select</option>
                       <option value="Never">Never</option>
                       <option value="Social">Social</option>
@@ -726,7 +726,7 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Marriage Timeline</label>
-                    <select value={newMarriageTimeline} onChange={e => setNewMarriageTimeline(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50">
+                    <select value={newMarriageTimeline} onChange={e => setNewMarriageTimeline(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50">
                       <option value="">Select</option>
                       <option value="ASAP">ASAP</option>
                       <option value="1-2 years">1-2 years</option>
@@ -736,7 +736,7 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Willing to Relocate</label>
-                    <select value={newWillingToRelocate} onChange={e => setNewWillingToRelocate(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50">
+                    <select value={newWillingToRelocate} onChange={e => setNewWillingToRelocate(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50">
                       <option value="">Select</option>
                       <option value="Yes">Yes</option>
                       <option value="No">No</option>
@@ -745,7 +745,7 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Children Pref.</label>
-                    <select value={newChildrenPreference} onChange={e => setNewChildrenPreference(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50">
+                    <select value={newChildrenPreference} onChange={e => setNewChildrenPreference(e.target.value)} className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50">
                       <option value="">Select</option>
                       <option value="Open to children">Open to children</option>
                       <option value="Want children">Want children</option>
@@ -763,11 +763,11 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Marriage Expectations</label>
-                    <input type="text" value={newMarriageExpectations} onChange={e => setNewMarriageExpectations(e.target.value)} placeholder="e.g. Traditional, Equal Partners" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="text" value={newMarriageExpectations} onChange={e => setNewMarriageExpectations(e.target.value)} placeholder="e.g. Traditional, Equal Partners" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                   <div>
                     <label className="text-[10px] uppercase tracking-widest text-gray-400 font-bold block mb-1">Career Goals</label>
-                    <input type="text" value={newCareerGoals} onChange={e => setNewCareerGoals(e.target.value)} placeholder="e.g. Become CEO, Travel" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-[#D4AF37]/50" />
+                    <input type="text" value={newCareerGoals} onChange={e => setNewCareerGoals(e.target.value)} placeholder="e.g. Become CEO, Travel" className="w-full bg-[#0A0D14] border border-white/10 rounded-xl py-2.5 px-3 text-xs text-white focus:outline-none focus:border-[#E11D48]/50" />
                   </div>
                 </div>
               </div>
@@ -783,7 +783,7 @@ export default function AdminDashboard() {
                 <button 
                   type="submit"
                   disabled={isCreating}
-                  className="px-5 py-2.5 rounded-xl text-xs font-black bg-[#D4AF37] text-black hover:bg-[#F2CD5C] transition-colors disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2.5 rounded-xl text-xs font-black bg-[#E11D48] text-black hover:bg-[#F2CD5C] transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
                   {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add User"}
                 </button>
