@@ -218,12 +218,12 @@ class _CandidateCardState extends State<CandidateCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Row 1: Candidate Name & Age + Golden Verified Badge
+                  // Row 1: Candidate First Name & Age + Golden Verified Badge
                   Row(
                     children: [
                       Flexible(
                         child: Text(
-                          '${candidate.name}, ${candidate.age}',
+                          '${candidate.name.trim().split(RegExp(r'\s+')).first}, ${candidate.age}',
                           style: AppTypography.headingLarge.copyWith(
                             fontSize: 22,
                             color: AppColors.textPure,
@@ -242,13 +242,13 @@ class _CandidateCardState extends State<CandidateCard> {
                   // Row 2: Profession / Occupation • City, Country
                   Row(
                     children: [
-                      const Icon(Icons.work_outline, size: 13, color: AppColors.champagneGold),
+                      const Icon(Icons.work_outline, size: 13, color: AppColors.textMuted),
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
                           candidate.occupation,
                           style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textPure,
+                            color: AppColors.textMuted,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),

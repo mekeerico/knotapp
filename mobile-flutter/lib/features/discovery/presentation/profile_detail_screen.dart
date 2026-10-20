@@ -19,6 +19,12 @@ class ProfileDetailScreen extends StatefulWidget {
 }
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
+  static const Color _pearlGrey = Color(0xFFD1D5DC);   // Soft Off-White / Pearl Grey
+  static const Color _mutedSlate = Color(0xFF94A3B8);  // Muted Slate Grey / Cool Slate Blue
+  static const Color _trustGold = Color(0xFFD4AF37);   // Golden color like Trust icon
+  static const Color _deepGreen = Color(0xFF10B981);   // Deep green
+  static const Color _deepPink = Color(0xFFE11D48);    // Deep pink
+
   int _selectedPhotoIndex = 0;
   late final PageController _photoPageController;
 
@@ -484,28 +490,34 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         ),
                         const SizedBox(width: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                           decoration: BoxDecoration(
-                            color: AppColors.champagneGold.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.champagneGold, width: 1.2),
+                            color: _trustGold,
+                            borderRadius: BorderRadius.circular(999),
+                            boxShadow: [
+                              BoxShadow(
+                                color: _trustGold.withOpacity(0.35),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                          child: Column(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                '${profile.compatibilityScore}%',
-                                style: AppTypography.headingLarge.copyWith(
-                                  color: AppColors.champagneGold,
-                                  fontSize: 18,
-                                ),
+                              const Icon(
+                                Icons.shield_outlined,
+                                size: 13,
+                                color: Color(0xFF0B0E14),
                               ),
+                              const SizedBox(width: 4),
                               Text(
-                                'MATCH',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: AppColors.champagneGold,
-                                  fontSize: 9,
-                                  letterSpacing: 1.0,
+                                '${profile.compatibilityScore}% MATCH',
+                                style: const TextStyle(
+                                  color: Color(0xFF0B0E14),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.2,
                                 ),
                               ),
                             ],
@@ -523,16 +535,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.auto_awesome, color: AppColors.champagneGold, size: 18),
+                              const Icon(Icons.auto_awesome, color: _deepGreen, size: 18),
                               const SizedBox(width: 8),
-                              Text('WHY YOU MATCHED', style: AppTypography.headingMedium.copyWith(fontSize: 15)),
+                              Text('WHY YOU MATCHED', style: AppTypography.headingMedium.copyWith(fontSize: 15, color: _pearlGrey)),
                             ],
                           ),
                           const SizedBox(height: 12),
                           Text(
                             profile.aiExplanation,
                             style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textPure,
+                              color: _mutedSlate,
                               height: 1.5,
                             ),
                           ),
@@ -554,6 +566,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                   'Archetype',
                                   profile.personalityArchetype,
                                   Icons.psychology_outlined,
+                                  iconColor: _trustGold,
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -562,6 +575,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                   'Attachment Style',
                                   profile.attachmentStyle,
                                   Icons.favorite_border,
+                                  iconColor: _deepGreen,
                                 ),
                               ),
                             ],
@@ -577,12 +591,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSectionHeader(Icons.person_outline, 'CANDIDATE BIOGRAPHY'),
+                          _buildSectionHeader(Icons.person_outline, 'CANDIDATE BIOGRAPHY', iconColor: AppColors.champagneGold),
                           const SizedBox(height: 10),
                           Text(
                             profile.bio,
                             style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.textPure,
+                              color: _mutedSlate,
                               height: 1.5,
                             ),
                           ),
@@ -597,12 +611,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSectionHeader(Icons.public, 'HERITAGE & ORIGIN'),
+                          _buildSectionHeader(Icons.public, 'HERITAGE & ORIGIN', iconColor: _trustGold),
                           const SizedBox(height: 14),
                           _buildDetailRow(
                             icon: Icons.account_balance_outlined,
                             label: 'Ancestral Origin',
                             value: originFormatted,
+                            iconColor: _trustGold,
+                            valueColor: _pearlGrey,
                           ),
                           if (profile.culturalBackground.isNotEmpty) ...[
                             const SizedBox(height: 12),
@@ -610,6 +626,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               icon: Icons.diversity_3_outlined,
                               label: 'Cultural Background',
                               value: profile.culturalBackground,
+                              iconColor: _trustGold,
+                              valueColor: _pearlGrey,
                             ),
                           ],
                         ],
@@ -623,7 +641,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSectionHeader(Icons.person_search_outlined, 'PARTNER PREFERENCES'),
+                          _buildSectionHeader(Icons.person_search_outlined, 'PARTNER PREFERENCES', iconColor: _deepPink),
                           const SizedBox(height: 14),
                           _buildDetailRow(
                             icon: Icons.flag_outlined,
@@ -631,6 +649,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             value: profile.preferredResidenceCountry.isNotEmpty
                                 ? profile.preferredResidenceCountry
                                 : 'Any Country',
+                            iconColor: _deepPink,
+                            valueColor: _pearlGrey,
                           ),
                           const SizedBox(height: 12),
                           _buildDetailRow(
@@ -639,6 +659,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             value: profile.preferredResidenceState.isNotEmpty
                                 ? profile.preferredResidenceState
                                 : 'Any State/Province/Region',
+                            iconColor: _deepPink,
+                            valueColor: _pearlGrey,
                           ),
                           const SizedBox(height: 12),
                           _buildDetailRow(
@@ -647,6 +669,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             value: profile.preferredOriginCountry.isNotEmpty
                                 ? profile.preferredOriginCountry
                                 : 'Any Country',
+                            iconColor: _deepPink,
+                            valueColor: _pearlGrey,
                           ),
                           const SizedBox(height: 12),
                           _buildDetailRow(
@@ -655,6 +679,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             value: profile.preferredOriginState.isNotEmpty
                                 ? profile.preferredOriginState
                                 : 'Any Heritage',
+                            iconColor: _deepPink,
+                            valueColor: _pearlGrey,
                           ),
                         ],
                       ),
@@ -667,12 +693,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSectionHeader(Icons.work_outline, 'VOCATION, EDUCATION & FAITH'),
+                          _buildSectionHeader(Icons.work_outline, 'VOCATION, EDUCATION & FAITH', iconColor: _deepGreen),
                           const SizedBox(height: 14),
                           _buildDetailRow(
                             icon: Icons.business_center_outlined,
                             label: 'Profession / Occupation',
                             value: profile.occupation,
+                            iconColor: _deepGreen,
+                            valueColor: _pearlGrey,
                           ),
                           if (profile.education.isNotEmpty) ...[
                             const SizedBox(height: 12),
@@ -680,6 +708,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               icon: Icons.school_outlined,
                               label: 'Highest Educational Qualification',
                               value: profile.education,
+                              iconColor: _deepGreen,
+                              valueColor: _pearlGrey,
                             ),
                           ],
                           const SizedBox(height: 12),
@@ -687,6 +717,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             icon: Icons.church_outlined,
                             label: 'Faith / Religion',
                             value: profile.religion,
+                            iconColor: _deepGreen,
+                            valueColor: _pearlGrey,
                           ),
                           if (profile.careerGoals.isNotEmpty) ...[
                             const SizedBox(height: 12),
@@ -694,6 +726,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               icon: Icons.trending_up,
                               label: 'Career & Life Ambitions',
                               value: profile.careerGoals,
+                              iconColor: _deepGreen,
+                              valueColor: _pearlGrey,
                             ),
                           ],
                         ],
@@ -707,12 +741,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSectionHeader(Icons.translate, 'LANGUAGES SPOKEN'),
+                          _buildSectionHeader(Icons.translate, 'LANGUAGES SPOKEN', iconColor: _trustGold),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: profile.languagesSpoken.map((lang) => _buildGoldPill(lang)).toList(),
+                            children: profile.languagesSpoken.map((lang) => _buildGoldPill(lang, textColor: _mutedSlate)).toList(),
                           ),
                         ],
                       ),
@@ -725,30 +759,38 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSectionHeader(Icons.history_edu_outlined, 'MARITAL HISTORY & LIFESTYLE'),
+                          _buildSectionHeader(Icons.history_edu_outlined, 'MARITAL HISTORY & LIFESTYLE', iconColor: _deepPink),
                           const SizedBox(height: 14),
                           _buildDetailRow(
                             icon: Icons.favorite_outline,
                             label: 'Past Marital History',
                             value: profile.maritalStatus,
+                            iconColor: _deepPink,
+                            valueColor: _pearlGrey,
                           ),
                           const SizedBox(height: 12),
                           _buildDetailRow(
                             icon: Icons.child_care_outlined,
                             label: 'Current Children Status',
                             value: profile.childrenStatus,
+                            iconColor: _deepPink,
+                            valueColor: _pearlGrey,
                           ),
                           const SizedBox(height: 12),
                           _buildDetailRow(
                             icon: Icons.smoke_free_outlined,
                             label: 'Smoking Habits',
                             value: profile.smoking,
+                            iconColor: _deepPink,
+                            valueColor: _pearlGrey,
                           ),
                           const SizedBox(height: 12),
                           _buildDetailRow(
                             icon: Icons.local_bar_outlined,
                             label: 'Drinking Habits',
                             value: profile.drinking,
+                            iconColor: _deepPink,
+                            valueColor: _pearlGrey,
                           ),
                         ],
                       ),
@@ -761,24 +803,30 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSectionHeader(Icons.diamond_outlined, 'FUTURE MARRIAGE PLANS & ASPIRATIONS'),
+                          _buildSectionHeader(Icons.diamond_outlined, 'FUTURE MARRIAGE PLANS & ASPIRATIONS', iconColor: _trustGold),
                           const SizedBox(height: 14),
                           _buildDetailRow(
                             icon: Icons.schedule_outlined,
                             label: 'Marriage / Vow Timeline',
                             value: profile.marriageTimeline,
+                            iconColor: _trustGold,
+                            valueColor: _pearlGrey,
                           ),
                           const SizedBox(height: 12),
                           _buildDetailRow(
                             icon: Icons.family_restroom_outlined,
                             label: 'Future Children & Family Plans',
                             value: profile.childrenPreference,
+                            iconColor: _trustGold,
+                            valueColor: _pearlGrey,
                           ),
                           const SizedBox(height: 12),
                           _buildDetailRow(
                             icon: Icons.flight_takeoff_outlined,
                             label: 'Willingness to Relocate',
                             value: profile.willingToRelocate,
+                            iconColor: _trustGold,
+                            valueColor: _pearlGrey,
                           ),
                           if (profile.marriageExpectations.isNotEmpty) ...[
                             const SizedBox(height: 12),
@@ -786,6 +834,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                               icon: Icons.volunteer_activism_outlined,
                               label: 'Marriage Vision & Expectations',
                               value: profile.marriageExpectations,
+                              iconColor: _trustGold,
+                              valueColor: _pearlGrey,
                             ),
                           ],
                         ],
@@ -799,27 +849,28 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildSectionHeader(Icons.verified_outlined, 'CORE VALUES & COVENANT TRAITS'),
+                          _buildSectionHeader(Icons.verified_outlined, 'CORE VALUES & COVENANT TRAITS', iconColor: _deepGreen),
                           const SizedBox(height: 12),
                           Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: profile.personalValues.map((val) => _buildGoldPill(val)).toList(),
+                            children: profile.personalValues.map((val) => _buildGoldPill(val, textColor: _mutedSlate)).toList(),
                           ),
                           if (profile.idealPartnerTraits.isNotEmpty) ...[
                             const SizedBox(height: 16),
                             Text(
                               'DESIRED PARTNER QUALITIES',
                               style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.textSubtle,
+                                color: _mutedSlate,
                                 letterSpacing: 1.0,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 10),
                             Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: profile.idealPartnerTraits.map((t) => _buildGoldPill(t)).toList(),
+                              children: profile.idealPartnerTraits.map((t) => _buildGoldPill(t, textColor: _mutedSlate)).toList(),
                             ),
                           ],
                         ],
@@ -838,15 +889,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  Widget _buildSectionHeader(IconData icon, String title) {
+  Widget _buildSectionHeader(IconData icon, String title, {Color? iconColor}) {
     return Row(
       children: [
-        Icon(icon, color: AppColors.champagneGold, size: 18),
+        Icon(icon, color: iconColor ?? _trustGold, size: 18),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             title,
-            style: AppTypography.headingMedium.copyWith(fontSize: 14),
+            style: AppTypography.headingMedium.copyWith(
+              fontSize: 14,
+              color: _pearlGrey,
+            ),
           ),
         ),
       ],
@@ -857,6 +911,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     required IconData icon,
     required String label,
     required String value,
+    Color? iconColor,
+    Color? valueColor,
   }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -868,7 +924,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppColors.borderSubtle),
           ),
-          child: Icon(icon, size: 16, color: AppColors.champagneGold),
+          child: Icon(icon, size: 16, color: iconColor ?? _trustGold),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -886,7 +942,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               Text(
                 value,
                 style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textPure,
+                  color: valueColor ?? _pearlGrey,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -897,7 +953,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  Widget _buildCompactStat(String label, String value, IconData icon) {
+  Widget _buildCompactStat(String label, String value, IconData icon, {Color? iconColor}) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -907,18 +963,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppColors.champagneGold),
+          Icon(icon, size: 18, color: iconColor ?? _trustGold),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: AppTypography.bodySmall.copyWith(fontSize: 10.5)),
+                Text(label, style: AppTypography.bodySmall.copyWith(fontSize: 10.5, color: _mutedSlate)),
                 const SizedBox(height: 2),
                 Text(
                   value,
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textPure,
+                    color: _pearlGrey,
                     fontWeight: FontWeight.bold,
                   ),
                   maxLines: 2,
@@ -932,18 +988,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  Widget _buildGoldPill(String text) {
+  Widget _buildGoldPill(String text, {Color? textColor, Color? borderColor}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.darkCardElevated,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderGold, width: 0.8),
+        border: Border.all(color: borderColor ?? AppColors.borderGold, width: 0.8),
       ),
       child: Text(
         text,
         style: AppTypography.bodySmall.copyWith(
-          color: AppColors.champagneGold,
+          color: textColor ?? _mutedSlate,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -957,11 +1013,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: AppTypography.bodySmall),
+            Text(label, style: AppTypography.bodySmall.copyWith(color: _pearlGrey)),
             Text(
               '$score%',
               style: AppTypography.bodySmall.copyWith(
-                color: AppColors.champagneGold,
+                color: _trustGold,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -973,7 +1029,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           child: LinearProgressIndicator(
             value: (score.clamp(0, 100)) / 100,
             backgroundColor: AppColors.darkSlate,
-            valueColor: const AlwaysStoppedAnimation(AppColors.champagneGold),
+            valueColor: const AlwaysStoppedAnimation(_trustGold),
             minHeight: 6,
           ),
         ),

@@ -10,7 +10,7 @@ class NotificationBellButton extends ConsumerWidget {
 
   const NotificationBellButton({
     super.key,
-    this.iconColor = AppColors.champagneGold,
+    this.iconColor = AppColors.prestigeGold,
     this.size = 24,
   });
 
