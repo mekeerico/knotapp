@@ -52,11 +52,11 @@ class ProfileScreen extends ConsumerWidget {
                   'SOVEREIGN IDENTITY',
                   style: AppTypography.headingMedium.copyWith(
                     letterSpacing: 1.5,
-                    color: AppColors.champagneGold,
+                    color: const Color(0xFFD1D5DC),
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.tune_rounded, color: AppColors.champagneGold, size: 22),
+                  icon: const Icon(Icons.tune_rounded, color: Color(0xFFD1D5DC), size: 22),
                   onPressed: () => context.push('/partner-preferences'),
                   tooltip: 'Partner Match Preferences',
                 ),
@@ -83,16 +83,47 @@ class ProfileScreen extends ConsumerWidget {
               top: 14,
               bottom: 16,
             ),
-            child: GoldButton(
-              text: 'Sign Out',
-              isSecondary: true,
-              icon: Icons.logout,
-              onPressed: () async {
+            child: GestureDetector(
+              onTap: () async {
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) {
                   context.go('/auth');
                 }
               },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFE27D8D), Color(0xFF8C52FF)],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFE27D8D).withOpacity(0.35),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      'Sign Out',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Icon(Icons.logout, color: Colors.white, size: 18),
+                  ],
+                ),
+              ),
             ),
           ),
           child: SingleChildScrollView(

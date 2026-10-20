@@ -7,11 +7,23 @@ import '../../../core/widgets/knot_app_bar.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../auth/providers/auth_provider.dart';
 
-class InsightsScreen extends ConsumerWidget {
+class InsightsScreen extends ConsumerStatefulWidget {
   const InsightsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InsightsScreen> createState() => _InsightsScreenState();
+}
+
+class _InsightsScreenState extends ConsumerState<InsightsScreen> {
+  bool _headerVisible = true;
+
+  static const Color _mutedSlate = Color(0xFF9DABBF); // Muted Slate Grey / Cool Slate Blue
+  static const Color _golden = Color(0xFFD4AF37); // Golden
+  static const Color _pink = Color(0xFFE27D8D); // Pink
+  static const Color _green = Color(0xFF10B981); // Green
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
 
     final readiness = user?.readinessScore ?? 88;
@@ -21,142 +33,182 @@ class InsightsScreen extends ConsumerWidget {
     final attachment = user?.attachmentStyle ?? 'Secure';
     final values = (user?.personalValues.isNotEmpty ?? false)
         ? user!.personalValues
-        : ['Faith', 'Family', 'Integrity', 'Mutual Growth'];
+        : ['Faith', 'Family', 'Loyalty', 'Integrity'];
 
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
-      appBar: const KnotAppBar(
+      appBar: KnotAppBar(
         title: 'RELATIONSHIP INTELLIGENCE',
+        titleColor: Colors.white,
+        isTitleVisible: _headerVisible,
         showNotificationBell: true,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Psychological Alignment Vectors',
-                style: AppTypography.displayMedium.copyWith(fontSize: 20),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Extracted from your AI onboarding interview & verified by Knot behavioral engines.',
-                style: AppTypography.bodySmall,
-              ),
-              const SizedBox(height: 20),
+      body: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) {
+          if (_headerVisible) {
+            setState(() => _headerVisible = false);
+          }
+        },
+        onPointerUp: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        onPointerCancel: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Psychological Alignment Vectors',
+                  style: AppTypography.displayMedium.copyWith(
+                    fontSize: 20,
+                    color: _mutedSlate,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Extracted from your AI onboarding interview & verified by knot behavioral engines',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: _mutedSlate,
+                  ),
+                ),
+                const SizedBox(height: 20),
 
-              // 3-Metric Index Grid
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildIndexCard(
-                      'READINESS',
-                      '$readiness%',
-                      Icons.favorite_border,
-                      AppColors.roseGlow,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildIndexCard(
-                      'SERIOUSNESS',
-                      '$seriousness%',
-                      Icons.lock_clock,
-                      AppColors.champagneGold,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _buildIndexCard(
-                      'TRUST SCORE',
-                      '$trust%',
-                      Icons.shield_outlined,
-                      AppColors.emeraldVerified,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Personality Archetype Card
-              GlassCard(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                // 3-Metric Index Grid
+                Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('PERSONALITY ARCHETYPE', style: AppTypography.labelLarge),
-                        const VerifiedBadge(size: 16),
-                      ],
+                    Expanded(
+                      child: _buildIndexCard(
+                        'READINESS',
+                        '$readiness%',
+                        Icons.favorite_border,
+                        _golden,
+                      ),
                     ),
-                    const SizedBox(height: 10),
-                    Text(archetype, style: AppTypography.headingLarge.copyWith(fontSize: 20)),
-                    const SizedBox(height: 8),
-                    Text(
-                      _getArchetypeDescription(archetype),
-                      style: AppTypography.bodyMedium,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildIndexCard(
+                        'SERIOUSNESS',
+                        '$seriousness%',
+                        Icons.lock_clock,
+                        _pink,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildIndexCard(
+                        'TRUST SCORE',
+                        '$trust%',
+                        Icons.shield_outlined,
+                        _green,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
-              // Attachment Style Card
-              GlassCard(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('ATTACHMENT STYLE', style: AppTypography.labelLarge),
-                    const SizedBox(height: 10),
-                    Text(attachment, style: AppTypography.headingLarge.copyWith(fontSize: 20)),
-                    const SizedBox(height: 8),
-                    Text(
-                      _getAttachmentDescription(attachment),
-                      style: AppTypography.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Core Values Cluster
-              GlassCard(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('SACRED VALUE VECTORS', style: AppTypography.labelLarge),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: values.map((val) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                          decoration: BoxDecoration(
-                            color: AppColors.darkCardElevated,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.borderGold, width: 0.8),
-                          ),
-                          child: Text(
-                            val,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.champagneGold,
-                              fontWeight: FontWeight.bold,
+                // Personality Archetype Card
+                GlassCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'PERSONALITY ARCHETYPE',
+                            style: AppTypography.labelLarge.copyWith(
+                              color: _mutedSlate,
                             ),
                           ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
+                          const VerifiedBadge(size: 16),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(archetype, style: AppTypography.headingLarge.copyWith(fontSize: 20)),
+                      const SizedBox(height: 8),
+                      Text(
+                        _getArchetypeDescription(archetype),
+                        style: AppTypography.bodyMedium,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 30),
-            ],
+                const SizedBox(height: 16),
+
+                // Attachment Style Card
+                GlassCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'ATTACHMENT STYLE',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: _mutedSlate,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(attachment, style: AppTypography.headingLarge.copyWith(fontSize: 20)),
+                      const SizedBox(height: 8),
+                      Text(
+                        _getAttachmentDescription(attachment),
+                        style: AppTypography.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Core Values Cluster
+                GlassCard(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SACRED VALUE VECTORS',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: values.map((val) {
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                            decoration: BoxDecoration(
+                              color: AppColors.darkCardElevated,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.borderGold, width: 0.8),
+                            ),
+                            child: Text(
+                              val,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: _mutedSlate,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
+            ),
           ),
         ),
       ),

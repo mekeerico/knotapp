@@ -6,6 +6,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/gold_button.dart';
 import '../../../core/widgets/knot_app_bar.dart';
+import '../../../core/widgets/knot_image.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../discovery/models/match_profile.dart';
@@ -129,15 +130,62 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.champagneGold),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFFD1D5DC)),
           onPressed: () => context.pop(),
         ),
-        title: partnerName,
+        centerTitle: false,
+        titleWidget: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: KnotImage(
+                imageUrl: widget.matchProfile?.photos.isNotEmpty == true
+                    ? widget.matchProfile!.photos.first
+                    : null,
+                width: 36,
+                height: 36,
+                isCircle: true,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    partnerName,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: const [
+                      Icon(Icons.verified, size: 12, color: Color(0xFF10B981)),
+                      SizedBox(width: 3),
+                      Text(
+                        'Verified Real Human',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF10B981),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
         actions: [
-          const Center(child: VerifiedBadge(size: 16)),
-          const SizedBox(width: 8),
           IconButton(
-            icon: const Icon(Icons.more_vert, color: AppColors.champagneGold),
+            icon: const Icon(Icons.more_vert, color: Color(0xFF9DABBF)),
             onPressed: _showSafetyOptions,
           ),
         ],
@@ -279,7 +327,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             height: 44,
                             decoration: const BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppColors.champagneGold,
+                              gradient: LinearGradient(
+                                colors: [Color(0xFFE27D8D), Color(0xFF8C52FF)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
                             ),
                             child: const Icon(
                               Icons.send_rounded,
@@ -423,35 +475,131 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildMessageRow(ChatMessage msg, bool isMine) {
-    return Align(
-      alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.76,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: isMine ? AppColors.champagneGold : AppColors.darkSlate,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMine ? 16 : 4),
-            bottomRight: Radius.circular(isMine ? 4 : 16),
+    final timeStr =
+        '${msg.timestamp.hour.toString().padLeft(2, '0')}:${msg.timestamp.minute.toString().padLeft(2, '0')}';
+    final partnerPhoto = widget.matchProfile?.photos.isNotEmpty == true
+        ? widget.matchProfile!.photos.first
+        : null;
+
+    if (isMine) {
+      return Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.76,
           ),
-          border: Border.all(
-            color: isMine ? AppColors.champagneGold : AppColors.borderGold.withOpacity(0.3),
-            width: 0.8,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFF4C1D95), // Deep royal purple / violet bubble
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(18),
+              topRight: Radius.circular(18),
+              bottomLeft: Radius.circular(18),
+              bottomRight: Radius.circular(4),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF4C1D95).withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                msg.text,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w500,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                timeStr,
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.65),
+                  fontSize: 10,
+                ),
+              ),
+            ],
           ),
         ),
-        child: Text(
-          msg.text,
-          style: AppTypography.bodyMedium.copyWith(
-            color: isMine ? Colors.white : AppColors.textPure,
-            fontWeight: isMine ? FontWeight.w600 : FontWeight.normal,
+      );
+    } else {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              // Candidate circular avatar
+              Container(
+                width: 28,
+                height: 28,
+                margin: const EdgeInsets.only(right: 8, bottom: 2),
+                child: KnotImage(
+                  imageUrl: partnerPhoto,
+                  width: 28,
+                  height: 28,
+                  isCircle: true,
+                ),
+              ),
+              // Dark slate incoming message bubble
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.72,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF182028), // Dark slate container
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(18),
+                      topRight: Radius.circular(18),
+                      bottomLeft: Radius.circular(4),
+                      bottomRight: Radius.circular(18),
+                    ),
+                    border: Border.all(
+                      color: const Color(0xFF28313E),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        msg.text,
+                        style: const TextStyle(
+                          color: Color(0xFFD1D5DC), // Soft pearl grey / off-white
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.normal,
+                          height: 1.35,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        timeStr,
+                        style: const TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-    );
+      );
+    }
   }
 }

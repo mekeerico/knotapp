@@ -133,6 +133,25 @@ class MatchProfile {
     return fallback;
   }
 
+  static String _resolveGender(Map<String, dynamic> partner, Map<String, dynamic> root) {
+    final direct = _nonEmpty(partner['gender'], _nonEmpty(root['gender'], _nonEmpty(partner['sex'], _nonEmpty(root['sex']))));
+    if (direct.isNotEmpty) return direct;
+
+    final pref = _nonEmpty(partner['preferredGender'], _nonEmpty(root['preferredGender'])).toLowerCase();
+    if (pref == 'male' || pref == 'man' || pref == 'm') return 'Female';
+    if (pref == 'female' || pref == 'woman' || pref == 'f') return 'Male';
+
+    final name = _nonEmpty(partner['firstName'], _nonEmpty(partner['name'], _nonEmpty(root['name']))).toLowerCase();
+    const maleNames = ['michael', 'alex', 'david', 'john', 'james', 'daniel', 'liam', 'chen', 'robert', 'william', 'joseph', 'charles', 'thomas', 'christopher', 'matthew', 'anthony', 'mark', 'steven', 'paul', 'andrew', 'joshua', 'kevin', 'brian', 'george', 'edward', 'jason', 'ryan', 'jacob', 'nicholas', 'eric', 'jonathan', 'stephen', 'justin', 'brandon', 'benjamin', 'samuel', 'alexander', 'patrick', 'jack', 'tyler', 'aaron', 'adam', 'nathan', 'henry', 'zachary', 'peter', 'kyle', 'ethan', 'jeremy', 'christian', 'noah', 'sean', 'austin', 'arthur', 'jesse', 'dylan', 'bryan', 'jordan', 'gabriel', 'logan', 'alan', 'juan', 'vincent', 'louis', 'philip', 'bradley'];
+    const femaleNames = ['sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'emma', 'olivia', 'ava', 'isabella', 'mia', 'charlotte', 'amelia', 'harper', 'evelyn', 'abigail', 'elizabeth', 'sofia', 'avery', 'ella', 'scarlett', 'grace', 'victoria', 'riley', 'aria', 'lily', 'aubrey', 'zoey', 'penelope', 'layla', 'lillian', 'nora', 'camila', 'hannah', 'mila', 'eleanor', 'maya', 'stella', 'hazel', 'leah', 'violet', 'aurora', 'savannah', 'audrey', 'brooklyn', 'claire', 'skylar', 'ellie', 'lucy', 'anna', 'caroline', 'nova', 'genesis', 'emilia', 'kennedy', 'samantha', 'allison', 'madelyn', 'adeline', 'hailey', 'elena', 'cora', 'vivian', 'natalie', 'zoe', 'katelyn', 'fatima', 'aisha', 'maryam', 'khadija', 'nour', 'huda', 'yasmin', 'iman', 'asma', 'mariam'];
+
+    final firstWord = name.split(' ').first.toLowerCase();
+    if (maleNames.contains(firstWord)) return 'Male';
+    if (femaleNames.contains(firstWord)) return 'Female';
+
+    return '';
+  }
+
   factory MatchProfile.fromJson(Map<String, dynamic> json) {
     // If backend wrapped match in { matchId, partner, scores }, unwrap partner!
     final partner = json['partner'] is Map<String, dynamic>
@@ -215,7 +234,7 @@ class MatchProfile {
       id: _nonEmpty(partner['id'], _nonEmpty(json['matchId'])),
       name: fullName,
       age: _parseAge(partner['age'], partner['dateOfBirth']),
-      gender: _nonEmpty(partner['gender']),
+      gender: _resolveGender(partner, json),
       city: residenceCity,
       residenceState: residenceState,
       country: residenceCountry,

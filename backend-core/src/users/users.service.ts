@@ -272,6 +272,8 @@ export class UsersService {
             passwordHash: 'mock',
             firstName: u.firstName || u.name || 'Mock',
             lastName: u.lastName || '',
+            gender: u.gender || (u.preferredGender === 'male' ? 'Female' : 'Male'),
+            preferredGender: u.preferredGender || (u.gender?.toLowerCase() === 'female' ? 'Male' : 'Female'),
             dateOfBirth: u.dateOfBirth || new Date(new Date().setFullYear(new Date().getFullYear() - (u.age || 25))).toISOString(),
             isVerified: true,
             isPremium: true,

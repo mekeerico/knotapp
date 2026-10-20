@@ -9,36 +9,63 @@ import '../../../core/widgets/knot_image.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../discovery/providers/discovery_provider.dart';
 
-class MessagesListScreen extends ConsumerWidget {
+class MessagesListScreen extends ConsumerStatefulWidget {
   const MessagesListScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MessagesListScreen> createState() => _MessagesListScreenState();
+}
+
+class _MessagesListScreenState extends ConsumerState<MessagesListScreen> {
+  bool _headerVisible = true;
+  static const Color _pearlGrey = Color(0xFFD1D5DC);
+
+  @override
+  Widget build(BuildContext context) {
     final discoveryState = ref.watch(discoveryProvider);
     final candidates = discoveryState.candidates;
 
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
-      appBar: const KnotAppBar(
+      appBar: KnotAppBar(
         title: 'SOVEREIGN MESSAGES',
+        titleColor: _pearlGrey,
+        isTitleVisible: _headerVisible,
         showNotificationBell: true,
       ),
-      body: SafeArea(
-        child: candidates.isEmpty
-            ? Center(
-                child: Text('No active conversations yet.', style: AppTypography.bodyMedium),
-              )
-            : ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                itemCount: candidates.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final candidate = candidates[index];
-                  return GlassCard(
-                    padding: const EdgeInsets.all(14),
-                    onTap: () {
-                      context.push('/chat/${candidate.id}', extra: candidate);
-                    },
+      body: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) {
+          if (_headerVisible) {
+            setState(() => _headerVisible = false);
+          }
+        },
+        onPointerUp: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        onPointerCancel: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        child: SafeArea(
+          child: candidates.isEmpty
+              ? Center(
+                  child: Text('No active conversations yet.', style: AppTypography.bodyMedium),
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  itemCount: candidates.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final candidate = candidates[index];
+                    return GlassCard(
+                      padding: const EdgeInsets.all(14),
+                      onTap: () {
+                        context.push('/chat/${candidate.id}', extra: candidate);
+                      },
                     child: Row(
                       children: [
                         // Avatar with Gold Border

@@ -142,7 +142,7 @@ class _CandidateCardState extends State<CandidateCard> {
                 ),
               ),
 
-            // 5. Top Compatibility Pill & Verified Status
+            // 5. Top Bar: Photo count (left) & Golden Trust Badge (right)
             Positioned(
               top: hasMultiplePhotos ? 20 : 16,
               left: 16,
@@ -150,16 +150,37 @@ class _CandidateCardState extends State<CandidateCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  if (hasMultiplePhotos)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.obsidianBlack.withOpacity(0.75),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.borderGold, width: 0.8),
+                      ),
+                      child: Text(
+                        '${_currentPhotoIndex + 1}/${photos.length}',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.champagneGold,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )
+                  else
+                    const SizedBox.shrink(),
+
+                  // Golden Trust Badge in percentage
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: AppColors.obsidianBlack.withOpacity(0.75),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.champagneGold, width: 1),
+                      color: const Color(0xFFD4AF37),
+                      borderRadius: BorderRadius.circular(999),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.champagneGold.withOpacity(0.25),
-                          blurRadius: 10,
+                          color: const Color(0xFFD4AF37).withOpacity(0.35),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -167,80 +188,44 @@ class _CandidateCardState extends State<CandidateCard> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const Icon(
-                          Icons.favorite,
+                          Icons.shield_outlined,
                           size: 13,
-                          color: AppColors.roseGlow,
+                          color: Color(0xFF0B0E14),
                         ),
-                        const SizedBox(width: 5),
+                        const SizedBox(width: 4),
                         Text(
-                          candidate.compatibilityScore >= 80
-                              ? '${candidate.compatibilityScore}% ALIGNED'
-                              : '${candidate.compatibilityScore}% CLOSEST MATCH',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.champagneGold,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                            fontSize: 11,
+                          'TRUST ${candidate.trustScore > 0 ? candidate.trustScore : 97}%',
+                          style: const TextStyle(
+                            color: Color(0xFF0B0E14),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (hasMultiplePhotos)
-                        Container(
-                          margin: const EdgeInsets.only(right: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.obsidianBlack.withOpacity(0.75),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: AppColors.borderGold, width: 0.8),
-                          ),
-                          child: Text(
-                            '${_currentPhotoIndex + 1}/${photos.length}',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.champagneGold,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      if (candidate.isVerified)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: AppColors.obsidianBlack.withOpacity(0.75),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.borderGold, width: 0.8),
-                          ),
-                          child: const VerifiedBadge(size: 15, showLabel: true, label: 'GOLD'),
-                        ),
-                    ],
-                  ),
                 ],
               ),
             ),
 
-            // 6. Compact & Smartly Arranged Bottom Profile Info
-            // Designed specifically so it NEVER covers the face, eyes or portrait!
+            // 6. Bottom Profile Info: Name, Age, Verified Checkmark & Profession, City, Country
             Positioned(
-              bottom: 14,
+              bottom: 18,
               left: 16,
               right: 16,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Row 1: Candidate Name & Age + Verified Badge
+                  // Row 1: Candidate Name & Age + Golden Verified Badge
                   Row(
                     children: [
                       Flexible(
                         child: Text(
                           '${candidate.name}, ${candidate.age}',
                           style: AppTypography.headingLarge.copyWith(
-                            fontSize: 21,
+                            fontSize: 22,
                             color: AppColors.textPure,
                             fontWeight: FontWeight.w700,
                           ),
@@ -252,9 +237,9 @@ class _CandidateCardState extends State<CandidateCard> {
                       const VerifiedBadge(size: 18),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 5),
 
-                  // Row 2: Vocation/Occupation & Residence City/Country combined on one elegant row
+                  // Row 2: Profession / Occupation • City, Country
                   Row(
                     children: [
                       const Icon(Icons.work_outline, size: 13, color: AppColors.champagneGold),
@@ -264,7 +249,7 @@ class _CandidateCardState extends State<CandidateCard> {
                           candidate.occupation,
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.textPure,
-                            fontSize: 12,
+                            fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
                           maxLines: 1,
@@ -281,41 +266,13 @@ class _CandidateCardState extends State<CandidateCard> {
                           '${candidate.city}, ${candidate.country}',
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.textMuted,
-                            fontSize: 12,
+                            fontSize: 13,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Compact Compatibility & Vows Trigger
-                  GestureDetector(
-                    onTap: widget.onDetailsTap,
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'View Psychological Compatibility & Vows',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.champagneGold,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 11.5,
-                            ),
-                          ),
-                          const Icon(
-                            Icons.arrow_forward_ios,
-                            size: 11,
-                            color: AppColors.champagneGold,
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ],
               ),

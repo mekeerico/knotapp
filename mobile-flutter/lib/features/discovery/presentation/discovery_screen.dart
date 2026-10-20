@@ -36,6 +36,21 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
     final notifier = ref.read(discoveryProvider.notifier);
     final authState = ref.watch(authProvider);
 
+    // Automatically reload candidate deck whenever auth state resolves or user gender changes
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (previous?.user?.id != next.user?.id ||
+          previous?.user?.gender != next.user?.gender ||
+          previous?.user?.preferredGender != next.user?.preferredGender) {
+        notifier.loadCandidates();
+      }
+    });
+
+    // Strictly enforce opposite-gender filtering on candidates rendered in the UI
+    final displayCandidates = DiscoveryNotifier.filterOppositeGender(
+      candidates: state.candidates,
+      currentUser: authState.user,
+    );
+
     ref.listen<DiscoveryState>(discoveryProvider, (previous, next) {
       if (next.limitNoticeMessage != null && next.limitNoticeMessage != previous?.limitNoticeMessage) {
         final message = next.limitNoticeMessage!;
@@ -119,7 +134,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                       valueColor: AlwaysStoppedAnimation(AppColors.champagneGold),
                     ),
                   )
-                : state.candidates.isEmpty
+                : displayCandidates.isEmpty
                     ? _buildEmptyRegistry(notifier, authState.user?.gender)
                     : Column(
                         children: [
@@ -127,9 +142,9 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               child: CardSwiper(
-                                key: ValueKey('deck_${state.candidates.length}'),
+                                key: ValueKey('deck_${displayCandidates.length}'),
                                 controller: _swiperController,
-                                cardsCount: state.candidates.length,
+                                cardsCount: displayCandidates.length,
                                 numberOfCardsDisplayed: 1,
                                 backCardOffset: Offset.zero,
                                 isLoop: true,
@@ -137,10 +152,10 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                   // In continuous loop mode, candidates remain available
                                 },
                                 cardBuilder: (context, index, percentX, percentY) {
-                                  if (index < 0 || index >= state.candidates.length) {
+                                  if (index < 0 || index >= displayCandidates.length) {
                                     return const SizedBox.shrink();
                                   }
-                                  final candidate = state.candidates[index];
+                                  final candidate = displayCandidates[index];
                                   return CandidateCard(
                                     candidate: candidate,
                                     onDetailsTap: () {
@@ -149,13 +164,13 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                   );
                                 },
                                 onSwipe: (previousIndex, currentIndex, direction) {
-                                  if (currentIndex != null && state.candidates.isNotEmpty) {
+                                  if (currentIndex != null && displayCandidates.isNotEmpty) {
                                     setState(() {
-                                      _currentCardIndex = currentIndex % state.candidates.length;
+                                      _currentCardIndex = currentIndex % displayCandidates.length;
                                     });
                                   }
-                                  if (previousIndex >= 0 && previousIndex < state.candidates.length) {
-                                    final candidate = state.candidates[previousIndex];
+                                  if (previousIndex >= 0 && previousIndex < displayCandidates.length) {
+                                    final candidate = displayCandidates[previousIndex];
                                     if (direction == CardSwiperDirection.right) {
                                       notifier.likeCandidate(candidate);
                                     } else {
@@ -169,47 +184,84 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                             ),
                           ),
 
-                          // Action Buttons Bar
+                          // Action Buttons Bar: Pass & Connect
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 16, top: 8),
+                            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 8),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // Pass Button (X)
-                                _buildActionButton(
-                                  icon: Icons.close,
-                                  color: AppColors.textSubtle,
-                                  onTap: () {
-                                    if (state.candidates.isNotEmpty) {
-                                      _swiperController.swipe(CardSwiperDirection.left);
-                                    }
-                                  },
+                                // Pass Button
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (displayCandidates.isNotEmpty) {
+                                        _swiperController.swipe(CardSwiperDirection.left);
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF191E2E),
+                                        borderRadius: BorderRadius.circular(999),
+                                        border: Border.all(color: const Color(0xFF374151), width: 1),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: const Text(
+                                        'Pass',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                const SizedBox(width: 24),
+                                const SizedBox(width: 14),
 
-                                // View Details & Compatibility Button
-                                _buildActionButton(
-                                  icon: Icons.star,
-                                  color: AppColors.champagneGold,
-                                  size: 64,
-                                  onTap: () {
-                                    if (state.candidates.isNotEmpty) {
-                                      final idx = _currentCardIndex.clamp(0, state.candidates.length - 1);
-                                      context.push('/profile-detail', extra: state.candidates[idx]);
-                                    }
-                                  },
-                                ),
-                                const SizedBox(width: 24),
-
-                                // Like & Connect Button (Red Heart)
-                                _buildActionButton(
-                                  icon: Icons.favorite,
-                                  color: AppColors.roseGlow,
-                                  onTap: () {
-                                    if (state.candidates.isNotEmpty) {
-                                      _swiperController.swipe(CardSwiperDirection.right);
-                                    }
-                                  },
+                                // Connect Button
+                                Expanded(
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (displayCandidates.isNotEmpty) {
+                                        final idx = _currentCardIndex.clamp(0, displayCandidates.length - 1);
+                                        context.push('/profile-detail', extra: displayCandidates[idx]);
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [Color(0xFFE27D8D), Color(0xFF8C52FF)],
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(999),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFFE27D8D).withOpacity(0.35),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: const [
+                                          Text(
+                                            'Connect',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Icon(Icons.favorite_border, color: Colors.white, size: 18),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -222,34 +274,6 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
               _buildMatchCelebrationModal(context, state.matchedCandidate!, notifier),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-    double size = 52,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.darkSlate,
-          border: Border.all(color: color.withOpacity(0.4), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.25),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Icon(icon, color: color, size: size * 0.45),
       ),
     );
   }

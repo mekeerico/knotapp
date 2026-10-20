@@ -16,6 +16,9 @@ class AICoachScreen extends ConsumerStatefulWidget {
 class _AICoachScreenState extends ConsumerState<AICoachScreen> {
   final _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  bool _headerVisible = true;
+
+  static const Color _mutedSlate = Color(0xFF9DABBF); // Muted Slate Grey / Cool Slate Blue
 
   final List<String> _quickPrompts = [
     'How do I discuss marriage timelines?',
@@ -54,39 +57,58 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
-      appBar: const KnotAppBar(
+      appBar: KnotAppBar(
         title: 'AI RELATIONSHIP COACH',
+        titleColor: Colors.white,
+        isTitleVisible: _headerVisible,
         showNotificationBell: true,
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Quick Prompts Horizontal Scroll
-            Container(
-              height: 44,
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: _quickPrompts.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final prompt = _quickPrompts[index];
-                  return ActionChip(
-                    backgroundColor: AppColors.darkSlate,
-                    side: const BorderSide(color: AppColors.borderGold, width: 0.8),
-                    label: Text(
-                      prompt,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.champagneGold,
-                        fontWeight: FontWeight.w600,
+      body: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) {
+          if (_headerVisible) {
+            setState(() => _headerVisible = false);
+          }
+        },
+        onPointerUp: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        onPointerCancel: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Quick Prompts Horizontal Scroll
+              Container(
+                height: 44,
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: _quickPrompts.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final prompt = _quickPrompts[index];
+                    return ActionChip(
+                      backgroundColor: AppColors.darkSlate,
+                      side: const BorderSide(color: AppColors.borderGold, width: 0.8),
+                      label: Text(
+                        prompt,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: _mutedSlate,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    onPressed: () => _sendMessage(prompt),
-                  );
-                },
+                      onPressed: () => _sendMessage(prompt),
+                    );
+                  },
+                ),
               ),
-            ),
 
             // Message Stream
             Expanded(
@@ -193,7 +215,7 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
         child: Text(
           msg.text,
           style: AppTypography.bodyMedium.copyWith(
-            color: msg.isUser ? AppColors.obsidianBlack : AppColors.textPure,
+            color: msg.isUser ? AppColors.obsidianBlack : const Color(0xFFD1D5DC),
             fontWeight: msg.isUser ? FontWeight.w600 : FontWeight.normal,
             height: 1.45,
           ),

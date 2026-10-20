@@ -5,6 +5,9 @@ import '../../features/notifications/presentation/widgets/notification_bell_butt
 
 class KnotAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? title;
+  final Widget? titleWidget;
+  final Color? titleColor;
+  final bool isTitleVisible;
   final bool showLogo;
   final bool showNotificationBell;
   final List<Widget>? actions;
@@ -14,6 +17,9 @@ class KnotAppBar extends StatelessWidget implements PreferredSizeWidget {
   const KnotAppBar({
     super.key,
     this.title,
+    this.titleWidget,
+    this.titleColor,
+    this.isTitleVisible = true,
     this.showLogo = false,
     this.showNotificationBell = false,
     this.actions,
@@ -24,38 +30,62 @@ class KnotAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final List<Widget> resolvedActions = [
-      if (actions != null) ...actions!,
+      ...?actions,
       if (showNotificationBell) const NotificationBellButton(),
     ];
+
+    Widget? renderedTitle;
+    if (showLogo) {
+      renderedTitle = Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'KNOT',
+            style: AppTypography.displayMedium.copyWith(
+              fontSize: 22,
+              letterSpacing: 3.0,
+            ),
+          ),
+          Text(
+            '.',
+            style: AppTypography.displayMedium.copyWith(
+              fontSize: 22,
+              color: AppColors.champagneGold,
+            ),
+          ),
+        ],
+      );
+    } else if (titleWidget != null) {
+      renderedTitle = titleWidget;
+    } else if (title != null) {
+      renderedTitle = Text(
+        title!,
+        style: AppTypography.headingMedium.copyWith(
+          color: titleColor,
+        ),
+      );
+    }
+
+    if (renderedTitle != null) {
+      renderedTitle = AnimatedSlide(
+        offset: isTitleVisible ? Offset.zero : const Offset(0, -0.4),
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        child: AnimatedOpacity(
+          opacity: isTitleVisible ? 1.0 : 0.0,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          child: renderedTitle,
+        ),
+      );
+    }
 
     return AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
       centerTitle: centerTitle,
       leading: leading,
-      title: showLogo
-          ? Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'KNOT',
-                  style: AppTypography.displayMedium.copyWith(
-                    fontSize: 22,
-                    letterSpacing: 3.0,
-                  ),
-                ),
-                Text(
-                  '.',
-                  style: AppTypography.displayMedium.copyWith(
-                    fontSize: 22,
-                    color: AppColors.champagneGold,
-                  ),
-                ),
-              ],
-            )
-          : title != null
-              ? Text(title!, style: AppTypography.headingMedium)
-              : null,
+      title: renderedTitle,
       actions: resolvedActions.isNotEmpty ? resolvedActions : null,
     );
   }

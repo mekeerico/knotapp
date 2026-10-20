@@ -86,6 +86,90 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     await loadCandidates();
   }
 
+  static bool isMale(String? g) {
+    if (g == null) return false;
+    final s = g.trim().toLowerCase();
+    return s == 'male' || s == 'man' || s == 'm' || s == 'gentleman' || s == 'he' || s == 'he/him' || s == 'boy';
+  }
+
+  static bool isFemale(String? g) {
+    if (g == null) return false;
+    final s = g.trim().toLowerCase();
+    return s == 'female' || s == 'woman' || s == 'f' || s == 'lady' || s == 'she' || s == 'she/her' || s == 'girl';
+  }
+
+  static List<MatchProfile> filterOppositeGender({
+    required List<MatchProfile> candidates,
+    required UserModel? currentUser,
+  }) {
+    if (currentUser == null) {
+      return candidates;
+    }
+
+    final currentUserId = currentUser.id.trim();
+    final currentUserFullName = currentUser.fullName.trim().toLowerCase();
+    final userFirstName = currentUser.firstName.trim().toLowerCase();
+    final userLastName = currentUser.lastName.trim().toLowerCase();
+
+    // 1. Determine current user's gender
+    bool userIsMale = isMale(currentUser.gender);
+    bool userIsFemale = isFemale(currentUser.gender);
+
+    // If gender wasn't explicit, check preferredGender:
+    // User who prefers female is seeking female candidates (user is Male)
+    // User who prefers male is seeking male candidates (user is Female)
+    if (!userIsMale && !userIsFemale) {
+      if (isFemale(currentUser.preferredGender)) {
+        userIsMale = true;
+      } else if (isMale(currentUser.preferredGender)) {
+        userIsFemale = true;
+      }
+    }
+
+    // Name inference for user if gender not set
+    if (!userIsMale && !userIsFemale) {
+      final name = userFirstName.isNotEmpty ? userFirstName : currentUserFullName.split(' ').first;
+      const maleNames = ['michael', 'alex', 'david', 'john', 'james', 'daniel', 'liam', 'chen'];
+      const femaleNames = ['sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe'];
+      if (maleNames.contains(name)) userIsMale = true;
+      if (femaleNames.contains(name)) userIsFemale = true;
+    }
+
+    return candidates.where((c) {
+      // 1. Never match user to themselves
+      if (currentUserId.isNotEmpty && c.id == currentUserId) return false;
+      final candName = c.name.trim().toLowerCase();
+      if (currentUserFullName.isNotEmpty && candName.isNotEmpty && candName == currentUserFullName) {
+        return false;
+      }
+      if (userFirstName.isNotEmpty && userLastName.isNotEmpty && candName.isNotEmpty) {
+        if (candName.contains(userFirstName) && candName.contains(userLastName)) {
+          return false;
+        }
+      }
+
+      // 2. Strict Opposite-Gender Enforcement
+      final cGen = c.gender.trim().toLowerCase();
+      final candIsMale = isMale(cGen);
+      final candIsFemale = isFemale(cGen);
+
+      if (userIsMale) {
+        // Male user must ONLY see female candidates! Strictly forbid male candidates.
+        return candIsFemale && !candIsMale;
+      } else if (userIsFemale) {
+        // Female user must ONLY see male candidates! Strictly forbid female candidates.
+        return candIsMale && !candIsFemale;
+      }
+
+      // Fallback: If current user's gender couldn't be resolved, forbid candidates of identical detected gender
+      if (cGen.isNotEmpty && currentUser.gender.trim().toLowerCase() == cGen) {
+        return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
   Future<void> loadCandidates() async {
     state = state.copyWith(candidates: state.candidates, isLoading: true);
 
@@ -96,53 +180,11 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
             .map((item) => MatchProfile.fromJson(item))
             .toList();
 
-        // Strict Client-Side Self-Exclusion & Opposite-Gender Enforcement:
-        // Guarantees that a user can NEVER see themselves and can ONLY see opposite-sex candidates
         final authState = _ref.read(authProvider);
-        final currentUserId = (authState.user?.id ?? '').trim();
-        final currentUserFullName = (authState.user?.fullName ?? '').trim().toLowerCase();
-        final userFirstName = (authState.user?.firstName ?? '').trim().toLowerCase();
-        final userLastName = (authState.user?.lastName ?? '').trim().toLowerCase();
-        final userGender = (authState.user?.gender ?? '').trim().toLowerCase();
-
-        final isUserMale = userGender == 'male' || userGender == 'man' || userGender == 'm';
-        final isUserFemale = userGender == 'female' || userGender == 'woman' || userGender == 'f';
-
-        list = list.where((c) {
-          // 1. Strict Self-Exclusion: User can NEVER be matched to themselves
-          if (currentUserId.isNotEmpty && c.id == currentUserId) return false;
-
-          final candName = c.name.trim().toLowerCase();
-          if (currentUserFullName.isNotEmpty && candName.isNotEmpty && candName == currentUserFullName) {
-            return false;
-          }
-          if (userFirstName.isNotEmpty && userLastName.isNotEmpty && candName.isNotEmpty) {
-            if (candName.contains(userFirstName) && candName.contains(userLastName)) {
-              return false;
-            }
-          }
-
-          // 2. Strict Opposite-Gender Enforcement: Only opposite sex (Male <-> Female)
-          final cGen = c.gender.trim().toLowerCase();
-          final isCandMale = cGen == 'male' || cGen == 'man' || cGen == 'm';
-          final isCandFemale = cGen == 'female' || cGen == 'woman' || cGen == 'f';
-
-          if (isUserMale) {
-            // Male user must only see female candidates
-            return isCandFemale && !isCandMale;
-          } else if (isUserFemale) {
-            // Female user must only see male candidates
-            return isCandMale && !isCandFemale;
-          }
-
-          // If current user's gender string wasn't explicitly 'male' or 'female'
-          // still forbid matching with candidates of the same detected gender
-          if (cGen.isNotEmpty && userGender.isNotEmpty && cGen == userGender) {
-            return false;
-          }
-
-          return true;
-        }).toList();
+        list = filterOppositeGender(
+          candidates: list,
+          currentUser: authState.user,
+        );
 
         state = state.copyWith(candidates: list, isLoading: false);
         return;
