@@ -41,17 +41,37 @@ export default function HomeScreen() {
         const otherUsers = allUsers.filter(u => u.id !== userProfile.id);
         
         const userGender = (userProfile.gender || '').toLowerCase().trim();
-        const targetGender = userGender === 'female' ? 'male' : 'female';
+        const userPref = (userProfile.preferredGender || '').toLowerCase().trim();
+        const userName = (userProfile.firstName || userProfile.name || '').toLowerCase().trim();
         
-        let filtered = otherUsers.filter((m) => (m.gender || '').toLowerCase() === targetGender);
+        const maleNames = ['alex', 'michael', 'david', 'john', 'james', 'daniel', 'liam', 'chen', 'eric', 'emeke', 'mike', 'gabriel'];
+        const femaleNames = ['sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'amara'];
         
-        if (filtered.length === 0 && otherUsers.length > 0) {
-          filtered = otherUsers;
-          setIsFallbackMode(true);
-        } else {
-          setIsFallbackMode(false);
+        let targetGender = 'female';
+        if (userGender === 'female' || userGender === 'woman' || userPref === 'male' || femaleNames.includes(userName)) {
+          targetGender = 'male';
+        } else if (userGender === 'male' || userGender === 'man' || userPref === 'female' || maleNames.includes(userName)) {
+          targetGender = 'female';
         }
         
+        const filtered = otherUsers.filter((m) => {
+          if (m.id === userProfile.id) return false;
+          const candGender = (m.gender || '').toLowerCase().trim();
+          const candPref = (m.preferredGender || '').toLowerCase().trim();
+          const candName = (m.firstName || m.name || '').toLowerCase().trim().split(' ')[0];
+          
+          let candResolved = candGender;
+          if (!candResolved) {
+            if (candPref === 'male') candResolved = 'female';
+            else if (candPref === 'female') candResolved = 'male';
+            else if (maleNames.includes(candName)) candResolved = 'male';
+            else if (femaleNames.includes(candName)) candResolved = 'female';
+          }
+          
+          return candResolved === targetGender;
+        });
+        
+        setIsFallbackMode(false);
         setMatches(filtered as Match[]);
       } catch (err) {
         console.error('Failed to load matches:', err);

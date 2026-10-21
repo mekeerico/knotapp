@@ -11,6 +11,7 @@ import '../../../core/widgets/knot_app_bar.dart';
 import '../models/match_profile.dart';
 import '../providers/discovery_provider.dart';
 import '../../auth/providers/auth_provider.dart';
+import '../../auth/models/user_model.dart';
 import 'widgets/candidate_card.dart';
 
 class DiscoveryScreen extends ConsumerStatefulWidget {
@@ -23,6 +24,14 @@ class DiscoveryScreen extends ConsumerStatefulWidget {
 class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
   final CardSwiperController _swiperController = CardSwiperController();
   int _currentCardIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(discoveryProvider.notifier).loadCandidates();
+    });
+  }
 
   @override
   void dispose() {
@@ -156,7 +165,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                     ),
                   )
                 : displayCandidates.isEmpty
-                    ? _buildEmptyRegistry(notifier, authState.user?.gender)
+                    ? _buildEmptyRegistry(notifier, authState.user)
                     : Column(
                         children: [
                           Expanded(
@@ -299,11 +308,29 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
     );
   }
 
-  Widget _buildEmptyRegistry(DiscoveryNotifier notifier, String? userGender) {
-    final gender = userGender?.trim().toLowerCase() ?? '';
-    final targetCohort = gender == 'male'
-        ? 'eligible ladies'
-        : (gender == 'female' ? 'eligible gentlemen' : 'verified candidates');
+  Widget _buildEmptyRegistry(DiscoveryNotifier notifier, UserModel? currentUser) {
+    bool isMaleUser = DiscoveryNotifier.isMale(currentUser?.gender);
+    bool isFemaleUser = DiscoveryNotifier.isFemale(currentUser?.gender);
+
+    if (!isMaleUser && !isFemaleUser) {
+      if (DiscoveryNotifier.isFemale(currentUser?.preferredGender)) isMaleUser = true;
+      if (DiscoveryNotifier.isMale(currentUser?.preferredGender)) isFemaleUser = true;
+    }
+    if (!isMaleUser && !isFemaleUser) {
+      final name = currentUser?.firstName ?? currentUser?.fullName ?? '';
+      if (DiscoveryNotifier.isMaleName(name)) isMaleUser = true;
+      if (DiscoveryNotifier.isFemaleName(name)) isFemaleUser = true;
+    }
+    if (!isMaleUser && !isFemaleUser) {
+      final emailPrefix = (currentUser?.email ?? '').split('@').first.toLowerCase();
+      if (DiscoveryNotifier.isMaleName(emailPrefix)) isMaleUser = true;
+      if (DiscoveryNotifier.isFemaleName(emailPrefix)) isFemaleUser = true;
+    }
+    if (!isMaleUser && !isFemaleUser) {
+      isMaleUser = true; // Default
+    }
+
+    final targetCohort = isMaleUser ? 'eligible ladies' : 'eligible gentlemen';
 
     return Center(
       child: Padding(

@@ -254,6 +254,25 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       },
                     ),
 
+                    // Vignette Scrim (Keeping face completely clear) - Wrapped in IgnorePointer so taps pass through
+                    IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.black.withValues(alpha: 0.35),
+                              Colors.transparent,
+                              AppColors.obsidianBlack.withValues(alpha: 0.75),
+                              AppColors.obsidianBlack,
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: const [0.0, 0.35, 0.82, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+
                     // Left/Right Tap zones for quick photo flip
                     if (photos.length > 1) ...[
                       Positioned(
@@ -290,24 +309,59 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           },
                         ),
                       ),
-                    ],
 
-                    // Vignette Scrim (Keeping face completely clear)
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black.withOpacity(0.35),
-                            Colors.transparent,
-                            AppColors.obsidianBlack.withOpacity(0.75),
-                            AppColors.obsidianBlack,
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: const [0.0, 0.35, 0.82, 1.0],
+                      // Visible Chevron Arrows for Header Photo Carousel
+                      if (_selectedPhotoIndex > 0)
+                        Positioned(
+                          left: 12,
+                          top: 0,
+                          bottom: 70,
+                          child: Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                _photoPageController.previousPage(
+                                  duration: const Duration(milliseconds: 240),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(7),
+                                decoration: BoxDecoration(
+                                  color: AppColors.obsidianBlack.withValues(alpha: 0.7),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.6), width: 1),
+                                ),
+                                child: const Icon(Icons.chevron_left, color: AppColors.champagneGold, size: 22),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      if (_selectedPhotoIndex < photos.length - 1)
+                        Positioned(
+                          right: 12,
+                          top: 0,
+                          bottom: 70,
+                          child: Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                _photoPageController.nextPage(
+                                  duration: const Duration(milliseconds: 240),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(7),
+                                decoration: BoxDecoration(
+                                  color: AppColors.obsidianBlack.withValues(alpha: 0.7),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.6), width: 1),
+                                ),
+                                child: const Icon(Icons.chevron_right, color: AppColors.champagneGold, size: 22),
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
 
                     // Top Segmented Story Indicators (1, 2, or 3 bars)
                     if (photos.length > 1)
@@ -319,22 +373,31 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           children: List.generate(photos.length, (idx) {
                             final isActive = idx == _selectedPhotoIndex;
                             return Expanded(
-                              child: Container(
-                                height: 3.5,
-                                margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(2),
-                                  color: isActive
-                                      ? AppColors.champagneGold
-                                      : Colors.white.withOpacity(0.35),
-                                  boxShadow: isActive
-                                      ? [
-                                          BoxShadow(
-                                            color: AppColors.champagneGold.withOpacity(0.7),
-                                            blurRadius: 4,
-                                          )
-                                        ]
-                                      : null,
+                              child: GestureDetector(
+                                onTap: () {
+                                  _photoPageController.animateToPage(
+                                    idx,
+                                    duration: const Duration(milliseconds: 240),
+                                    curve: Curves.easeInOut,
+                                  );
+                                },
+                                child: Container(
+                                  height: 3.5,
+                                  margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(2),
+                                    color: isActive
+                                        ? AppColors.champagneGold
+                                        : Colors.white.withValues(alpha: 0.35),
+                                    boxShadow: isActive
+                                        ? [
+                                            BoxShadow(
+                                              color: AppColors.champagneGold.withValues(alpha: 0.7),
+                                              blurRadius: 4,
+                                            )
+                                          ]
+                                        : null,
+                                  ),
                                 ),
                               ),
                             );
@@ -350,23 +413,24 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         child: GestureDetector(
                           onTap: () => _openFullscreenGallery(context, photos, _selectedPhotoIndex),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
                             decoration: BoxDecoration(
-                              color: AppColors.obsidianBlack.withOpacity(0.78),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(color: AppColors.champagneGold.withOpacity(0.8), width: 0.9),
+                              color: AppColors.obsidianBlack.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.8), width: 1),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.photo_library_outlined, size: 13, color: AppColors.champagneGold),
-                                const SizedBox(width: 5),
+                                const Icon(Icons.photo_library_outlined, size: 14, color: AppColors.champagneGold),
+                                const SizedBox(width: 6),
                                 Text(
-                                  '${_selectedPhotoIndex + 1}/${photos.length}',
+                                  '${_selectedPhotoIndex + 1}/${photos.length} PHOTOS',
                                   style: AppTypography.labelSmall.copyWith(
                                     color: AppColors.champagneGold,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 11,
+                                    fontSize: 10.5,
+                                    letterSpacing: 0.5,
                                   ),
                                 ),
                               ],
@@ -525,7 +589,34 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 22),
+                    if (profile.isClosestAvailable) ...[
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: _trustGold.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: _trustGold.withValues(alpha: 0.4)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.stars, color: _trustGold, size: 18),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Closest Available Match: ${profile.name.trim().split(RegExp(r"\\s+")).first} is your closest matching candidate in the registry for now. You will be matched appropriately as closer candidates become available.',
+                                style: const TextStyle(
+                                  color: Color(0xFFD1D5DC),
+                                  fontSize: 12,
+                                  height: 1.45,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
 
                     // 1. Compatibility Profile Card
                     GlassCard(
@@ -629,7 +720,161 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ),
                     const SizedBox(height: 18),
 
-                    // 2. Personal Bio
+                    // 3. Candidate Verified Photos Gallery Card (Show all 4-5 uploaded pictures)
+                    if (photos.isNotEmpty) ...[
+                      GlassCard(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                _buildSectionHeader(
+                                  Icons.photo_library_outlined,
+                                  'VERIFIED PHOTO GALLERY',
+                                  iconColor: _trustGold,
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: _trustGold.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: _trustGold.withValues(alpha: 0.45), width: 1),
+                                  ),
+                                  child: Text(
+                                    '${photos.length} Verified Photos',
+                                    style: const TextStyle(
+                                      color: _trustGold,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tap any photo to open full-screen gallery with pinch-to-zoom.',
+                              style: AppTypography.bodySmall.copyWith(color: _mutedSlate, fontSize: 12),
+                            ),
+                            const SizedBox(height: 16),
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: photos.length > 2 ? 3 : 2,
+                                crossAxisSpacing: 10,
+                                mainAxisSpacing: 10,
+                                childAspectRatio: 0.85,
+                              ),
+                              itemCount: photos.length,
+                              itemBuilder: (context, idx) {
+                                final isSelected = idx == _selectedPhotoIndex;
+                                return GestureDetector(
+                                  onTap: () => _openFullscreenGallery(context, photos, idx),
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(14),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? _trustGold
+                                                : Colors.white.withValues(alpha: 0.2),
+                                            width: isSelected ? 2.2 : 1.0,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(alpha: 0.35),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(13),
+                                          child: KnotImage(
+                                            imageUrl: photos[idx],
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        top: 6,
+                                        left: 6,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                                          decoration: BoxDecoration(
+                                            color: Colors.black.withValues(alpha: 0.75),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: Text(
+                                            idx == 0 ? 'Primary' : 'Photo ${idx + 1}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 9,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Positioned(
+                                        bottom: 6,
+                                        right: 6,
+                                        child: Container(
+                                          padding: const EdgeInsets.all(3.5),
+                                          decoration: BoxDecoration(
+                                            color: _trustGold.withValues(alpha: 0.85),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(Icons.fullscreen, color: Colors.black, size: 13),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 14),
+                            GestureDetector(
+                              onTap: () => _openFullscreenGallery(context, photos, 0),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: AppColors.darkSlate.withValues(alpha: 0.7),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: AppColors.borderGold.withValues(alpha: 0.4), width: 1),
+                                ),
+                                alignment: Alignment.center,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.photo_size_select_actual_outlined, size: 15, color: _trustGold),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'View All ${photos.length} Photos in Fullscreen',
+                                      style: const TextStyle(
+                                        color: _trustGold,
+                                        fontSize: 12.5,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                    ],
+
+                    // 4. Personal Bio
                     GlassCard(
                       padding: const EdgeInsets.all(20),
                       child: Column(

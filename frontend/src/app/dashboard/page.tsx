@@ -283,9 +283,32 @@ export default function Dashboard() {
       const userFirstName = (profileData?.firstName || '').trim().toLowerCase();
       const userLastName = (profileData?.lastName || '').trim().toLowerCase();
       const currentUserFullName = `${userFirstName} ${userLastName}`.trim();
+      const maleNames = ['michael', 'alex', 'david', 'john', 'james', 'daniel', 'liam', 'chen', 'eric', 'emeke', 'mike', 'gabriel', 'tunde', 'femi', 'chidi', 'george', 'william', 'thomas', 'charles', 'robert', 'joseph'];
+      const femaleNames = ['sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'amara', 'olivia', 'emma', 'ava', 'isabella', 'mia', 'charlotte', 'amelia', 'ajajwjwjw'];
+
       const userGender = (profileData?.gender || '').trim().toLowerCase();
-      const isUserMale = userGender === 'male' || userGender === 'man' || userGender === 'm';
-      const isUserFemale = userGender === 'female' || userGender === 'woman' || userGender === 'f';
+      let isUserMale = userGender === 'male' || userGender === 'man' || userGender === 'm';
+      let isUserFemale = userGender === 'female' || userGender === 'woman' || userGender === 'f';
+
+      if (!isUserMale && !isUserFemale) {
+        const pref = (profileData?.preferredGender || '').trim().toLowerCase();
+        if (pref === 'female' || pref === 'woman' || pref === 'f') isUserMale = true;
+        else if (pref === 'male' || pref === 'man' || pref === 'm') isUserFemale = true;
+      }
+      if (!isUserMale && !isUserFemale) {
+        if (maleNames.includes(userFirstName)) isUserMale = true;
+        else if (femaleNames.includes(userFirstName)) isUserFemale = true;
+      }
+      if (!isUserMale && !isUserFemale && currentUserEmail) {
+        const emailPrefix = currentUserEmail.split('@')[0];
+        if (maleNames.some(m => emailPrefix.includes(m))) isUserMale = true;
+        else if (femaleNames.some(f => emailPrefix.includes(f))) isUserFemale = true;
+      }
+      if (!isUserMale && !isUserFemale) {
+        isUserMale = true; // Deterministic default
+      }
+
+      const seekingFemale = isUserMale;
 
       const filteredMatches = normalizedMatches.filter((m: any) => {
         const partner = m.partner || {};
@@ -301,22 +324,22 @@ export default function Dashboard() {
         if (currentUserFullName && partnerFullName && currentUserFullName === partnerFullName) return false;
         if (userFirstName && pFirst && userFirstName === pFirst && userLastName && pLast && userLastName === pLast) return false;
 
-        // 2. Strict Opposite-Gender Enforcement: Only opposite sex (Male <-> Female)
+        // 2. Strict Opposite-Gender Enforcement: Only verified opposite gender candidates
         const candGender = (partner.gender || m.gender || '').trim().toLowerCase();
-        const isCandMale = candGender === 'male' || candGender === 'man' || candGender === 'm';
-        const isCandFemale = candGender === 'female' || candGender === 'woman' || candGender === 'f';
+        const candPref = (partner.preferredGender || m.preferredGender || '').trim().toLowerCase();
+        let isCandMale = candGender === 'male' || candGender === 'man' || candGender === 'm' || maleNames.includes(pFirst);
+        let isCandFemale = candGender === 'female' || candGender === 'woman' || candGender === 'f' || femaleNames.includes(pFirst);
 
-        if (isUserMale) {
+        if (!isCandMale && !isCandFemale) {
+          if (candPref === 'male') isCandFemale = true;
+          else if (candPref === 'female') isCandMale = true;
+        }
+
+        if (seekingFemale) {
           return isCandFemale && !isCandMale;
-        } else if (isUserFemale) {
+        } else {
           return isCandMale && !isCandFemale;
         }
-
-        if (candGender && userGender && candGender === userGender) {
-          return false;
-        }
-
-        return true;
       });
 
       setMatches(filteredMatches);
@@ -1465,6 +1488,37 @@ export default function Dashboard() {
                     <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-3">About Me</h3>
                     <p className="text-gray-200 leading-relaxed font-serif text-lg italic">"{activeMatch.bio}"</p>
                   </div>
+
+                  {/* ══ VERIFIED PHOTO GALLERY ══ */}
+                  {activeMatch.imageUrls && activeMatch.imageUrls.length > 0 && (
+                    <div className="space-y-4 mt-8">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                        <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                          <Camera className="w-4 h-4 text-[#D4AF37]" /> Verified Photo Gallery ({activeMatch.imageUrls.length} Photos)
+                        </h3>
+                        <span className="text-xs text-[#D4AF37] font-semibold">Click any photo to preview</span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        {activeMatch.imageUrls.map((url: string, idx: number) => (
+                          <div 
+                            key={idx}
+                            onClick={() => setActiveMatchImageIndex(idx)}
+                            className={`group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer border-2 transition-all ${idx === activeMatchImageIndex ? 'border-[#D4AF37] shadow-lg shadow-[#D4AF37]/30 scale-[1.02]' : 'border-white/10 hover:border-[#D4AF37]/50'}`}
+                          >
+                            <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-bold text-white">
+                              {idx === 0 ? 'Primary' : `Photo ${idx + 1}`}
+                            </div>
+                            {idx === activeMatchImageIndex && (
+                              <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-[#D4AF37] text-black text-[10px] font-black">
+                                VIEWING
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* ══ IDENTITY & ROOTS ══ */}
                   <div className="space-y-4 mt-8">

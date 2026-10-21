@@ -41,6 +41,7 @@ class MatchProfile {
   final String aiExplanation;
   final bool isVerified;
   final String verificationBadge;
+  final bool isClosestAvailable;
   final List<String> photos;
 
   MatchProfile({
@@ -87,6 +88,7 @@ class MatchProfile {
         'Strong synergy in permanent family orientation, communication integrity, and shared marriage timeline.',
     this.isVerified = true,
     this.verificationBadge = 'GOLD',
+    this.isClosestAvailable = false,
     required this.photos,
   });
 
@@ -142,10 +144,34 @@ class MatchProfile {
     if (pref == 'female' || pref == 'woman' || pref == 'f') return 'Male';
 
     final name = _nonEmpty(partner['firstName'], _nonEmpty(partner['name'], _nonEmpty(root['name']))).toLowerCase();
-    const maleNames = ['michael', 'alex', 'david', 'john', 'james', 'daniel', 'liam', 'chen', 'robert', 'william', 'joseph', 'charles', 'thomas', 'christopher', 'matthew', 'anthony', 'mark', 'steven', 'paul', 'andrew', 'joshua', 'kevin', 'brian', 'george', 'edward', 'jason', 'ryan', 'jacob', 'nicholas', 'eric', 'jonathan', 'stephen', 'justin', 'brandon', 'benjamin', 'samuel', 'alexander', 'patrick', 'jack', 'tyler', 'aaron', 'adam', 'nathan', 'henry', 'zachary', 'peter', 'kyle', 'ethan', 'jeremy', 'christian', 'noah', 'sean', 'austin', 'arthur', 'jesse', 'dylan', 'bryan', 'jordan', 'gabriel', 'logan', 'alan', 'juan', 'vincent', 'louis', 'philip', 'bradley'];
-    const femaleNames = ['sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'emma', 'olivia', 'ava', 'isabella', 'mia', 'charlotte', 'amelia', 'harper', 'evelyn', 'abigail', 'elizabeth', 'sofia', 'avery', 'ella', 'scarlett', 'grace', 'victoria', 'riley', 'aria', 'lily', 'aubrey', 'zoey', 'penelope', 'layla', 'lillian', 'nora', 'camila', 'hannah', 'mila', 'eleanor', 'maya', 'stella', 'hazel', 'leah', 'violet', 'aurora', 'savannah', 'audrey', 'brooklyn', 'claire', 'skylar', 'ellie', 'lucy', 'anna', 'caroline', 'nova', 'genesis', 'emilia', 'kennedy', 'samantha', 'allison', 'madelyn', 'adeline', 'hailey', 'elena', 'cora', 'vivian', 'natalie', 'zoe', 'katelyn', 'fatima', 'aisha', 'maryam', 'khadija', 'nour', 'huda', 'yasmin', 'iman', 'asma', 'mariam'];
+    const maleNames = [
+      'michael', 'alex', 'david', 'john', 'james', 'daniel', 'liam', 'chen',
+      'robert', 'william', 'joseph', 'charles', 'thomas', 'christopher', 'matthew',
+      'anthony', 'mark', 'steven', 'paul', 'andrew', 'joshua', 'kevin', 'brian',
+      'george', 'edward', 'jason', 'ryan', 'jacob', 'nicholas', 'eric', 'emeke',
+      'jonathan', 'stephen', 'justin', 'brandon', 'benjamin', 'samuel', 'alexander',
+      'patrick', 'jack', 'tyler', 'aaron', 'adam', 'nathan', 'henry', 'zachary',
+      'peter', 'kyle', 'ethan', 'jeremy', 'christian', 'noah', 'sean', 'austin',
+      'arthur', 'jesse', 'dylan', 'bryan', 'jordan', 'gabriel', 'logan', 'alan',
+      'juan', 'vincent', 'louis', 'philip', 'bradley', 'mike', 'tunde', 'femi',
+      'chidi', 'obi', 'kofi', 'kwame', 'ahmed', 'ali', 'hassan', 'omar', 'ibrahim', 'musa'
+    ];
+    const femaleNames = [
+      'sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'emma',
+      'olivia', 'ava', 'isabella', 'mia', 'charlotte', 'amelia', 'harper', 'evelyn',
+      'abigail', 'elizabeth', 'sofia', 'avery', 'ella', 'scarlett', 'grace',
+      'victoria', 'riley', 'aria', 'lily', 'aubrey', 'zoey', 'penelope', 'layla',
+      'lillian', 'nora', 'camila', 'hannah', 'mila', 'eleanor', 'maya', 'stella',
+      'hazel', 'leah', 'violet', 'aurora', 'savannah', 'audrey', 'brooklyn',
+      'claire', 'skylar', 'ellie', 'lucy', 'anna', 'caroline', 'nova', 'genesis',
+      'emilia', 'kennedy', 'samantha', 'allison', 'madelyn', 'adeline', 'hailey',
+      'elena', 'cora', 'vivian', 'natalie', 'zoe', 'katelyn', 'fatima', 'aisha',
+      'maryam', 'khadija', 'nour', 'huda', 'yasmin', 'iman', 'asma', 'mariam',
+      'amara', 'chioma', 'ngozi', 'ada', 'adaora', 'blessing', 'mercy', 'joy',
+      'chiamaka', 'yetunde', 'folake', 'funke', 'ajajwjwjw'
+    ];
 
-    final firstWord = name.split(' ').first.toLowerCase();
+    final firstWord = name.split(RegExp(r'\s+')).first.toLowerCase();
     if (maleNames.contains(firstWord)) return 'Male';
     if (femaleNames.contains(firstWord)) return 'Female';
 
@@ -300,6 +326,9 @@ class MatchProfile {
       ),
       isVerified: partner['isVerified'] == true || partner['idVerified'] == true,
       verificationBadge: _nonEmpty(partner['verificationBadge'], 'GOLD'),
+      isClosestAvailable: json['isClosestAvailable'] == true ||
+          partner['isClosestAvailable'] == true ||
+          ((scores['compatibilityScore'] ?? partner['compatibilityScore'] ?? json['compatibilityScore'] ?? 92) as num) < 85,
       photos: photoList,
     );
   }

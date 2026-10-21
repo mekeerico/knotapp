@@ -157,37 +157,83 @@ export class MatchesService {
 
     // Strictly enforce opposite-sex matching only (Male <-> Female)
     const userGenderRaw = (user.gender || '').trim().toLowerCase();
-    const isUserMale = userGenderRaw === 'male' || userGenderRaw === 'man' || userGenderRaw === 'm';
-    const isUserFemale = userGenderRaw === 'female' || userGenderRaw === 'woman' || userGenderRaw === 'f';
+    let isUserMale = userGenderRaw === 'male' || userGenderRaw === 'man' || userGenderRaw === 'm';
+    let isUserFemale = userGenderRaw === 'female' || userGenderRaw === 'woman' || userGenderRaw === 'f';
 
-    let targetGender: 'Male' | 'Female';
-
-    if (isUserFemale) {
-      targetGender = 'Male';
-    } else if (isUserMale) {
-      targetGender = 'Female';
-    } else {
-      const prefRaw = (user.preferredGender || '').trim().toLowerCase();
-      targetGender = (prefRaw === 'male' || prefRaw === 'man' || prefRaw === 'm') ? 'Male' : 'Female';
-    }
+    const maleNames = [
+      'michael', 'alex', 'david', 'john', 'james', 'daniel', 'liam', 'chen',
+      'robert', 'william', 'joseph', 'charles', 'thomas', 'christopher', 'matthew',
+      'anthony', 'mark', 'steven', 'paul', 'andrew', 'joshua', 'kevin', 'brian',
+      'george', 'edward', 'jason', 'ryan', 'jacob', 'nicholas', 'eric', 'emeke',
+      'jonathan', 'stephen', 'justin', 'brandon', 'benjamin', 'samuel', 'alexander',
+      'patrick', 'jack', 'tyler', 'aaron', 'adam', 'nathan', 'henry', 'zachary',
+      'peter', 'kyle', 'ethan', 'jeremy', 'christian', 'noah', 'sean', 'austin',
+      'arthur', 'jesse', 'dylan', 'bryan', 'jordan', 'gabriel', 'logan', 'alan',
+      'juan', 'vincent', 'louis', 'philip', 'bradley', 'mike', 'tunde', 'femi',
+      'chidi', 'obi', 'kofi', 'kwame', 'ahmed', 'ali', 'hassan', 'omar', 'ibrahim', 'musa'
+    ];
+    const femaleNames = [
+      'sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'emma',
+      'olivia', 'ava', 'isabella', 'mia', 'charlotte', 'amelia', 'harper', 'evelyn',
+      'abigail', 'elizabeth', 'sofia', 'avery', 'ella', 'scarlett', 'grace',
+      'victoria', 'riley', 'aria', 'lily', 'aubrey', 'zoey', 'penelope', 'layla',
+      'lillian', 'nora', 'camila', 'hannah', 'mila', 'eleanor', 'maya', 'stella',
+      'hazel', 'leah', 'violet', 'aurora', 'savannah', 'audrey', 'brooklyn',
+      'claire', 'skylar', 'ellie', 'lucy', 'anna', 'caroline', 'nova', 'genesis',
+      'emilia', 'kennedy', 'samantha', 'allison', 'madelyn', 'adeline', 'hailey',
+      'elena', 'cora', 'vivian', 'natalie', 'zoe', 'katelyn', 'fatima', 'aisha',
+      'maryam', 'khadija', 'nour', 'huda', 'yasmin', 'iman', 'asma', 'mariam',
+      'amara', 'chioma', 'ngozi', 'ada', 'adaora', 'blessing', 'mercy', 'joy',
+      'chiamaka', 'yetunde', 'folake', 'funke', 'ajajwjwjw'
+    ];
 
     const userEmail = (user.email || '').trim().toLowerCase();
     const userFirstName = (user.firstName || '').trim().toLowerCase();
     const userLastName = (user.lastName || '').trim().toLowerCase();
     const userFullName = `${userFirstName} ${userLastName}`.trim();
 
+    if (!isUserMale && !isUserFemale) {
+      const prefRaw = (user.preferredGender || '').trim().toLowerCase();
+      if (prefRaw === 'male' || prefRaw === 'man' || prefRaw === 'm') isUserFemale = true;
+      else if (prefRaw === 'female' || prefRaw === 'woman' || prefRaw === 'f') isUserMale = true;
+    }
+    if (!isUserMale && !isUserFemale) {
+      if (maleNames.includes(userFirstName)) isUserMale = true;
+      else if (femaleNames.includes(userFirstName)) isUserFemale = true;
+    }
+    if (!isUserMale && !isUserFemale && userEmail) {
+      const emailPrefix = userEmail.split('@')[0];
+      if (maleNames.some(m => emailPrefix.includes(m))) isUserMale = true;
+      else if (femaleNames.some(f => emailPrefix.includes(f))) isUserFemale = true;
+    }
+
+    let targetGender: 'Male' | 'Female';
+    if (isUserFemale) {
+      targetGender = 'Male';
+    } else {
+      // Default to Female for male users or unassigned users
+      targetGender = 'Female';
+    }
+
+    const femaleVariants = ['female', 'woman', 'lady', 'f', 'she', 'girl'];
+    const maleVariants = ['male', 'man', 'gentleman', 'm', 'he', 'boy'];
+    const targetVariants = targetGender === 'Male' ? maleVariants : femaleVariants;
+
     // Query opposite-sex candidates excluding current user ID and current user email
     const allCandidates = await this.prisma.user.findMany({
       where: {
         id: { not: userId },
         ...(userEmail ? { email: { not: userEmail } } : {}),
-        gender: { equals: targetGender, mode: 'insensitive' },
+        OR: [
+          { gender: { in: targetVariants, mode: 'insensitive' } },
+          { gender: '' },
+        ],
       },
       orderBy: [
         { isVerified: 'desc' },
         { trustScore: 'desc' },
       ],
-      take: 25,
+      take: 50,
       include: { profileImages: true },
     });
 
@@ -207,8 +253,21 @@ export class MatchesService {
 
       // 2. Strict Opposite-Sex Enforcement
       const cGender = (c.gender || '').trim().toLowerCase();
-      const isCandMale = cGender === 'male' || cGender === 'man' || cGender === 'm';
-      const isCandFemale = cGender === 'female' || cGender === 'woman' || cGender === 'f';
+      let isCandMale = maleVariants.includes(cGender);
+      let isCandFemale = femaleVariants.includes(cGender);
+
+      // If gender was not explicitly specified, infer from candidate's preferredGender
+      if (!isCandMale && !isCandFemale) {
+        const cPref = (c.preferredGender || '').trim().toLowerCase();
+        if (femaleVariants.includes(cPref)) isCandMale = true;
+        if (maleVariants.includes(cPref)) isCandFemale = true;
+      }
+
+      // Name-based inference for candidates with unset gender
+      if (!isCandMale && !isCandFemale) {
+        if (maleNames.includes(candFirstName)) isCandMale = true;
+        if (femaleNames.includes(candFirstName)) isCandFemale = true;
+      }
 
       if (!isCandMale && !isCandFemale) return false;
 
@@ -284,11 +343,13 @@ export class MatchesService {
       }
 
       const partner = cand;
-      const isClosestAvailable = match.compatibilityScore < 80;
+      const isClosestAvailable = match.compatibilityScore < 85 ||
+        (user.preferredResidenceCountry && user.preferredResidenceCountry.toLowerCase() !== 'any country' && cand.residenceCountry && user.preferredResidenceCountry.toLowerCase() !== cand.residenceCountry.toLowerCase()) ||
+        (user.religion && cand.religion && user.religion.toLowerCase() !== cand.religion.toLowerCase());
       let explanation = match.aiExplanation;
 
       if (isClosestAvailable) {
-        explanation = `Closest Available Alignment: ${partner.firstName} is currently your closest matching partner in the registry while we search for your exact marriage timeline & preference alignment. ${explanation} Your recommendations will continuously update as closer candidates join.`;
+        explanation = `Closest Available Alignment: ${partner.firstName} is currently your closest matching partner in the registry for now. ${explanation} You will be matched appropriately as closer candidates become available.`;
       }
 
       const media = this.formatPartnerMedia(partner);

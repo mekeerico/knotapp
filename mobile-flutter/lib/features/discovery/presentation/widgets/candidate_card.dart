@@ -58,7 +58,28 @@ class _CandidateCardState extends State<CandidateCard> {
               ),
             ),
 
-            // 2. Extra Photos Navigation: Left/Right Tap Zones on the photo
+            // 2. Low-profile Vignette Scrim (concentrated ONLY at the bottom 38% to keep face/chest 100% clear)
+            Positioned.fill(
+              child: IgnorePointer(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.0),
+                        Colors.black.withValues(alpha: 0.45),
+                        Colors.black.withValues(alpha: 0.92),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: const [0.0, 0.60, 0.80, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // 3. Extra Photos Navigation: Left/Right Tap Zones on the photo
             if (hasMultiplePhotos) ...[
               Positioned(
                 top: 70,
@@ -88,26 +109,53 @@ class _CandidateCardState extends State<CandidateCard> {
                   },
                 ),
               ),
-            ],
 
-            // 3. Low-profile Vignette Scrim (concentrated ONLY at the bottom 38% to keep face/chest 100% clear)
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.0),
-                      Colors.black.withOpacity(0.45),
-                      Colors.black.withOpacity(0.92),
-                    ],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: const [0.0, 0.60, 0.80, 1.0],
+              // Visible Chevron Buttons for Instant Photo Switching
+              if (_currentPhotoIndex > 0)
+                Positioned(
+                  left: 10,
+                  top: 0,
+                  bottom: 120,
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _currentPhotoIndex--);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.obsidianBlack.withValues(alpha: 0.65),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.6), width: 1),
+                        ),
+                        child: const Icon(Icons.chevron_left, color: AppColors.champagneGold, size: 20),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              if (_currentPhotoIndex < photos.length - 1)
+                Positioned(
+                  right: 10,
+                  top: 0,
+                  bottom: 120,
+                  child: Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() => _currentPhotoIndex++);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.obsidianBlack.withValues(alpha: 0.65),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.6), width: 1),
+                        ),
+                        child: const Icon(Icons.chevron_right, color: AppColors.champagneGold, size: 20),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
 
             // 4. Story Progress Bars for Extra Pictures (if candidate has multiple photos)
             if (hasMultiplePhotos)
@@ -119,22 +167,25 @@ class _CandidateCardState extends State<CandidateCard> {
                   children: List.generate(photos.length, (idx) {
                     final isActive = idx == _currentPhotoIndex;
                     return Expanded(
-                      child: Container(
-                        height: 3,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(2),
-                          color: isActive
-                              ? AppColors.champagneGold
-                              : Colors.white.withOpacity(0.35),
-                          boxShadow: isActive
-                              ? [
-                                  BoxShadow(
-                                    color: AppColors.champagneGold.withOpacity(0.6),
-                                    blurRadius: 4,
-                                  )
-                                ]
-                              : null,
+                      child: GestureDetector(
+                        onTap: () => setState(() => _currentPhotoIndex = idx),
+                        child: Container(
+                          height: 3.5,
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(2),
+                            color: isActive
+                                ? AppColors.champagneGold
+                                : Colors.white.withValues(alpha: 0.35),
+                            boxShadow: isActive
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.champagneGold.withValues(alpha: 0.6),
+                                      blurRadius: 4,
+                                    )
+                                  ]
+                                : null,
+                          ),
                         ),
                       ),
                     );
@@ -142,7 +193,7 @@ class _CandidateCardState extends State<CandidateCard> {
                 ),
               ),
 
-            // 5. Top Bar: Photo count (left) & Golden Trust Badge (right)
+            // 5. Top Bar: Photo count badge & Golden Trust Badge
             Positioned(
               top: hasMultiplePhotos ? 20 : 16,
               left: 16,
@@ -151,19 +202,34 @@ class _CandidateCardState extends State<CandidateCard> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   if (hasMultiplePhotos)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.obsidianBlack.withOpacity(0.75),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.borderGold, width: 0.8),
-                      ),
-                      child: Text(
-                        '${_currentPhotoIndex + 1}/${photos.length}',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.champagneGold,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _currentPhotoIndex = (_currentPhotoIndex + 1) % photos.length;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
+                        decoration: BoxDecoration(
+                          color: AppColors.obsidianBlack.withValues(alpha: 0.82),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppColors.borderGold, width: 0.9),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.photo_library_outlined, size: 12, color: AppColors.champagneGold),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${_currentPhotoIndex + 1}/${photos.length} PHOTOS',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.champagneGold,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     )
@@ -218,6 +284,35 @@ class _CandidateCardState extends State<CandidateCard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  if (candidate.isClosestAvailable) ...[
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.obsidianBlack.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFD4AF37), width: 1.0),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.stars, color: Color(0xFFD4AF37), size: 12),
+                          const SizedBox(width: 5),
+                          Flexible(
+                            child: Text(
+                              'CLOSEST AVAILABLE MATCH FOR NOW',
+                              style: const TextStyle(
+                                color: Color(0xFFD4AF37),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   // Row 1: Candidate First Name & Age + Golden Verified Badge
                   Row(
                     children: [

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../discovery/providers/discovery_provider.dart';
 import '../providers/auth_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
@@ -120,10 +121,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         storage.setRememberMe(false);
       }
 
-      final user = ref.read(authProvider).user;
-      if (user?.firstName.isEmpty ?? true) {
-        context.go('/onboarding');
+      if (_isSignUp) {
+        final user = ref.read(authProvider).user;
+        if (user?.firstName.isEmpty ?? true) {
+          context.go('/onboarding');
+        } else {
+          context.go('/discovery');
+        }
       } else {
+        // Sign In takes users directly to matches screen to see matched candidates
+        ref.read(discoveryProvider.notifier).loadCandidates();
         context.go('/discovery');
       }
     }

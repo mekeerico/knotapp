@@ -18,7 +18,7 @@ class DiscoveryState {
 
   const DiscoveryState({
     this.candidates = const [],
-    this.isLoading = false,
+    this.isLoading = true,
     this.errorMessage,
     this.matchedCandidate,
     this.viewsToday = 0,
@@ -86,6 +86,34 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     await loadCandidates();
   }
 
+  static const Set<String> _maleNames = {
+    'michael', 'alex', 'david', 'john', 'james', 'daniel', 'liam', 'chen',
+    'robert', 'william', 'joseph', 'charles', 'thomas', 'christopher', 'matthew',
+    'anthony', 'mark', 'steven', 'paul', 'andrew', 'joshua', 'kevin', 'brian',
+    'george', 'edward', 'jason', 'ryan', 'jacob', 'nicholas', 'eric', 'emeke',
+    'jonathan', 'stephen', 'justin', 'brandon', 'benjamin', 'samuel', 'alexander',
+    'patrick', 'jack', 'tyler', 'aaron', 'adam', 'nathan', 'henry', 'zachary',
+    'peter', 'kyle', 'ethan', 'jeremy', 'christian', 'noah', 'sean', 'austin',
+    'arthur', 'jesse', 'dylan', 'bryan', 'jordan', 'gabriel', 'logan', 'alan',
+    'juan', 'vincent', 'louis', 'philip', 'bradley', 'mike', 'tunde', 'femi',
+    'chidi', 'obi', 'kofi', 'kwame', 'ahmed', 'ali', 'hassan', 'omar', 'ibrahim', 'musa'
+  };
+
+  static const Set<String> _femaleNames = {
+    'sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'emma',
+    'olivia', 'ava', 'isabella', 'mia', 'charlotte', 'amelia', 'harper', 'evelyn',
+    'abigail', 'elizabeth', 'sofia', 'avery', 'ella', 'scarlett', 'grace',
+    'victoria', 'riley', 'aria', 'lily', 'aubrey', 'zoey', 'penelope', 'layla',
+    'lillian', 'nora', 'camila', 'hannah', 'mila', 'eleanor', 'maya', 'stella',
+    'hazel', 'leah', 'violet', 'aurora', 'savannah', 'audrey', 'brooklyn',
+    'claire', 'skylar', 'ellie', 'lucy', 'anna', 'caroline', 'nova', 'genesis',
+    'emilia', 'kennedy', 'samantha', 'allison', 'madelyn', 'adeline', 'hailey',
+    'elena', 'cora', 'vivian', 'natalie', 'zoe', 'katelyn', 'fatima', 'aisha',
+    'maryam', 'khadija', 'nour', 'huda', 'yasmin', 'iman', 'asma', 'mariam',
+    'amara', 'chioma', 'ngozi', 'ada', 'adaora', 'blessing', 'mercy', 'joy',
+    'chiamaka', 'yetunde', 'folake', 'funke', 'ajajwjwjw'
+  };
+
   static bool isMale(String? g) {
     if (g == null) return false;
     final s = g.trim().toLowerCase();
@@ -98,15 +126,30 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
     return s == 'female' || s == 'woman' || s == 'f' || s == 'lady' || s == 'she' || s == 'she/her' || s == 'girl';
   }
 
+  static bool isMaleName(String? name) {
+    if (name == null || name.isEmpty) return false;
+    final first = name.trim().toLowerCase().split(RegExp(r'\s+')).first;
+    return _maleNames.contains(first);
+  }
+
+  static bool isFemaleName(String? name) {
+    if (name == null || name.isEmpty) return false;
+    final first = name.trim().toLowerCase().split(RegExp(r'\s+')).first;
+    return _femaleNames.contains(first);
+  }
+
   static List<MatchProfile> filterOppositeGender({
     required List<MatchProfile> candidates,
     required UserModel? currentUser,
   }) {
+    if (candidates.isEmpty) return const [];
     if (currentUser == null) {
-      return candidates;
+      // If user profile has not loaded yet, do not leak or flash candidates
+      return const [];
     }
 
     final currentUserId = currentUser.id.trim();
+    final currentUserEmail = currentUser.email.trim().toLowerCase();
     final currentUserFullName = currentUser.fullName.trim().toLowerCase();
     final userFirstName = currentUser.firstName.trim().toLowerCase();
     final userLastName = currentUser.lastName.trim().toLowerCase();
@@ -126,18 +169,31 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
       }
     }
 
-    // Name inference for user if gender not set
+    // Name-based inference for user if gender not set
     if (!userIsMale && !userIsFemale) {
       final name = userFirstName.isNotEmpty ? userFirstName : currentUserFullName.split(' ').first;
-      const maleNames = ['michael', 'alex', 'david', 'john', 'james', 'daniel', 'liam', 'chen'];
-      const femaleNames = ['sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe'];
-      if (maleNames.contains(name)) userIsMale = true;
-      if (femaleNames.contains(name)) userIsFemale = true;
+      if (isMaleName(name)) userIsMale = true;
+      if (isFemaleName(name)) userIsFemale = true;
     }
 
+    // Email-based inference for user if gender not set
+    if (!userIsMale && !userIsFemale && currentUserEmail.isNotEmpty) {
+      final emailPrefix = currentUserEmail.split('@').first.toLowerCase();
+      if (_maleNames.any((m) => emailPrefix.contains(m))) userIsMale = true;
+      if (_femaleNames.any((f) => emailPrefix.contains(f))) userIsFemale = true;
+    }
+
+    // Deterministic fallback: default to male (seeking female) if still completely unresolved
+    if (!userIsMale && !userIsFemale) {
+      userIsMale = true;
+    }
+
+    final bool seekingFemale = userIsMale;
+
     return candidates.where((c) {
-      // 1. Never match user to themselves
+      // 1. Strict self-exclusion: User must NEVER be matched to themselves
       if (currentUserId.isNotEmpty && c.id == currentUserId) return false;
+      if (currentUserEmail.isNotEmpty && c.id == currentUserEmail) return false;
       final candName = c.name.trim().toLowerCase();
       if (currentUserFullName.isNotEmpty && candName.isNotEmpty && candName == currentUserFullName) {
         return false;
@@ -148,25 +204,24 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
         }
       }
 
-      // 2. Strict Opposite-Gender Enforcement
+      // 2. Strict Opposite-Gender Enforcement: Only verified opposite gender candidates
       final cGen = c.gender.trim().toLowerCase();
-      final candIsMale = isMale(cGen);
-      final candIsFemale = isFemale(cGen);
+      final candIsMale = isMale(cGen) || isMaleName(candName);
+      final candIsFemale = isFemale(cGen) || isFemaleName(candName);
 
-      if (userIsMale) {
-        // Male user must ONLY see female candidates! Strictly forbid male candidates.
-        return candIsFemale && !candIsMale;
-      } else if (userIsFemale) {
-        // Female user must ONLY see male candidates! Strictly forbid female candidates.
-        return candIsMale && !candIsFemale;
-      }
-
-      // Fallback: If current user's gender couldn't be resolved, forbid candidates of identical detected gender
-      if (cGen.isNotEmpty && currentUser.gender.trim().toLowerCase() == cGen) {
+      if (seekingFemale) {
+        // User seeking female: Candidate MUST be confirmed female, and MUST NOT be male
+        if (candIsFemale && !candIsMale) {
+          return true;
+        }
+        return false;
+      } else {
+        // User seeking male: Candidate MUST be confirmed male, and MUST NOT be female
+        if (candIsMale && !candIsFemale) {
+          return true;
+        }
         return false;
       }
-
-      return true;
     }).toList();
   }
 

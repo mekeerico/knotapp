@@ -27,10 +27,38 @@ export default function DiscoveryScreen() {
 
   const [matches, setMatches] = React.useState<Match[]>([]);
   React.useEffect(() => {
-    if (!userProfile) return;
     db.getPotentialMatches(userProfile).then((data) => {
+      const userGender = (userProfile.gender || '').toLowerCase().trim();
+      const userPref = (userProfile.preferredGender || '').toLowerCase().trim();
+      const userName = (userProfile.firstName || userProfile.name || '').toLowerCase().trim();
+      const maleNames = ['alex', 'michael', 'david', 'john', 'james', 'daniel', 'liam', 'chen', 'eric', 'emeke', 'mike', 'gabriel'];
+      const femaleNames = ['sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'amara'];
+
+      let targetGender = 'female';
+      if (userGender === 'female' || userGender === 'woman' || userPref === 'male' || femaleNames.includes(userName)) {
+        targetGender = 'male';
+      } else if (userGender === 'male' || userGender === 'man' || userPref === 'female' || maleNames.includes(userName)) {
+        targetGender = 'female';
+      }
+
+      const filterByOppositeGender = (list: Match[]) => list.filter(m => {
+        if (m.id === userProfile.id) return false;
+        const g = (m.gender || '').toLowerCase().trim();
+        const candPref = (m.preferredGender || '').toLowerCase().trim();
+        const candName = (m.firstName || m.name || '').toLowerCase().trim().split(' ')[0];
+        let resolved = g;
+        if (!resolved) {
+          if (candPref === 'male') resolved = 'female';
+          else if (candPref === 'female') resolved = 'male';
+          else if (maleNames.includes(candName)) resolved = 'male';
+          else if (femaleNames.includes(candName)) resolved = 'female';
+        }
+        return resolved === targetGender;
+      });
+
       const unique = Array.from(new Map(data.map((m) => [m.id, m])).values());
-      setMatches(unique.length > 0 ? unique : MATCHES_DATA);
+      const filtered = filterByOppositeGender(unique.length > 0 ? unique : MATCHES_DATA);
+      setMatches(filtered);
     });
   }, [userProfile]);
 
