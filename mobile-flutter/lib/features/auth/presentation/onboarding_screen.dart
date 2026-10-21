@@ -35,7 +35,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _lastNameController = TextEditingController();
 
   // Controllers - Screen 2: Gender Identity & Date of Birth
-  String _gender = 'Female';
+  String _gender = '';
   DateTime? _selectedDob;
 
   // Controllers - Screen 3: Vocation, Education & Faith
@@ -149,6 +149,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     // Screen 2 Validation: Gender & Age (18+)
     if (_currentStep == 1) {
+      if (_gender.isEmpty) {
+        _showError('Please select your legal biological gender.');
+        return;
+      }
       if (_selectedDob == null) {
         _showError('Please select your date of birth.');
         return;

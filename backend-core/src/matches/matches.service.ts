@@ -170,7 +170,7 @@ export class MatchesService {
       'peter', 'kyle', 'ethan', 'jeremy', 'christian', 'noah', 'sean', 'austin',
       'arthur', 'jesse', 'dylan', 'bryan', 'jordan', 'gabriel', 'logan', 'alan',
       'juan', 'vincent', 'louis', 'philip', 'bradley', 'mike', 'tunde', 'femi',
-      'chidi', 'obi', 'kofi', 'kwame', 'ahmed', 'ali', 'hassan', 'omar', 'ibrahim', 'musa'
+      'chidi', 'obi', 'kofi', 'kwame', 'ahmed', 'ali', 'hassan', 'omar', 'ibrahim', 'musa', 'ajajwjwjw'
     ];
     const femaleNames = [
       'sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'emma',
@@ -184,7 +184,7 @@ export class MatchesService {
       'elena', 'cora', 'vivian', 'natalie', 'zoe', 'katelyn', 'fatima', 'aisha',
       'maryam', 'khadija', 'nour', 'huda', 'yasmin', 'iman', 'asma', 'mariam',
       'amara', 'chioma', 'ngozi', 'ada', 'adaora', 'blessing', 'mercy', 'joy',
-      'chiamaka', 'yetunde', 'folake', 'funke', 'ajajwjwjw'
+      'chiamaka', 'yetunde', 'folake', 'funke'
     ];
 
     const userEmail = (user.email || '').trim().toLowerCase();

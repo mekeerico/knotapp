@@ -283,8 +283,8 @@ export default function Dashboard() {
       const userFirstName = (profileData?.firstName || '').trim().toLowerCase();
       const userLastName = (profileData?.lastName || '').trim().toLowerCase();
       const currentUserFullName = `${userFirstName} ${userLastName}`.trim();
-      const maleNames = ['michael', 'alex', 'david', 'john', 'james', 'daniel', 'liam', 'chen', 'eric', 'emeke', 'mike', 'gabriel', 'tunde', 'femi', 'chidi', 'george', 'william', 'thomas', 'charles', 'robert', 'joseph'];
-      const femaleNames = ['sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'amara', 'olivia', 'emma', 'ava', 'isabella', 'mia', 'charlotte', 'amelia', 'ajajwjwjw'];
+      const maleNames = ['michael', 'alex', 'david', 'john', 'james', 'daniel', 'liam', 'chen', 'eric', 'emeke', 'mike', 'gabriel', 'tunde', 'femi', 'chidi', 'george', 'william', 'thomas', 'charles', 'robert', 'joseph', 'ajajwjwjw'];
+      const femaleNames = ['sarah', 'emily', 'sophia', 'zainab', 'priya', 'amina', 'chloe', 'amara', 'olivia', 'emma', 'ava', 'isabella', 'mia', 'charlotte', 'amelia'];
 
       const userGender = (profileData?.gender || '').trim().toLowerCase();
       let isUserMale = userGender === 'male' || userGender === 'man' || userGender === 'm';
