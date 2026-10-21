@@ -32,29 +32,29 @@
 }
 
 .gold-gradient-text {
-  background: linear-gradient(135deg, #E27D8D 0%, #B062C9 50%, #8C52FF 100%);
+  background: linear-gradient(135deg, #D4AF37 0%, #F3E5AB 50%, #AA7C11 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .gold-border {
-  border: 1px solid rgba(226, 125, 141, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.25);
 }
 
 .gold-border-glow:hover {
-  border-color: rgba(226, 125, 141, 0.6);
-  box-shadow: 0 0 16px rgba(226, 125, 141, 0.25);
+  border-color: rgba(212, 175, 55, 0.6);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
   transition: all 0.3s ease-in-out;
 }
 
 .rose-glow-btn {
-  background: linear-gradient(135deg, #E27D8D 0%, #8C52FF 100%);
-  box-shadow: 0 0 14px rgba(226, 125, 141, 0.3);
+  background: linear-gradient(135deg, #E27D8D 0%, #2D1B4E 100%);
+  box-shadow: 0 0 10px rgba(226, 125, 141, 0.2);
   transition: all 0.3s ease;
 }
 
 .rose-glow-btn:hover {
-  box-shadow: 0 0 24px rgba(140, 82, 255, 0.5);
+  box-shadow: 0 0 20px rgba(226, 125, 141, 0.45);
   transform: translateY(-1px);
 }
 
