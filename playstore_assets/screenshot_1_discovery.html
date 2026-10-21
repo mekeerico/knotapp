@@ -45,9 +45,16 @@
     }
     .brand-logo { font-family: 'Cinzel', serif; font-size: 38px; font-weight: 900; letter-spacing: 0.12em; color: #FFFFFF; display: flex; align-items: center; gap: 8px; }
     .brand-logo .dot { color: #D4AF37; }
+    .appbar-bell { position: relative; display: flex; align-items: center; }
+    .bell-badge {
+      position: absolute; top: -6px; right: -8px; width: 22px; height: 22px;
+      background: #E11D48; border-radius: 50%; color: #FFFFFF;
+      font-size: 13px; font-weight: 800; display: flex; align-items: center; justify-content: center;
+      border: 2px solid #0E131C;
+    }
     
     /* Discovery Card */
-    .discovery-card-wrapper { flex: 1; padding: 24px 32px 16px; display: flex; flex-direction: column; }
+    .discovery-card-wrapper { flex: 1; padding: 24px 32px 14px; display: flex; flex-direction: column; }
     .candidate-card {
       flex: 1; border-radius: 44px; overflow: hidden; position: relative;
       border: 1.5px solid rgba(212, 175, 55, 0.35); box-shadow: 0 25px 50px rgba(0,0,0,0.8);
@@ -58,7 +65,7 @@
     }
     .card-vignette {
       position: absolute; inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.4) 65%, #0B0E14 98%);
+      background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.45) 65%, #0B0E14 98%);
     }
     .card-top-row {
       position: absolute; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5;
@@ -69,7 +76,10 @@
       font-size: 20px; font-weight: 800; padding: 8px 20px; border-radius: 9999px;
       display: flex; align-items: center; gap: 8px;
     }
-    .pill-badge.gold { border-color: rgba(212, 175, 55, 0.55); color: #E5C378; }
+    .pill-badge.trust-gold {
+      background: #D4AF37; color: #0B0E14; border: none; font-weight: 900; letter-spacing: 0.05em;
+      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+    }
     .gallery-dots {
       position: absolute; top: 32px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5;
     }
@@ -87,21 +97,25 @@
     .candidate-sub { font-size: 24px; color: #E2E8F0; font-weight: 600; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
     .candidate-link { font-size: 22px; font-weight: 700; color: #E5C378; display: flex; align-items: center; gap: 8px; }
 
-    /* Action Buttons Row */
-    .action-row { height: 130px; display: flex; align-items: center; justify-content: center; gap: 36px; padding: 10px 0; }
-    .btn-circle {
-      width: 90px; height: 90px; border-radius: 50%; background: #141A24;
-      border: 2px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center;
-      font-size: 38px; color: #94A3B8; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    /* Action Buttons Row: TWO PILL BUTTONS (Pass & Connect) */
+    .action-row {
+      height: 115px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; gap: 20px;
     }
-    .btn-circle.star {
-      width: 104px; height: 104px; background: #1A1F2C; border: 2.5px solid #D4AF37;
-      color: #D4AF37; box-shadow: 0 0 35px rgba(212, 175, 55, 0.35); font-size: 44px;
+    .btn-pill-pass {
+      flex: 1; height: 80px; border-radius: 9999px;
+      background: #191E2E; border: 1.5px solid #374151;
+      color: #FFFFFF; font-size: 30px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.4);
     }
-    .btn-circle.heart {
-      border: 2px solid #E11D48; color: #E11D48; background: #1C1520;
-      box-shadow: 0 0 30px rgba(225, 29, 72, 0.35); font-size: 42px;
+    .btn-pill-connect {
+      flex: 1.35; height: 80px; border-radius: 9999px;
+      background: linear-gradient(90deg, #E27D8D, #9353D3);
+      color: #FFFFFF; font-size: 30px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      cursor: pointer; box-shadow: 0 8px 25px rgba(226, 125, 141, 0.45);
     }
+    .btn-pill-connect svg { width: 28px; height: 28px; fill: none; stroke: #FFFFFF; stroke-width: 2.4; }
 
     .phone-bottom-nav {
       height: 110px; background: #0C1017; border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -129,7 +143,10 @@
 
     <div class="phone-app-bar">
       <div class="brand-logo">KNOT<span class="dot">.</span></div>
-      <div style="color: #E5C378; font-size: 30px;">⚙</div>
+      <div class="appbar-bell">
+        <svg viewBox="0 0 24 24" style="width: 34px; height: 34px; fill: #D4AF37;"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
+        <span class="bell-badge">3</span>
+      </div>
     </div>
 
     <div class="discovery-card-wrapper">
@@ -139,7 +156,10 @@
 
         <div class="card-top-row">
           <div class="pill-badge">♥ 97% ALIGNED</div>
-          <div class="pill-badge gold">✓ GOLD VERIFIED</div>
+          <div class="pill-badge trust-gold">
+            <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #0B0E14;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+            <span>TRUST 98%</span>
+          </div>
         </div>
 
         <div class="gallery-dots">
@@ -161,10 +181,13 @@
       </div>
     </div>
 
+    <!-- Live Two Pill Buttons: Pass and Connect -->
     <div class="action-row">
-      <div class="btn-circle">✕</div>
-      <div class="btn-circle star">★</div>
-      <div class="btn-circle heart">♥</div>
+      <div class="btn-pill-pass">Pass</div>
+      <div class="btn-pill-connect">
+        <span>Connect</span>
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </div>
     </div>
 
     <div class="phone-bottom-nav">
