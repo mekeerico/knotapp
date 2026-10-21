@@ -1082,7 +1082,12 @@ export default function Dashboard() {
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#121721] border-r border-white/5 flex flex-col justify-between p-6 transition-transform duration-300 md:static md:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="space-y-8">
           <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2" onClick={() => setIsSidebarOpen(false)}>
+            <Link href="/" className="flex items-center gap-3 group" onClick={() => setIsSidebarOpen(false)}>
+              <img 
+                src="/knot-icon.png?v=4" 
+                alt="KNOT Logo" 
+                className="w-8 h-8 rounded-xl shadow border border-white/10 group-hover:scale-105 transition-transform" 
+              />
               <span className="text-2xl font-serif font-black tracking-wider text-[#F5F5F1] flex items-center gap-1">
                 KNOT<span className="text-[#E27D8D]">.</span>
               </span>

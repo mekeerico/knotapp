@@ -102,7 +102,12 @@ export default function Login() {
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-[#E27D8D]/15 blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-md z-10 relative">
-        <Link href="/" className="inline-block mb-10">
+        <Link href="/" className="inline-flex items-center gap-3 mb-10 group">
+          <img 
+            src="/knot-icon.png?v=4" 
+            alt="KNOT Logo" 
+            className="w-10 h-10 rounded-2xl shadow-xl border border-white/10 group-hover:scale-105 transition-transform" 
+          />
           <span className="text-3xl font-serif font-black tracking-wider text-[#F5F5F1] flex items-center gap-1">
             KNOT<span className="text-[#E27D8D]">.</span>
           </span>

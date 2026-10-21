@@ -15,7 +15,12 @@ export default function Home() {
       {/* Premium Header */}
       <header className="fixed top-0 left-0 right-0 z-50 glass-nav">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 md:h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-3 group">
+            <img 
+              src="/knot-icon.png?v=4" 
+              alt="KNOT Logo" 
+              className="w-8 h-8 md:w-9 md:h-9 rounded-xl shadow-lg border border-white/10 group-hover:scale-105 transition-transform" 
+            />
             <span className="text-xl md:text-2xl font-serif font-black tracking-wider text-[#F5F5F1] flex items-center gap-1">
               KNOT<span className="text-[#D4AF37]">.</span>
             </span>
@@ -310,7 +315,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-black/60 border-t border-white/5 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-gray-500">
-          <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
+            <img src="/knot-icon.png?v=4" alt="KNOT Logo" className="w-6 h-6 rounded-lg" />
             <span className="text-lg font-serif font-black text-white">KNOT.</span>
             <span className="text-xs">© 2026 KNOT AI Relationship Systems.</span>
           </div>
