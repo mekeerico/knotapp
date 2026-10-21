@@ -2,32 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/glass_card.dart';
-import '../../../core/widgets/gold_button.dart';
-import '../../../core/widgets/verified_badge.dart';
 import '../providers/auth_provider.dart';
-
-class _ShowcaseCandidate {
-  final String nameAge;
-  final String roleLocation;
-  final String assetPath;
-  final String trustScore;
-  final String matchScore;
-  final List<String> traits;
-  final String whyMatched;
-
-  const _ShowcaseCandidate({
-    required this.nameAge,
-    required this.roleLocation,
-    required this.assetPath,
-    required this.trustScore,
-    required this.matchScore,
-    required this.traits,
-    required this.whyMatched,
-  });
-}
 
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key});
@@ -38,20 +14,33 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _trustSectionKey = GlobalKey();
 
   Timer? _initialDelayTimer;
   Timer? _autoScrollTimer;
   bool _userTookOverScroll = false;
 
-  static const _ShowcaseCandidate _featuredCandidate = _ShowcaseCandidate(
-    nameAge: 'Michael, 30',
-    roleLocation: 'Engineer • San Francisco, USA',
-    assetPath: 'assets/images/welcome_male.jpg',
-    trustScore: 'TRUST 97%',
-    matchScore: '96% Match Score',
-    traits: ['✔ Family-Oriented', '✔ Secure Attachment', '✔ Marriage-Focused'],
-    whyMatched:
-        '"You both prioritize family traditions, share a calm conflict-resolution style, and seek marriage within 1–2 years."',
+  // Exact Web Palette (Obsidian Black, Champagne Gold, Emerald Green, Velvet Rose)
+  static const Color _webGold = Color(0xFFD4AF37);
+  static const Color _webGoldLight = Color(0xFFF3E5AB);
+  static const Color _webGoldDark = Color(0xFFAA7C11);
+  static const Color _webEmerald = Color(0xFF10B981);
+  static const Color _webRose = Color(0xFFE27D8D);
+  static const Color _webDeepPurple = Color(0xFF2D1B4E);
+  static const Color _webObsidian = Color(0xFF0A0E14);
+  static const Color _webOffWhite = Color(0xFFF5F5F1);
+  static const Color _webSlateMuted = Color(0xFF94A3B8);
+
+  static const LinearGradient _webGoldGradient = LinearGradient(
+    colors: [_webGold, _webGoldLight, _webGoldDark],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const LinearGradient _webRoseGlowGradient = LinearGradient(
+    colors: [_webRose, _webDeepPurple],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 
   @override
@@ -65,7 +54,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     _initialDelayTimer = Timer(const Duration(milliseconds: 1400), () {
       if (!mounted || _userTookOverScroll) return;
 
-      // 24ms tick (~42 fps) moving 0.65px per tick = ~27px/sec smooth editorial glide
+      // Smooth editorial scroll glide down the page
       _autoScrollTimer = Timer.periodic(const Duration(milliseconds: 24), (timer) {
         if (!mounted || _userTookOverScroll || !_scrollController.hasClients) {
           timer.cancel();
@@ -106,25 +95,37 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     context.go(isRegister ? '/auth?mode=register' : '/auth');
   }
 
+  void _scrollToTrustSection() {
+    _stopAutoScrollOnUserTouch();
+    final targetContext = _trustSectionKey.currentContext;
+    if (targetContext != null) {
+      Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.obsidianBlack,
+      backgroundColor: _webObsidian,
       body: Stack(
         children: [
-          // Subtle ambient background radial glow
+          // Ambient background radial purple/gold glow (Matches web .brand-bg-glow & orb-pulse)
           Positioned(
             top: -100,
             left: -60,
             right: -60,
             child: IgnorePointer(
               child: Container(
-                height: 360,
+                height: 380,
                 decoration: BoxDecoration(
                   gradient: RadialGradient(
                     colors: [
-                      AppColors.royalPurple.withValues(alpha: 0.35),
-                      AppColors.champagneGold.withValues(alpha: 0.06),
+                      _webDeepPurple.withValues(alpha: 0.45),
+                      _webGold.withValues(alpha: 0.06),
                       Colors.transparent,
                     ],
                     radius: 0.85,
@@ -137,11 +138,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           SafeArea(
             child: Column(
               children: [
-                // Sticky Top Navigation Bar
+                // 1. Sticky Top Navigation Bar (Matches Web Header)
                 _buildTopNavbar(),
 
-                // Scrollable Multi-Section Editorial Landing Content
-                // Gently auto-scrolls vertically on launch and immediately yields control on touch
+                // 2. Scrollable Multi-Section Landing Content (Matches Web Sections)
                 Expanded(
                   child: Listener(
                     onPointerDown: (_) => _stopAutoScrollOnUserTouch(),
@@ -149,20 +149,31 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                     child: SingleChildScrollView(
                       controller: _scrollController,
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 36),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Hero Section
                           _buildHeroSection(),
-                          const SizedBox(height: 28),
+                          const SizedBox(height: 36),
+
+                          // Cinematic Interactive Core Visual Mockup (Matches Web Gabriel/Michael Card)
                           _buildCandidateShowcaseSection(),
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 48),
+
+                          // Feature Section (Deep Intelligence Platforms)
                           _buildIntelligencePillarsSection(),
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 48),
+
+                          // Trust Architecture Details (Zero-Tolerance Security)
                           _buildTrustArchitectureSection(),
-                          const SizedBox(height: 40),
+                          const SizedBox(height: 48),
+
+                          // AI Relationship Coach Showcase
                           _buildAICoachPreviewSection(),
-                          const SizedBox(height: 32),
+                          const SizedBox(height: 44),
+
+                          // Web-Aligned Footer
                           _buildFooterNote(),
                         ],
                       ),
@@ -170,7 +181,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   ),
                 ),
 
-                // Pinned Bottom Action Bar
+                // 3. Pinned Bottom Action Bar
                 _buildBottomActionBar(),
               ],
             ),
@@ -180,69 +191,89 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Top Navbar (Matches Web Header)
+  // ---------------------------------------------------------------------------
   Widget _buildTopNavbar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.obsidianBlack.withValues(alpha: 0.92),
-        border: const Border(
-          bottom: BorderSide(color: AppColors.glassBorder, width: 0.8),
+        color: _webObsidian.withValues(alpha: 0.85),
+        border: Border(
+          bottom: BorderSide(
+            color: Colors.white.withValues(alpha: 0.06),
+            width: 0.8,
+          ),
         ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
+          // Logo KNOT.
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'KNOT',
                 style: AppTypography.headingLarge.copyWith(
                   fontSize: 22,
-                  letterSpacing: 3.5,
+                  letterSpacing: 3.0,
                   fontWeight: FontWeight.w900,
+                  color: _webOffWhite,
                 ),
               ),
               Text(
                 '.',
                 style: AppTypography.headingLarge.copyWith(
                   fontSize: 24,
-                  color: AppColors.champagneGold,
+                  color: _webGold,
                   fontWeight: FontWeight.w900,
                 ),
               ),
             ],
           ),
+
+          // Actions: Sign In & Join Registry
           Row(
             children: [
               TextButton(
                 onPressed: () => _navigateToAuth(isRegister: false),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.textSecondary,
+                  foregroundColor: _webSlateMuted,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
                 child: Text(
                   'Sign In',
                   style: AppTypography.labelLarge.copyWith(
-                    color: AppColors.textPure,
-                    fontSize: 12,
+                    color: _webOffWhite,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               GestureDetector(
                 onTap: () => _navigateToAuth(isRegister: true),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8.5),
                   decoration: BoxDecoration(
-                    gradient: AppColors.goldGradient,
+                    gradient: _webRoseGlowGradient,
                     borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _webRose.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Text(
                     'Join Registry',
                     style: AppTypography.labelLarge.copyWith(
-                      color: AppColors.obsidianBlack,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.4,
                     ),
                   ),
                 ),
@@ -254,40 +285,40 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Hero Section (Matches Web Hero)
+  // ---------------------------------------------------------------------------
   Widget _buildHeroSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Gold Pill Badge
+        // Anti-Fraud Pill (Matches Web)
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.champagneGold.withValues(alpha: 0.1),
+            color: Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: AppColors.champagneGold.withValues(alpha: 0.35),
+              color: Colors.white.withValues(alpha: 0.10),
             ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: AppColors.champagneGold,
-                  shape: BoxShape.circle,
-                ),
+              const Icon(
+                Icons.auto_awesome,
+                color: _webGold,
+                size: 13,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 7),
               Flexible(
                 child: Text(
-                  'ANTI-FRAUD  |  AI MATCHMAKING  |  HIGH-TRUST',
+                  'ANTI-FRAUD | AI MATCHMAKING | HIGH-TRUST',
                   style: AppTypography.labelSmall.copyWith(
-                    color: AppColors.champagneGold,
+                    color: _webGold,
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
+                    letterSpacing: 1.1,
                   ),
                 ),
               ),
@@ -296,60 +327,140 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         ),
         const SizedBox(height: 18),
 
-        // Display Headline
+        // Display Headline: "Where Compatibility Becomes Commitment."
         RichText(
           text: TextSpan(
             style: AppTypography.displayLarge.copyWith(
               fontSize: 34,
-              height: 1.12,
-              fontWeight: FontWeight.w800,
+              height: 1.15,
+              fontWeight: FontWeight.w900,
+              color: _webOffWhite,
             ),
             children: [
-              const TextSpan(text: 'Where\nCompatibility\nBecomes '),
-              TextSpan(
-                text: 'Commitment.',
-                style: AppTypography.displayLarge.copyWith(
-                  fontSize: 34,
-                  height: 1.12,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.champagneGold,
+              const TextSpan(text: 'Where Compatibility\nBecomes '),
+              WidgetSpan(
+                alignment: PlaceholderAlignment.baseline,
+                baseline: TextBaseline.alphabetic,
+                child: ShaderMask(
+                  blendMode: BlendMode.srcIn,
+                  shaderCallback: (bounds) => _webGoldGradient.createShader(bounds),
+                  child: Text(
+                    'Commitment.',
+                    style: AppTypography.displayLarge.copyWith(
+                      fontSize: 34,
+                      height: 1.15,
+                      fontWeight: FontWeight.w900,
+                      color: _webGold,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 16),
 
+        // Subtitle (Matches Web)
         Text(
-          'Move beyond endless swiping. KNOT combines psychological compatibility AI, biometric identity verification, and personal relationship coaching to connect individuals genuinely ready for marriage.',
+          "KNOT is the world's most trusted relationship intelligence ecosystem built exclusively for verified singles seeking marriage and permanent partnership. No shallow swipes. No superficial games. Just real love.",
           style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: _webSlateMuted,
             height: 1.55,
             fontSize: 14,
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 24),
 
-        // 3 Key Registry Stats
+        // Hero CTA Buttons (Matches Web)
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => _navigateToAuth(isRegister: true),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: _webRoseGlowGradient,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _webRose.withValues(alpha: 0.3),
+                        blurRadius: 14,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Begin AI Guided Interview',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.arrow_forward,
+                        color: Colors.white,
+                        size: 15,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTap: _scrollToTrustSection,
+          child: Container(
+            width: double.infinity,
+            height: 46,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(23),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.10),
+              ),
+            ),
+            child: Center(
+              child: Text(
+                'Our Verification System',
+                style: AppTypography.labelLarge.copyWith(
+                  color: _webOffWhite,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // 3 Key Registry Stats (Matches Web 100%, 94%, 0%)
         Container(
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.glassBorder),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
           ),
           child: Row(
             children: [
               Expanded(
-                child: _buildStatColumn('100%', 'Verified Users'),
+                child: _buildStatColumn('100%', 'VERIFIED USERS', isGold: false),
               ),
-              Container(width: 1, height: 32, color: AppColors.glassBorder),
+              Container(width: 1, height: 32, color: Colors.white.withValues(alpha: 0.08)),
               Expanded(
-                child: _buildStatColumn('94%', 'Success Match Index'),
+                child: _buildStatColumn('94%', 'SUCCESS MATCH INDEX', isGold: true),
               ),
-              Container(width: 1, height: 32, color: AppColors.glassBorder),
+              Container(width: 1, height: 32, color: Colors.white.withValues(alpha: 0.08)),
               Expanded(
-                child: _buildStatColumn('0%', 'Superficial Swiping'),
+                child: _buildStatColumn('0%', 'SUPERFICIAL SWIPING', isGold: false),
               ),
             ],
           ),
@@ -358,24 +469,25 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
-  Widget _buildStatColumn(String value, String label) {
+  Widget _buildStatColumn(String value, String label, {required bool isGold}) {
     return Column(
       children: [
         Text(
           value,
           style: AppTypography.headingLarge.copyWith(
-            color: AppColors.champagneGold,
+            color: isGold ? _webGold : Colors.white,
             fontSize: 22,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Text(
           label,
           style: AppTypography.bodySmall.copyWith(
-            color: AppColors.textSubtle,
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
+            color: const Color(0xFF6B7280),
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.8,
           ),
           textAlign: TextAlign.center,
         ),
@@ -383,309 +495,242 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Core Visual Mockup (Matches Web Interactive Gabriel/Michael Card)
+  // ---------------------------------------------------------------------------
   Widget _buildCandidateShowcaseSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Section Header Subtitle
         Text(
-          'SOVEREIGN VERIFIED PROFILE',
+          'CURATED INTENTIONAL MATCHES',
           style: AppTypography.labelSmall.copyWith(
-            color: AppColors.champagneGold,
+            color: _webGold,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.4,
           ),
         ),
         const SizedBox(height: 12),
-        _buildCinematicCandidateCard(_featuredCandidate),
-      ],
-    );
-  }
 
-  Widget _buildCinematicCandidateCard(_ShowcaseCandidate candidate) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Live Discovery-Style Candidate Card with the exact Male Studio Portrait
-        GestureDetector(
-          onTap: () => _navigateToAuth(isRegister: true),
-          child: Container(
-            height: 460,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: AppColors.champagneGold.withValues(alpha: 0.45),
-                width: 1.2,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  blurRadius: 24,
-                  spreadRadius: 4,
-                  offset: const Offset(0, 12),
-                ),
-              ],
+        // Interactive Glass Card Mockup (Matches Web layout)
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xB3121721),
+            borderRadius: BorderRadius.circular(32),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.10),
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(27),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // 1. Exact Male Studio Portrait Image
-                  Image.asset(
-                    candidate.assetPath,
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                  ),
-
-                  // 2. Dark Gradient Overlay for Text Readability (Matches CandidateCard)
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.25),
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.65),
-                          Colors.black.withValues(alpha: 0.95),
-                        ],
-                        stops: const [0.0, 0.35, 0.7, 1.0],
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 28,
+                spreadRadius: 2,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Photo Frame with Verified Badge & Match Score
+              ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: SizedBox(
+                  height: 380,
+                  width: double.infinity,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Photo
+                      Image.asset(
+                        'assets/images/welcome_male.jpg',
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
                       ),
-                    ),
-                  ),
 
-                  // 3. Top Row: Match Score Pill & Gold Verified Badge (Matches CandidateCard)
-                  Positioned(
-                    top: 18,
-                    left: 18,
-                    right: 18,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Closest Match Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
+                      // Top-right Trust Badge (Matches Web .trust-badge)
+                      Positioned(
+                        top: 14,
+                        right: 14,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: AppColors.obsidianBlack.withValues(alpha: 0.8),
+                            color: _webEmerald.withValues(alpha: 0.20),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: AppColors.champagneGold,
-                              width: 1,
+                              color: _webEmerald.withValues(alpha: 0.45),
                             ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(
-                                Icons.favorite,
-                                color: AppColors.roseGlow,
-                                size: 14,
+                                Icons.verified_user,
+                                color: _webEmerald,
+                                size: 13,
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 5),
                               Text(
-                                '96% CLOSEST MATCH',
+                                'ID & Selfie Verified',
                                 style: AppTypography.labelSmall.copyWith(
-                                  color: AppColors.champagneGold,
+                                  color: _webEmerald,
+                                  fontSize: 10.5,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
                             ],
                           ),
                         ),
+                      ),
 
-                        // Sovereign Gold Verified Badge
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 6,
-                          ),
+                      // Bottom Gradient & Candidate Details
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
                           decoration: BoxDecoration(
-                            color: AppColors.obsidianBlack.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppColors.glassBorder),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.90),
+                              ],
+                            ),
                           ),
-                          child: const VerifiedBadge(
-                            size: 16,
-                            showLabel: true,
-                            label: 'GOLD',
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Name & Subtitle
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Gabriel, 29',
+                                    style: AppTypography.headingLarge.copyWith(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Architect • Intentional Builder',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: _webGold,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              // Match Score Pill (Matches Web)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: _webGold.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: _webGold,
+                                    width: 1.2,
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'MATCH SCORE',
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: const Color(0xFFD1D5DB),
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 1),
+                                    Text(
+                                      '96%',
+                                      style: AppTypography.headingMedium.copyWith(
+                                        color: _webGold,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-
-                  // 4. Bottom Profile Details Overlay (Matches CandidateCard)
-                  Positioned(
-                    bottom: 24,
-                    left: 20,
-                    right: 20,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Full-Width Name, Age & Verified Badge
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                'MICHAEL, 30',
-                                style: AppTypography.headingLarge.copyWith(
-                                  fontSize: 24,
-                                  color: AppColors.textPure,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const VerifiedBadge(size: 20),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-
-                        // Occupation Row
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.work_outline,
-                              size: 15,
-                              color: AppColors.champagneGold,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                'Principal Engineer',
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-
-                        // Location Row
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on_outlined,
-                              size: 15,
-                              color: AppColors.textMuted,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'San Francisco, USA',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 14),
-
-                        // Archetype & Marriage Timeline Chips
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: [
-                            _buildMiniChip(
-                              'The Strategic Visionary',
-                              Icons.psychology_outlined,
-                            ),
-                            _buildMiniChip(
-                              'Within 18 months',
-                              Icons.access_time,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Tap to view full compatibility hint
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'View Psychological Compatibility & Vows',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.champagneGold,
-                                fontSize: 11,
-                              ),
-                            ),
-                            const Icon(
-                              Icons.arrow_forward_ios,
-                              size: 13,
-                              color: AppColors.champagneGold,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // 5. Current Discovery Action Buttons Row (X, Star, Love)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            _buildDiscoveryActionButton(
-              icon: Icons.close,
-              color: AppColors.textSubtle,
-              size: 52,
-              onTap: () => _navigateToAuth(isRegister: false),
-            ),
-            _buildDiscoveryActionButton(
-              icon: Icons.star,
-              color: AppColors.champagneGold,
-              size: 64,
-              onTap: () => _navigateToAuth(isRegister: true),
-            ),
-            _buildDiscoveryActionButton(
-              icon: Icons.favorite,
-              color: AppColors.roseGlow,
-              size: 52,
-              onTap: () => _navigateToAuth(isRegister: true),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // 6. "Why You Matched" AI Explanation Box
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.glassBorder),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'WHY YOU MATCHED (AI COMPATIBILITY)',
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.champagneGold,
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 1.1,
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                candidate.whyMatched,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: 11.5,
-                  height: 1.4,
+              const SizedBox(height: 16),
+
+              // 3 Trait Chips (Matches Web)
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildWebChip('✔ Family-Oriented', isGold: false),
+                  _buildWebChip('✔ Secure Attachment', isGold: true),
+                  _buildWebChip('✔ Marriage-Focused', isGold: false),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // "Why You Matched" Box (Matches Web)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.06),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.smart_toy_outlined,
+                          color: _webGold,
+                          size: 15,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Why You Matched',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: _webGold,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '"Both value career milestones and solid family foundations. Your complementary conflict-resolution styles (Secure-Collaborative) suggest high capability for long-term marital success."',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: _webSlateMuted,
+                        height: 1.45,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -695,92 +740,63 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
-  Widget _buildMiniChip(String text, IconData icon) {
+  Widget _buildWebChip(String label, {required bool isGold}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: AppColors.champagneGold),
-          const SizedBox(width: 5),
-          Text(
-            text,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textPure,
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDiscoveryActionButton({
-    required IconData icon,
-    required Color color,
-    required double size,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppColors.darkSlate,
-          border: Border.all(
-            color: color.withValues(alpha: 0.4),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.25),
-              blurRadius: 14,
-              offset: const Offset(0, 4),
-            ),
-          ],
+        color: isGold
+            ? _webDeepPurple.withValues(alpha: 0.35)
+            : Colors.white.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isGold
+              ? _webGold.withValues(alpha: 0.30)
+              : Colors.white.withValues(alpha: 0.06),
         ),
-        child: Icon(
-          icon,
-          color: color,
-          size: size * 0.45,
+      ),
+      child: Text(
+        label,
+        style: AppTypography.bodySmall.copyWith(
+          color: isGold ? _webGold : const Color(0xFFD1D5DB),
+          fontSize: 11,
+          fontWeight: isGold ? FontWeight.w700 : FontWeight.w500,
         ),
       ),
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Relationship Intelligence Technology (Matches Web 4 Pillars)
+  // ---------------------------------------------------------------------------
   Widget _buildIntelligencePillarsSection() {
     final pillars = [
       {
-        'icon': Icons.psychology_outlined,
+        'icon': Icons.handshake_outlined,
         'title': 'Compatibility AI',
         'desc':
-            'Matches based on values, attachment styles, communication patterns, and marriage readiness.',
+            'Calculates values, lifestyle alignments, attachment archetypes, and marriage timelines. We match on psychological depth, not surface appearances.',
+        'color': _webGold,
       },
       {
         'icon': Icons.verified_user_outlined,
         'title': 'Identity Verification',
         'desc':
-            'Biometric live selfie and government ID verification eliminate fake profiles and catfishing.',
+            'Dual government ID and real-time biometric selfie verification. Keeps 100% of romance scammers, catfishers, and malicious bad actors out.',
+        'color': _webEmerald,
       },
       {
-        'icon': Icons.auto_awesome_outlined,
+        'icon': Icons.smart_toy_outlined,
         'title': 'AI Relationship Coach',
         'desc':
-            '24/7 personal guidance for deeper conversations, conflict resolution, and emotional connection.',
+            'An empathetic relationship therapist in your pocket. Offers icebreakers, conversation analysis, first date strategies, and marital readiness checkpoints.',
+        'color': _webRose,
       },
       {
-        'icon': Icons.shield_outlined,
+        'icon': Icons.gpp_maybe_outlined,
         'title': 'Anti-Fraud Engine',
         'desc':
-            'Continuous behavioral analysis and duplicate photo detection protect the integrity of every match.',
+            'Real-time conversation safety shields monitor indicators of financial coercion, catfish speech patterns, and manipulation to protect your emotional safety.',
+        'color': const Color(0xFFF87171),
       },
     ];
 
@@ -790,7 +806,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         Text(
           'RELATIONSHIP INTELLIGENCE',
           style: AppTypography.labelSmall.copyWith(
-            color: AppColors.champagneGold,
+            color: _webGold,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.4,
           ),
@@ -800,75 +816,92 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
           'Relationship Intelligence Technology',
           style: AppTypography.headingLarge.copyWith(
             fontSize: 24,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
             height: 1.2,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'We replaced addictive swiping algorithms with deep psychological alignment and impenetrable security.',
+          'Our four foundational layers engineered specifically to ensure maximum security, safety, and compatibility.',
           style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: _webSlateMuted,
             fontSize: 13.5,
           ),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 20),
+
         ...pillars.map(
-          (p) => Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: GlassCard(
-              padding: const EdgeInsets.all(18),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: AppColors.champagneGold.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: AppColors.champagneGold.withValues(alpha: 0.3),
+          (p) {
+            final color = p['color'] as Color;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: const Color(0xB3121721),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.08),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Icon(
+                        p['icon'] as IconData,
+                        color: color,
+                        size: 22,
                       ),
                     ),
-                    child: Icon(
-                      p['icon'] as IconData,
-                      color: AppColors.champagneGold,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          p['title'] as String,
-                          style: AppTypography.headingMedium.copyWith(
-                            fontSize: 16,
-                            color: AppColors.textPure,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            p['title'] as String,
+                            style: AppTypography.headingMedium.copyWith(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          p['desc'] as String,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                            height: 1.45,
-                            fontSize: 12.5,
+                          const SizedBox(height: 4),
+                          Text(
+                            p['desc'] as String,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: _webSlateMuted,
+                              height: 1.45,
+                              fontSize: 12.5,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ],
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Trust Architecture Details (Matches Web Trust Section)
+  // ---------------------------------------------------------------------------
   Widget _buildTrustArchitectureSection() {
     final checks = [
       'Government ID Verified',
@@ -878,73 +911,81 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     ];
 
     return Column(
+      key: _trustSectionKey,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: AppColors.emeraldSuccess.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.emeraldSuccess.withValues(alpha: 0.35),
+        // Headline with Emerald Accent (Matches Web)
+        RichText(
+          text: TextSpan(
+            style: AppTypography.headingLarge.copyWith(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              height: 1.25,
+              color: Colors.white,
             ),
-          ),
-          child: Text(
-            'ZERO-TOLERANCE SECURITY',
-            style: AppTypography.labelSmall.copyWith(
-              color: AppColors.emeraldSuccess,
-              fontSize: 9.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.2,
-            ),
+            children: const [
+              TextSpan(text: 'An Impenetrable Network\nof '),
+              TextSpan(
+                text: 'Verified Real Humans.',
+                style: TextStyle(color: _webEmerald),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 10),
         Text(
-          'An Impenetrable Trust Architecture.',
-          style: AppTypography.headingLarge.copyWith(
-            fontSize: 24,
-            height: 1.2,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Traditional dating apps profit from your prolonged search and ignore fraudulent accounts. KNOT enforces mandatory multi-step identity verification before any user can interact.',
+          'Casual dating apps optimize for bot density, fake profiles, and scams to increase endless swiping loops. At KNOT, we completely removed scams. Every member undergoes strict, AI-validated identity screening before interacting with the registry.',
           style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: _webSlateMuted,
             fontSize: 13.5,
             height: 1.5,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
 
-        // 0% Catfishing & Duplicate Elimination Mini Cards
+        // 0% Catfishing & Duplicate Elimination Cards (Matches Web)
         Row(
           children: [
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.03),
+                  color: Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.glassBorder),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: _webEmerald.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.how_to_reg_outlined,
+                        color: _webEmerald,
+                        size: 19,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     Text(
                       '0% Catfishing',
                       style: AppTypography.headingMedium.copyWith(
-                        color: AppColors.champagneGold,
-                        fontSize: 15,
+                        color: Colors.white,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Live facial liveness & ID cross-matching.',
+                      'Biometric face-matching guarantees profiles correspond to actual human images.',
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSubtle,
+                        color: const Color(0xFF6B7280),
                         fontSize: 11,
+                        height: 1.4,
                       ),
                     ),
                   ],
@@ -956,26 +997,42 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.03),
+                  color: Colors.white.withValues(alpha: 0.04),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.glassBorder),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: _webEmerald.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.security,
+                        color: _webEmerald,
+                        size: 19,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
                     Text(
-                      'Anti-Scam AI',
+                      'Duplicate Elimination',
                       style: AppTypography.headingMedium.copyWith(
-                        color: AppColors.champagneGold,
-                        fontSize: 15,
+                        color: Colors.white,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Document expiry & biometric age audit.',
+                      'One unique verified account per SSN/ID parameters to restrict fake loops.',
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSubtle,
+                        color: const Color(0xFF6B7280),
                         fontSize: 11,
+                        height: 1.4,
                       ),
                     ),
                   ],
@@ -984,94 +1041,98 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
 
-        // KNOT Trust Profile (98%) Card
-        GlassCard(
+        // KNOT Trust Profile Card (Matches Web)
+        Container(
           padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: const Color(0xB3121721),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: _webEmerald.withValues(alpha: 0.25),
+            ),
+          ),
           child: Column(
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.emeraldSuccess.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppColors.emeraldSuccess.withValues(alpha: 0.4),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.verified_user,
-                  color: AppColors.emeraldSuccess,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'KNOT Trust Profile',
-                style: AppTypography.headingMedium.copyWith(fontSize: 18),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'Sample Verified Member Status',
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSubtle,
-                  fontSize: 11.5,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ...checks.map(
-                (label) => Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.04),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.glassBorder),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
                     children: [
-                      Text(
-                        label,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textPure,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
+                      const Icon(
+                        Icons.verified_user,
+                        color: _webEmerald,
+                        size: 18,
                       ),
+                      const SizedBox(width: 8),
                       Text(
-                        '✔ PASSED',
+                        'KNOT TRUST PROFILE',
                         style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.emeraldSuccess,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 10.5,
+                          color: _webEmerald,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
                         ),
                       ),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'OVERALL TRUST SCORE',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.textSubtle,
-                      fontSize: 10.5,
-                    ),
-                  ),
                   Text(
                     '98%',
                     style: AppTypography.headingLarge.copyWith(
-                      color: AppColors.champagneGold,
-                      fontSize: 22,
+                      color: _webEmerald,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+
+              // 4 Verification Lines (Matches Web)
+              ...checks.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.05),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          item,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: const Color(0xFFD1D5DB),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: _webEmerald,
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'This trust profile resides on our high-performance ledger, preventing malicious duplicates and fake identities.',
+                style: AppTypography.bodySmall.copyWith(
+                  color: const Color(0xFF6B7280),
+                  fontSize: 11,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
@@ -1080,120 +1141,354 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // AI Relationship Coach Showcase (Matches Web Coach Section)
+  // ---------------------------------------------------------------------------
   Widget _buildAICoachPreviewSection() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.royalPurple.withValues(alpha: 0.45),
-            const Color(0xFF121622),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'AI RELATIONSHIP COACH',
+          style: AppTypography.labelSmall.copyWith(
+            color: _webGold,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.4,
+          ),
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: AppColors.champagneGold.withValues(alpha: 0.25),
+        const SizedBox(height: 8),
+        Text(
+          'Meet Your Relationship Coach',
+          style: AppTypography.headingLarge.copyWith(
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+            height: 1.2,
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'MEET YOUR AI RELATIONSHIP COACH',
-            style: AppTypography.labelSmall.copyWith(
-              color: AppColors.champagneGold,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.3,
-              fontSize: 10,
-            ),
+        const SizedBox(height: 8),
+        Text(
+          "Not sure how to break the ice or navigate differences? KNOT's real-time AI Coach assists couples in communicating securely and with high emotional intelligence.",
+          style: AppTypography.bodyMedium.copyWith(
+            color: _webSlateMuted,
+            fontSize: 13.5,
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Never Run Out of Meaningful Things to Say.',
-            style: AppTypography.headingLarge.copyWith(
-              fontSize: 22,
-              height: 1.2,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Whether you need a tailored icebreaker, advice on navigating serious marriage topics, or feedback on your communication style, your private AI Coach is built into every step.',
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-              height: 1.5,
-              fontSize: 12.5,
-            ),
-          ),
-          const SizedBox(height: 16),
+        ),
+        const SizedBox(height: 20),
 
-          // Simulated Coach Conversation Bubble
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.glassBorder),
+        // Dual Presentation Card (Empathetic Intelligence + Chat Preview)
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: const Color(0xB3121721),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.08),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Banner: Empathetic Intelligence
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: _webDeepPurple.withValues(alpha: 0.25),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      width: 44,
+                      height: 44,
                       decoration: BoxDecoration(
-                        color: AppColors.champagneGold.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'AI COACH ICEBREAKER',
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.champagneGold,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
+                        color: _webGold.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: _webGold.withValues(alpha: 0.25),
                         ),
                       ),
+                      child: const Icon(
+                        Icons.smart_toy_outlined,
+                        color: _webGold,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      'Empathetic Intelligence',
+                      style: AppTypography.headingLarge.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      "Our coach does not just spit generic advice. It evaluates both user's profile dimensions, attachment style dynamics, and conversational milestones to offer highly tailored guidance.",
+                      style: AppTypography.bodySmall.copyWith(
+                        color: _webSlateMuted,
+                        height: 1.45,
+                        fontSize: 12.5,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.verified,
+                          color: _webGold,
+                          size: 15,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Assisted 12,000+ matches to commitment',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: const Color(0xFF6B7280),
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  '"Since you both place family traditions and faith at the center of your future home, ask what childhood family tradition they are most excited to carry into their own marriage."',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.champagneGold,
-                    fontStyle: FontStyle.italic,
-                    height: 1.45,
-                    fontSize: 12.5,
-                  ),
+              ),
+
+              // Bottom Simulated Chat View (Matches Web Chat Mockup)
+              Container(
+                padding: const EdgeInsets.all(18),
+                color: Colors.black.withValues(alpha: 0.5),
+                child: Column(
+                  children: [
+                    // AI Message 1
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: _webGold.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _webGold.withValues(alpha: 0.25),
+                            ),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'AI',
+                              style: TextStyle(
+                                color: _webGold,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
+                                bottomRight: Radius.circular(16),
+                              ),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.05),
+                              ),
+                            ),
+                            child: const Text(
+                              '"I noticed both of you value travel and family traditions. Would you like a prompt to start the conversation?"',
+                              style: TextStyle(
+                                color: Color(0xFFD1D5DB),
+                                fontSize: 12,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // User Message (ME)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.only(left: 40),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _webRose.withValues(alpha: 0.15),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
+                                bottomRight: Radius.circular(16),
+                              ),
+                              border: Border.all(
+                                color: _webRose.withValues(alpha: 0.25),
+                              ),
+                            ),
+                            child: const Text(
+                              '"Yes, please suggest an elegant icebreaker."',
+                              style: TextStyle(
+                                color: _webOffWhite,
+                                fontSize: 12,
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: const BoxDecoration(
+                            color: _webRose,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'ME',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+
+                    // AI Message 2 (Custom Icebreaker)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: _webGold.withValues(alpha: 0.12),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _webGold.withValues(alpha: 0.25),
+                            ),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'AI',
+                              style: TextStyle(
+                                color: _webGold,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.05),
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(16),
+                                bottomLeft: Radius.circular(16),
+                                bottomRight: Radius.circular(16),
+                              ),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.05),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  '"Here is a custom icebreaker based on your high values alignment:"',
+                                  style: TextStyle(
+                                    color: Color(0xFFD1D5DB),
+                                    fontSize: 11.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  '"Since you both love exploring historical towns, what is one memory from a childhood trip that inspired your current love for history?"',
+                                  style: TextStyle(
+                                    color: _webGold,
+                                    fontStyle: FontStyle.italic,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                    height: 1.45,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Web-Aligned Footer
+  // ---------------------------------------------------------------------------
   Widget _buildFooterNote() {
     return Center(
       child: Column(
         children: [
-          Text(
-            'KNOT. — Where True Relationship Leads to Vow',
-            style: AppTypography.labelLarge.copyWith(
-              color: AppColors.champagneGold,
-              fontSize: 12,
-              letterSpacing: 1.2,
-            ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'KNOT',
+                style: AppTypography.headingLarge.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.0,
+                  color: Colors.white,
+                ),
+              ),
+              Text(
+                '.',
+                style: AppTypography.headingLarge.copyWith(
+                  fontSize: 20,
+                  color: _webGold,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 4),
           Text(
-            'Protected by Didit Sovereign KYC & Biometric Identity Verification.',
+            '© 2026 KNOT AI Relationship Systems.',
             style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSubtle,
-              fontSize: 10.5,
+              color: const Color(0xFF6B7280),
+              fontSize: 11,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Terms of Service  •  Privacy Policy  •  Community Guidelines',
+            style: AppTypography.bodySmall.copyWith(
+              color: const Color(0xFF6B7280),
+              fontSize: 10,
             ),
             textAlign: TextAlign.center,
           ),
@@ -1202,41 +1497,82 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Pinned Bottom Action Bar
+  // ---------------------------------------------------------------------------
   Widget _buildBottomActionBar() {
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
       decoration: BoxDecoration(
-        color: AppColors.obsidianBlack.withValues(alpha: 0.96),
-        border: const Border(
-          top: BorderSide(color: AppColors.glassBorder, width: 0.8),
+        color: _webObsidian.withValues(alpha: 0.96),
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withValues(alpha: 0.08),
+            width: 0.8,
+          ),
         ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GoldButton(
-            text: 'Join the Sovereign Registry',
-            onPressed: () => _navigateToAuth(isRegister: true),
+          // Primary Action Button (Matches Web rose-glow-btn)
+          GestureDetector(
+            onTap: () => _navigateToAuth(isRegister: true),
+            child: Container(
+              height: 52,
+              decoration: BoxDecoration(
+                gradient: _webRoseGlowGradient,
+                borderRadius: BorderRadius.circular(26),
+                boxShadow: [
+                  BoxShadow(
+                    color: _webRose.withValues(alpha: 0.35),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Begin AI Guided Interview',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.arrow_forward,
+                    color: Colors.white,
+                    size: 17,
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+
+          // Secondary Sign In Link
           GestureDetector(
             onTap: () => _navigateToAuth(isRegister: false),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(vertical: 2),
               child: RichText(
                 text: TextSpan(
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
+                    color: _webSlateMuted,
                     fontSize: 12.5,
                   ),
-                  children: [
-                    const TextSpan(text: 'Already have an account? '),
+                  children: const [
+                    TextSpan(text: 'Already have an account? '),
                     TextSpan(
                       text: 'Sign In',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.champagneGold,
+                      style: TextStyle(
+                        color: _webGold,
                         fontWeight: FontWeight.w800,
-                        fontSize: 12.5,
                       ),
                     ),
                   ],
