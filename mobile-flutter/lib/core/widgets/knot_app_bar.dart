@@ -61,7 +61,8 @@ class KnotAppBar extends StatelessWidget implements PreferredSizeWidget {
       renderedTitle = Text(
         title!,
         style: AppTypography.headingMedium.copyWith(
-          color: titleColor,
+          color: titleColor ?? AppColors.textPure,
+          letterSpacing: 1.5,
         ),
       );
     }

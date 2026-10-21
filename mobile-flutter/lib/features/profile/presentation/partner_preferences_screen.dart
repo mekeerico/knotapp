@@ -185,7 +185,7 @@ class _PartnerPreferencesScreenState extends ConsumerState<PartnerPreferencesScr
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: _pearlGrey),
+                  icon: const Icon(Icons.arrow_back, color: AppColors.champagneGold),
                   onPressed: () => context.pop(),
                 ),
                 Expanded(
@@ -194,7 +194,7 @@ class _PartnerPreferencesScreenState extends ConsumerState<PartnerPreferencesScr
                     textAlign: TextAlign.center,
                     style: AppTypography.headingMedium.copyWith(
                       letterSpacing: 1.5,
-                      color: _pearlGrey,
+                      color: AppColors.textPure,
                       fontSize: 16,
                     ),
                   ),

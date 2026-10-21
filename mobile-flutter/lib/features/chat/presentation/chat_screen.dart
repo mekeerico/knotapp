@@ -130,7 +130,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFFD1D5DC)),
+          icon: const Icon(Icons.arrow_back, color: AppColors.champagneGold),
           onPressed: () => context.pop(),
         ),
         centerTitle: false,

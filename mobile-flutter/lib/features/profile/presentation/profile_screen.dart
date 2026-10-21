@@ -52,11 +52,11 @@ class ProfileScreen extends ConsumerWidget {
                   'SOVEREIGN IDENTITY',
                   style: AppTypography.headingMedium.copyWith(
                     letterSpacing: 1.5,
-                    color: const Color(0xFFD1D5DC),
+                    color: AppColors.textPure,
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.tune_rounded, color: Color(0xFFD1D5DC), size: 22),
+                  icon: const Icon(Icons.tune_rounded, color: AppColors.champagneGold, size: 22),
                   onPressed: () => context.push('/partner-preferences'),
                   tooltip: 'Partner Match Preferences',
                 ),
