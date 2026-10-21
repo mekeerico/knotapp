@@ -1,13 +1,7 @@
 name: Build Android APK
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - 'mobile/**'
-      - '.github/workflows/build-android.yml'
+  workflow_dispatch: # Manual trigger only (Flutter is the primary mobile client in mobile-flutter/)
 
 jobs:
   build:
