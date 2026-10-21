@@ -61,33 +61,31 @@ class KnotAppBar extends StatelessWidget implements PreferredSizeWidget {
       renderedTitle = Text(
         title!,
         style: AppTypography.headingMedium.copyWith(
-          color: titleColor ?? AppColors.textPure,
+          color: titleColor ?? const Color(0xFFD1D5DC),
           letterSpacing: 1.5,
         ),
       );
     }
 
-    if (renderedTitle != null) {
-      renderedTitle = AnimatedSlide(
-        offset: isTitleVisible ? Offset.zero : const Offset(0, -0.4),
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOutCubic,
-        child: AnimatedOpacity(
-          opacity: isTitleVisible ? 1.0 : 0.0,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutCubic,
-          child: renderedTitle,
-        ),
-      );
-    }
-
-    return AppBar(
+    final Widget bar = AppBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
       centerTitle: centerTitle,
       leading: leading,
       title: renderedTitle,
       actions: resolvedActions.isNotEmpty ? resolvedActions : null,
+    );
+
+    return AnimatedSlide(
+      offset: isTitleVisible ? Offset.zero : const Offset(0, -0.4),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      child: AnimatedOpacity(
+        opacity: isTitleVisible ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        child: bar,
+      ),
     );
   }
 

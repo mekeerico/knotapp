@@ -59,7 +59,7 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
         title: 'AI RELATIONSHIP COACH',
-        titleColor: Colors.white,
+        titleColor: const Color(0xFFD1D5DC),
         isTitleVisible: _headerVisible,
         showNotificationBell: true,
       ),
@@ -95,13 +95,14 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
                   itemBuilder: (context, index) {
                     final prompt = _quickPrompts[index];
                     return ActionChip(
-                      backgroundColor: AppColors.darkSlate,
-                      side: const BorderSide(color: AppColors.borderGold, width: 0.8),
+                      backgroundColor: const Color(0xFF161B26),
+                      side: const BorderSide(color: AppColors.champagneGold, width: 1.2),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       label: Text(
                         prompt,
                         style: AppTypography.bodySmall.copyWith(
-                          color: _mutedSlate,
-                          fontWeight: FontWeight.w600,
+                          color: AppColors.champagneGold,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       onPressed: () => _sendMessage(prompt),
@@ -161,13 +162,20 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
                     child: Container(
                       width: 44,
                       height: 44,
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: AppColors.goldGradient,
+                        gradient: AppColors.roseGlowGradient,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryRose.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: const Icon(
                         Icons.send_rounded,
-                        color: AppColors.obsidianBlack,
+                        color: Colors.white,
                         size: 20,
                       ),
                     ),
@@ -192,7 +200,7 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         decoration: BoxDecoration(
-          color: msg.isUser ? AppColors.champagneGold : AppColors.darkSlate,
+          color: msg.isUser ? const Color(0xFF4C1D95) : AppColors.darkSlate,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
@@ -201,13 +209,15 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
           ),
           border: Border.all(
             color: msg.isUser
-                ? AppColors.champagneGold
+                ? const Color(0xFF6D28D9)
                 : AppColors.borderGold.withOpacity(0.3),
             width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: msg.isUser
+                  ? const Color(0xFF4C1D95).withOpacity(0.35)
+                  : Colors.black.withOpacity(0.2),
               blurRadius: 8,
               offset: const Offset(0, 3),
             ),
@@ -216,8 +226,8 @@ class _AICoachScreenState extends ConsumerState<AICoachScreen> {
         child: Text(
           msg.text,
           style: AppTypography.bodyMedium.copyWith(
-            color: msg.isUser ? AppColors.obsidianBlack : const Color(0xFFD1D5DC),
-            fontWeight: msg.isUser ? FontWeight.w600 : FontWeight.normal,
+            color: msg.isUser ? Colors.white : const Color(0xFFD1D5DC),
+            fontWeight: msg.isUser ? FontWeight.w500 : FontWeight.normal,
             height: 1.45,
           ),
         ),

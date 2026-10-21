@@ -39,7 +39,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
         title: 'RELATIONSHIP INTELLIGENCE',
-        titleColor: Colors.white,
+        titleColor: const Color(0xFFD1D5DC),
         isTitleVisible: _headerVisible,
         showNotificationBell: true,
       ),
@@ -225,7 +225,7 @@ class _InsightsScreenState extends ConsumerState<InsightsScreen> {
           Text(
             value,
             style: AppTypography.headingLarge.copyWith(
-              color: AppColors.textPure,
+              color: _golden,
               fontSize: 20,
             ),
           ),

@@ -10,59 +10,93 @@ import '../../../core/widgets/knot_image.dart';
 import '../../../core/widgets/verified_badge.dart';
 import '../../auth/providers/auth_provider.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  bool _headerVisible = true;
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(authProvider).user;
     final isVerified = user?.isVerified ?? false;
 
     return Scaffold(
       backgroundColor: AppColors.obsidianBlack,
-      body: SafeArea(
-        child: AutoHidingFloatingBar(
-          bottomOffset: 0,
-          topOffset: 0,
-          topFloatingContent: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.obsidianBlack,
-                  AppColors.obsidianBlack.withOpacity(0.95),
-                  AppColors.obsidianBlack.withOpacity(0.72),
-                  Colors.transparent,
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                stops: const [0.0, 0.55, 0.85, 1.0],
-              ),
-            ),
-            padding: const EdgeInsets.only(
-              top: 14,
-              bottom: 18,
-              left: 20,
-              right: 20,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const SizedBox(width: 40),
-                Text(
-                  'SOVEREIGN IDENTITY',
-                  style: AppTypography.headingMedium.copyWith(
-                    letterSpacing: 1.5,
-                    color: AppColors.textPure,
+      body: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) {
+          if (_headerVisible) {
+            setState(() => _headerVisible = false);
+          }
+        },
+        onPointerUp: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        onPointerCancel: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        child: SafeArea(
+          child: AutoHidingFloatingBar(
+            bottomOffset: 0,
+            topOffset: 0,
+            topFloatingContent: AnimatedSlide(
+              offset: _headerVisible ? Offset.zero : const Offset(0, -0.4),
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
+              child: AnimatedOpacity(
+                opacity: _headerVisible ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.obsidianBlack,
+                        AppColors.obsidianBlack.withOpacity(0.95),
+                        AppColors.obsidianBlack.withOpacity(0.72),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: const [0.0, 0.55, 0.85, 1.0],
+                    ),
+                  ),
+                  padding: const EdgeInsets.only(
+                    top: 14,
+                    bottom: 18,
+                    left: 20,
+                    right: 20,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const SizedBox(width: 40),
+                      Text(
+                        'SOVEREIGN IDENTITY',
+                        style: AppTypography.headingMedium.copyWith(
+                          letterSpacing: 1.5,
+                          color: const Color(0xFFD1D5DC),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.tune_rounded, color: AppColors.champagneGold, size: 22),
+                        onPressed: () => context.push('/partner-preferences'),
+                        tooltip: 'Partner Match Preferences',
+                      ),
+                    ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.tune_rounded, color: AppColors.champagneGold, size: 22),
-                  onPressed: () => context.push('/partner-preferences'),
-                  tooltip: 'Partner Match Preferences',
-                ),
-              ],
+              ),
             ),
-          ),
           floatingContent: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -292,8 +326,9 @@ class ProfileScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildMenuItem(
     BuildContext context, {

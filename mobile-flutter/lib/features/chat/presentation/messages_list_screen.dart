@@ -29,7 +29,7 @@ class _MessagesListScreenState extends ConsumerState<MessagesListScreen> {
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
         title: 'SOVEREIGN MESSAGES',
-        titleColor: AppColors.textPure,
+        titleColor: const Color(0xFFD1D5DC),
         isTitleVisible: _headerVisible,
         showNotificationBell: true,
       ),

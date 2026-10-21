@@ -194,7 +194,7 @@ class _PartnerPreferencesScreenState extends ConsumerState<PartnerPreferencesScr
                     textAlign: TextAlign.center,
                     style: AppTypography.headingMedium.copyWith(
                       letterSpacing: 1.5,
-                      color: AppColors.textPure,
+                      color: const Color(0xFFD1D5DC),
                       fontSize: 16,
                     ),
                   ),

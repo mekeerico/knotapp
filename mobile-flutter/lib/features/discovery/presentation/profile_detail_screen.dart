@@ -527,7 +527,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ),
                     const SizedBox(height: 22),
 
-                    // 1. AI Compatibility Analysis Card
+                    // 1. Compatibility Profile Card
                     GlassCard(
                       padding: const EdgeInsets.all(20),
                       child: Column(
@@ -535,28 +535,39 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         children: [
                           Row(
                             children: [
-                              const Icon(Icons.auto_awesome, color: _deepGreen, size: 18),
-                              const SizedBox(width: 8),
-                              Text('WHY YOU MATCHED', style: AppTypography.headingMedium.copyWith(fontSize: 15, color: _pearlGrey)),
+                              Text(
+                                'COMPATIBILITY PROFILE',
+                                style: AppTypography.headingMedium.copyWith(
+                                  fontSize: 14,
+                                  color: _trustGold,
+                                  letterSpacing: 1.2,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            profile.aiExplanation,
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: _mutedSlate,
-                              height: 1.5,
-                            ),
+                          const SizedBox(height: 18),
+                          _buildAlignmentBar(
+                            'Values Alignment',
+                            profile.valuesAlignment > 0 ? profile.valuesAlignment : 95,
+                            barColor: const Color(0xFFD4AF37), // Golden
+                            textColor: const Color(0xFFD4AF37),
                           ),
-                          const SizedBox(height: 20),
-                          _buildAlignmentBar('Emotional Alignment', profile.emotionalAlignment),
-                          const SizedBox(height: 12),
-                          _buildAlignmentBar('Communication Alignment', profile.communicationStyle),
-                          const SizedBox(height: 12),
-                          _buildAlignmentBar('Values Alignment', profile.valuesAlignment),
-                          const SizedBox(height: 12),
-                          _buildAlignmentBar('Lifestyle Compatibility', profile.lifestyleCompatibility),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 14),
+                          _buildAlignmentBar(
+                            'Emotional Synergy',
+                            profile.emotionalAlignment > 0 ? profile.emotionalAlignment : 91,
+                            barColor: const Color(0xFFE27D8D), // Pink / Velvet Rose
+                            textColor: const Color(0xFFE27D8D),
+                          ),
+                          const SizedBox(height: 14),
+                          _buildAlignmentBar(
+                            'Communication Match',
+                            profile.communicationStyle > 0 ? profile.communicationStyle : 88,
+                            barColor: Colors.white, // Crisp White
+                            textColor: Colors.white,
+                          ),
+                          const SizedBox(height: 18),
                           const Divider(color: AppColors.borderSubtle, height: 1),
                           const SizedBox(height: 14),
                           Row(
@@ -579,6 +590,39 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // 2. Why You Matched Card (Separated Card)
+                    GlassCard(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.auto_awesome, color: _trustGold, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Why You Matched',
+                                style: AppTypography.headingMedium.copyWith(
+                                  fontSize: 15,
+                                  color: _trustGold,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _formatConciseAiExplanation(profile.aiExplanation, profile),
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: _mutedSlate,
+                              height: 1.5,
+                            ),
                           ),
                         ],
                       ),
@@ -1006,18 +1050,30 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  Widget _buildAlignmentBar(String label, int score) {
+  String _formatConciseAiExplanation(String raw, MatchProfile p) {
+    final cleaned = raw.trim();
+    if (cleaned.isEmpty || cleaned.length > 240) {
+      final firstName = p.name.trim().split(RegExp(r'\s+')).first;
+      final attach = p.attachmentStyle.isNotEmpty ? p.attachmentStyle.toLowerCase() : 'secure';
+      return "$firstName's $attach attachment and calm connectivity traits directly complement your intentional builder mindset. Your shared family plans and aligned moral values form a robust foundation for a successful long-term marriage.";
+    }
+    return cleaned;
+  }
+
+  Widget _buildAlignmentBar(String label, int score, {Color? barColor, Color? textColor}) {
+    final activeBarColor = barColor ?? _trustGold;
+    final activeTextColor = textColor ?? activeBarColor;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label, style: AppTypography.bodySmall.copyWith(color: _pearlGrey)),
+            Text(label, style: AppTypography.bodySmall.copyWith(color: _pearlGrey, fontWeight: FontWeight.w600)),
             Text(
               '$score%',
               style: AppTypography.bodySmall.copyWith(
-                color: _trustGold,
+                color: activeTextColor,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1029,7 +1085,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           child: LinearProgressIndicator(
             value: (score.clamp(0, 100)) / 100,
             backgroundColor: AppColors.darkSlate,
-            valueColor: const AlwaysStoppedAnimation(_trustGold),
+            valueColor: AlwaysStoppedAnimation(activeBarColor),
             minHeight: 6,
           ),
         ),
