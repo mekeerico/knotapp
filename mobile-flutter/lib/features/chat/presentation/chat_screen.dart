@@ -325,13 +325,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           child: Container(
                             width: 44,
                             height: 44,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: LinearGradient(
-                                colors: [Color(0xFFE27D8D), Color(0xFF8C52FF)],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                              gradient: AppColors.roseGlowGradient,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primaryRose.withValues(alpha: 0.35),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: const Icon(
                               Icons.send_rounded,

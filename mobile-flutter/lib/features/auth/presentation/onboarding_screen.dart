@@ -468,19 +468,45 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               )
             : null,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Progress Bar
-              LinearProgressIndicator(
-                value: (_currentStep + 1) / _totalSteps,
-                backgroundColor: AppColors.darkSlate,
-                valueColor: const AlwaysStoppedAnimation(AppColors.champagneGold),
-                minHeight: 3,
+      body: Stack(
+        children: [
+          // Ambient background radial purple/gold glow (Matches Welcome & Auth Screens)
+          Positioned(
+            top: -120,
+            left: -80,
+            right: -80,
+            child: IgnorePointer(
+              child: Container(
+                height: 380,
+                decoration: BoxDecoration(
+                  gradient: RadialGradient(
+                    colors: [
+                      AppColors.royalPurple.withValues(alpha: 0.40),
+                      AppColors.champagneGold.withValues(alpha: 0.06),
+                      Colors.transparent,
+                    ],
+                    radius: 0.85,
+                  ),
+                ),
               ),
+            ),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Progress Bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(2),
+                    child: LinearProgressIndicator(
+                      value: (_currentStep + 1) / _totalSteps,
+                      backgroundColor: Colors.white.withValues(alpha: 0.08),
+                      valueColor: const AlwaysStoppedAnimation(AppColors.champagneGold),
+                      minHeight: 3.5,
+                    ),
+                  ),
               const SizedBox(height: 24),
 
               // Animated "Fly-In" Transition Container
@@ -519,7 +545,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
         ),
       ),
-    );
+    ],
+  ),
+);
   }
 
   Widget _buildCurrentFormStep() {
@@ -1533,11 +1561,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.champagneGold.withValues(alpha: 0.18)
-              : AppColors.darkCardElevated,
+              ? AppColors.royalPurple.withValues(alpha: 0.35)
+              : const Color(0xFF0F141E),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.champagneGold : AppColors.borderSubtle,
+            color: isSelected ? AppColors.champagneGold : Colors.white.withValues(alpha: 0.08),
             width: isSelected ? 1.6 : 1.0,
           ),
         ),
@@ -1546,7 +1574,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             label,
             style: AppTypography.labelLarge.copyWith(
               color: isSelected ? AppColors.champagneGold : AppColors.textMuted,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
             ),
           ),
         ),
@@ -1569,15 +1597,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
-            color: AppColors.darkCardElevated,
+            color: const Color(0xFF0F141E),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderSubtle),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: effectiveValue,
               isExpanded: true,
-              dropdownColor: AppColors.darkCardElevated,
+              dropdownColor: const Color(0xFF161D2B),
               icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.champagneGold),
               style: AppTypography.bodyMedium.copyWith(color: AppColors.textPure),
               items: items.map((item) {
@@ -1605,19 +1633,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.champagneGold.withValues(alpha: 0.18)
-              : AppColors.darkCardElevated,
+              ? AppColors.royalPurple.withValues(alpha: 0.35)
+              : const Color(0xFF0F141E),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? AppColors.champagneGold : AppColors.borderSubtle,
+            color: isSelected ? AppColors.champagneGold : Colors.white.withValues(alpha: 0.08),
             width: isSelected ? 1.4 : 1.0,
           ),
         ),
         child: Text(
           label,
           style: AppTypography.bodySmall.copyWith(
-            color: isSelected ? AppColors.champagneGold : AppColors.textMuted,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? AppColors.champagneGold : const Color(0xFF94A3B8),
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
           ),
         ),
       ),

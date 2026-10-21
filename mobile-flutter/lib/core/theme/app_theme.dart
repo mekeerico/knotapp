@@ -11,9 +11,9 @@ class AppTheme {
       primaryColor: AppColors.champagneGold,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.champagneGold,
-        secondary: AppColors.roseGlow,
+        secondary: AppColors.primaryRose,
         surface: AppColors.darkSlate,
-        error: AppColors.roseGlow,
+        error: Color(0xFFEF4444),
         onPrimary: AppColors.obsidianBlack,
         onSurface: AppColors.textPure,
       ),
@@ -21,17 +21,17 @@ class AppTheme {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: AppTypography.headingMedium,
+        titleTextStyle: AppTypography.headingMedium.copyWith(color: AppColors.textPure),
         iconTheme: const IconThemeData(color: AppColors.champagneGold),
         systemOverlayStyle: SystemUiOverlayStyle.light,
       ),
       cardTheme: CardThemeData(
-        color: AppColors.darkSlate,
+        color: const Color(0xB3121721),
         elevation: 4,
-        shadowColor: Colors.black.withOpacity(0.5),
+        shadowColor: Colors.black.withValues(alpha: 0.5),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.borderSubtle, width: 1),
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: Color(0x1AFFFFFF), width: 1),
         ),
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -43,16 +43,16 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.darkSlate,
-        hintStyle: AppTypography.bodyMedium,
+        fillColor: const Color(0xFF0F141E),
+        hintStyle: AppTypography.bodyMedium.copyWith(color: const Color(0xFF64748B)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.borderSubtle),
+          borderSide: const BorderSide(color: Color(0x1AFFFFFF)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.borderSubtle),
+          borderSide: const BorderSide(color: Color(0x1AFFFFFF)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -60,7 +60,7 @@ class AppTheme {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: AppColors.roseGlow, width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
         ),
       ),
     );

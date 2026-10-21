@@ -12,6 +12,7 @@ class GoldButton extends StatelessWidget {
   final double? width;
   final double height;
   final double borderRadius;
+  final Gradient? gradient;
 
   const GoldButton({
     super.key,
@@ -21,8 +22,9 @@ class GoldButton extends StatelessWidget {
     this.isSecondary = false,
     this.icon,
     this.width,
-    this.height = 54,
-    this.borderRadius = 28,
+    this.height = 52,
+    this.borderRadius = 26,
+    this.gradient,
   });
 
   @override
@@ -32,17 +34,17 @@ class GoldButton extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        gradient: isSecondary ? null : AppColors.goldGradient,
+        gradient: isSecondary ? null : (gradient ?? AppColors.roseGlowGradient),
         color: isSecondary ? AppColors.darkCardElevated : null,
         border: isSecondary
-            ? Border.all(color: AppColors.borderGoldStrong, width: 1.2)
+            ? Border.all(color: AppColors.champagneGold.withValues(alpha: 0.5), width: 1.2)
             : null,
         boxShadow: isSecondary
             ? []
             : [
                 BoxShadow(
-                  color: AppColors.champagneGold.withValues(alpha: 0.35),
-                  blurRadius: 18,
+                  color: AppColors.primaryRose.withValues(alpha: 0.35),
+                  blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
               ],
@@ -65,7 +67,7 @@ class GoldButton extends StatelessWidget {
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        isSecondary ? AppColors.champagneGold : AppColors.textPure,
+                        isSecondary ? AppColors.champagneGold : Colors.white,
                       ),
                     ),
                   )
@@ -76,10 +78,10 @@ class GoldButton extends StatelessWidget {
                       if (icon != null) ...[
                         Icon(
                           icon,
-                          size: 20,
+                          size: 18,
                           color: isSecondary
                               ? AppColors.champagneGold
-                              : AppColors.textPure,
+                              : Colors.white,
                         ),
                         const SizedBox(width: 8),
                       ],
@@ -88,7 +90,10 @@ class GoldButton extends StatelessWidget {
                         style: AppTypography.button.copyWith(
                           color: isSecondary
                               ? AppColors.champagneGold
-                              : AppColors.textPure,
+                              : Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                          letterSpacing: 0.4,
                         ),
                       ),
                     ],

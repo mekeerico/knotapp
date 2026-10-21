@@ -127,7 +127,28 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-              state.isLoading
+            // Ambient background radial purple/gold glow
+            Positioned(
+              top: -100,
+              left: -60,
+              right: -60,
+              child: IgnorePointer(
+                child: Container(
+                  height: 360,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        AppColors.royalPurple.withValues(alpha: 0.35),
+                        AppColors.champagneGold.withValues(alpha: 0.06),
+                        Colors.transparent,
+                      ],
+                      radius: 0.85,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            state.isLoading
                 ? const Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,

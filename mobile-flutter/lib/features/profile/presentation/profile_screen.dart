@@ -93,16 +93,12 @@ class ProfileScreen extends ConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFE27D8D), Color(0xFF8C52FF)],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
+                  gradient: AppColors.roseGlowGradient,
                   borderRadius: BorderRadius.circular(999),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFE27D8D).withOpacity(0.35),
-                      blurRadius: 10,
+                      color: AppColors.primaryRose.withValues(alpha: 0.35),
+                      blurRadius: 14,
                       offset: const Offset(0, 4),
                     ),
                   ],
