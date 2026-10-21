@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&display=swap">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1080px; height: 2400px; background: #06080C; color: #FFFFFF; font-family: 'Inter', sans-serif;
+      overflow: hidden; position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 130px;
+    }
+    .ambient-glow-top {
+      position: absolute; top: -180px; left: 50%; transform: translateX(-50%); width: 950px; height: 680px;
+      background: radial-gradient(circle, rgba(226, 125, 141, 0.18) 0%, rgba(212, 175, 55, 0.12) 45%, transparent 75%);
+      pointer-events: none; z-index: 0;
+    }
+    .marketing-header { position: relative; z-index: 2; text-align: center; max-width: 960px; margin-bottom: 70px; }
+    .tag-pill {
+      display: inline-flex; align-items: center; padding: 10px 30px; border-radius: 9999px;
+      background: rgba(226, 125, 141, 0.12); border: 1.5px solid rgba(226, 125, 141, 0.5); color: #FFA3B4;
+      font-size: 22px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 24px;
+      box-shadow: 0 0 25px rgba(226, 125, 141, 0.2);
+    }
+    .main-headline {
+      font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 900; line-height: 1.15;
+      color: #FAF8F5; margin-bottom: 18px; letter-spacing: -0.01em;
+    }
+    .main-headline span.rose { color: #FF7590; }
+    .sub-headline { font-size: 28px; font-weight: 500; line-height: 1.45; color: #A0AEC0; max-width: 860px; margin: 0 auto; }
+    
+    .phone-container {
+      position: relative; z-index: 2; width: 880px; height: 1720px; background: #0E131C;
+      border-radius: 76px; border: 7px solid #283344;
+      box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.95), 0 0 0 2px rgba(226, 125, 141, 0.35);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .phone-status-bar {
+      height: 60px; padding: 0 44px; display: flex; align-items: center; justify-content: space-between;
+      font-size: 22px; font-weight: 700; color: #A0AEC0; background: #0E131C;
+    }
+    .dynamic-island { width: 170px; height: 34px; background: #000000; border-radius: 20px; }
+    .phone-app-bar {
+      height: 80px; padding: 0 40px; display: flex; align-items: center; gap: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: #0E131C; font-size: 26px; font-weight: 800;
+    }
+    
+    .screen-content { flex: 1; padding: 32px; display: flex; flex-direction: column; gap: 24px; overflow: hidden; }
+    
+    /* Hero Synergy Card */
+    .synergy-card {
+      background: linear-gradient(135deg, #1A1F2C 0%, #151822 100%);
+      border: 1.5px solid rgba(212, 175, 55, 0.4); border-radius: 36px; padding: 36px;
+      display: flex; align-items: center; gap: 32px; box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+    .score-circle {
+      width: 140px; height: 140px; border-radius: 50%; border: 7px solid #D4AF37;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: rgba(212, 175, 55, 0.1); box-shadow: 0 0 30px rgba(212, 175, 55, 0.3); flex-shrink: 0;
+    }
+    .score-num { font-size: 46px; font-weight: 900; color: #FAF8F5; line-height: 1; }
+    .score-lbl { font-size: 15px; font-weight: 800; color: #E5C378; letter-spacing: 0.1em; }
+    .synergy-title { font-size: 32px; font-weight: 800; color: #FFFFFF; font-family: 'Playfair Display', serif; margin-bottom: 8px; }
+    .synergy-sub { font-size: 20px; color: #E2E8F0; line-height: 1.4; }
+    
+    /* Vector Cards */
+    .vector-card {
+      background: #121722; border: 1px solid rgba(255, 255, 255, 0.09); border-radius: 28px; padding: 24px 28px;
+    }
+    .vector-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .vector-name { font-size: 24px; font-weight: 700; color: #F8FAFC; }
+    .vector-score { font-size: 26px; font-weight: 800; color: #E5C378; }
+    .bar-bg { height: 12px; background: rgba(255, 255, 255, 0.08); border-radius: 6px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 6px; }
+    .bar-gold { background: linear-gradient(90deg, #D4AF37, #F3E5AB); }
+    .bar-rose { background: linear-gradient(90deg, #E11D48, #FFA3B4); }
+    
+    /* Verdict Card */
+    .verdict-card {
+      background: rgba(212, 175, 55, 0.08); border: 1.5px solid rgba(212, 175, 55, 0.35);
+      border-radius: 30px; padding: 30px; margin-top: 8px;
+    }
+    .verdict-tag { font-size: 18px; font-weight: 800; color: #E5C378; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+    .verdict-text { font-size: 21px; line-height: 1.5; color: #E2E8F0; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow-top"></div>
+  
+  <div class="marketing-header">
+    <div class="tag-pill">DEEP PSYCHOLOGICAL SYNERGY</div>
+    <h1 class="main-headline">Gemini AI Compatibility Radar<br>& <span class="rose">Values Alignment</span></h1>
+    <p class="sub-headline">Mathematical synergy scoring across faith, communication, emotional safety & lifelong vows.</p>
+  </div>
+
+  <div class="phone-container">
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="dynamic-island"></div>
+      <span>5G 100%</span>
+    </div>
+
+    <div class="phone-app-bar">
+      <span style="color: #E5C378;">←</span>
+      <span>Psychological Compatibility & Vows</span>
+    </div>
+
+    <div class="screen-content">
+      <div class="synergy-card">
+        <div class="score-circle">
+          <div class="score-num">97%</div>
+          <div class="score-lbl">MATCH</div>
+        </div>
+        <div>
+          <div class="synergy-title">Exceptional Synergy</div>
+          <div class="synergy-sub">High marital readiness, mutual faith values, and complementary life vision.</div>
+        </div>
+      </div>
+
+      <div class="vector-card">
+        <div class="vector-header">
+          <span class="vector-name">Faith & Core Values</span>
+          <span class="vector-score">98%</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill bar-gold" style="width: 98%;"></div></div>
+      </div>
+
+      <div class="vector-card">
+        <div class="vector-header">
+          <span class="vector-name">Emotional Safety & Regulation</span>
+          <span class="vector-score" style="color: #FF7590;">96%</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill bar-rose" style="width: 96%;"></div></div>
+      </div>
+
+      <div class="vector-card">
+        <div class="vector-header">
+          <span class="vector-name">Communication Harmony</span>
+          <span class="vector-score">95%</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill bar-gold" style="width: 95%;"></div></div>
+      </div>
+
+      <div class="vector-card">
+        <div class="vector-header">
+          <span class="vector-name">Matrimonial Intentions & Vows</span>
+          <span class="vector-score" style="color: #FF7590;">97%</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill bar-rose" style="width: 97%;"></div></div>
+      </div>
+
+      <div class="verdict-card">
+        <div class="verdict-tag">★ Gemini AI Matrimonial Verdict</div>
+        <div class="verdict-text">"Both profiles demonstrate exemplary dedication to lifelong commitment. Michael's builder-style emotional grounding pairs harmoniously with your vision for family and lifelong vows."</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

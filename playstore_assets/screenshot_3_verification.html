@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&display=swap">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1080px; height: 2400px; background: #06080C; color: #FFFFFF; font-family: 'Inter', sans-serif;
+      overflow: hidden; position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 130px;
+    }
+    .ambient-glow-top {
+      position: absolute; top: -180px; left: 50%; transform: translateX(-50%); width: 950px; height: 680px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.16) 0%, rgba(16, 185, 129, 0.12) 45%, transparent 75%);
+      pointer-events: none; z-index: 0;
+    }
+    .marketing-header { position: relative; z-index: 2; text-align: center; max-width: 960px; margin-bottom: 70px; }
+    .tag-pill {
+      display: inline-flex; align-items: center; padding: 10px 30px; border-radius: 9999px;
+      background: rgba(212, 175, 55, 0.12); border: 1.5px solid rgba(212, 175, 55, 0.45); color: #E5C378;
+      font-size: 22px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 24px;
+      box-shadow: 0 0 25px rgba(212, 175, 55, 0.18);
+    }
+    .main-headline {
+      font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 900; line-height: 1.15;
+      color: #FAF8F5; margin-bottom: 18px; letter-spacing: -0.01em;
+    }
+    .main-headline span.gold { color: #E5C378; }
+    .sub-headline { font-size: 28px; font-weight: 500; line-height: 1.45; color: #A0AEC0; max-width: 860px; margin: 0 auto; }
+    
+    .phone-container {
+      position: relative; z-index: 2; width: 880px; height: 1720px; background: #0E131C;
+      border-radius: 76px; border: 7px solid #283344;
+      box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.95), 0 0 0 2px rgba(212, 175, 55, 0.4);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .phone-status-bar {
+      height: 60px; padding: 0 44px; display: flex; align-items: center; justify-content: space-between;
+      font-size: 22px; font-weight: 700; color: #A0AEC0; background: #0E131C;
+    }
+    .dynamic-island { width: 170px; height: 34px; background: #000000; border-radius: 20px; }
+    .phone-app-bar {
+      height: 80px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: #0E131C; font-size: 26px; font-weight: 800;
+    }
+    
+    .screen-content { flex: 1; padding: 32px; display: flex; flex-direction: column; gap: 24px; overflow: hidden; }
+    
+    .badge-card {
+      background: linear-gradient(135deg, #181F2C 0%, #111520 100%);
+      border: 1.5px solid rgba(212, 175, 55, 0.45); border-radius: 36px; padding: 40px 30px; text-align: center;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.6);
+    }
+    .stars { color: #D4AF37; font-size: 28px; letter-spacing: 8px; margin-bottom: 12px; }
+    .trust-score-num { font-size: 72px; font-weight: 900; color: #FAF8F5; line-height: 1; margin-bottom: 8px; font-family: 'Playfair Display', serif; }
+    .trust-score-lbl { font-size: 22px; font-weight: 800; color: #D4AF37; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px; }
+    .trust-desc { font-size: 18px; color: #94A3B8; font-weight: 500; }
+
+    .check-card {
+      background: #121722; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 26px; padding: 24px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .check-title { font-size: 24px; font-weight: 700; color: #F8FAFC; margin-bottom: 4px; }
+    .check-sub { font-size: 18px; color: #94A3B8; }
+    .status-tag {
+      padding: 8px 18px; border-radius: 9999px; font-size: 18px; font-weight: 800;
+      background: rgba(16, 185, 129, 0.15); border: 1.5px solid #10B981; color: #34D399; flex-shrink: 0;
+    }
+    
+    .guarantee-card {
+      background: rgba(212, 175, 55, 0.08); border: 1.5px solid rgba(212, 175, 55, 0.4);
+      border-radius: 30px; padding: 28px; margin-top: auto; display: flex; gap: 20px; align-items: center;
+    }
+    .guarantee-icon { font-size: 40px; color: #D4AF37; }
+    .guarantee-title { font-size: 22px; font-weight: 800; color: #FAF8F5; margin-bottom: 4px; }
+    .guarantee-text { font-size: 18px; color: #CBD5E1; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow-top"></div>
+  
+  <div class="marketing-header">
+    <div class="tag-pill">BANK-GRADE FRAUD-PROOF SCREENING</div>
+    <h1 class="main-headline">Zero Catfishing. 100% Real.<br><span class="gold">Sovereign Trust Registry</span></h1>
+    <p class="sub-headline">Government ID verification & live 3D face liveness for absolute security and peace of mind.</p>
+  </div>
+
+  <div class="phone-container">
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="dynamic-island"></div>
+      <span>5G 100%</span>
+    </div>
+
+    <div class="phone-app-bar">
+      <span>Identity & Trust Verification</span>
+      <span style="color: #10B981; font-size: 20px;">● Live Encrypted</span>
+    </div>
+
+    <div class="screen-content">
+      <div class="badge-card">
+        <div class="stars">★★★★★</div>
+        <div class="trust-score-num">TRUST SCORE 98</div>
+        <div class="trust-score-lbl">SOVEREIGN GOLD BADGE</div>
+        <div class="trust-desc">Didit AI Biometric Engine Certified • Cryptographically Signed</div>
+      </div>
+
+      <div class="check-card">
+        <div>
+          <div class="check-title">National ID / Int'l Passport</div>
+          <div class="check-sub">Bank-grade OCR & government class checked</div>
+        </div>
+        <div class="status-tag">✓ VERIFIED</div>
+      </div>
+
+      <div class="check-card">
+        <div>
+          <div class="check-title">Live 3D Biometric Liveness</div>
+          <div class="check-sub">Active facial depth motion; zero synthetic media</div>
+        </div>
+        <div class="status-tag">✓ CONFIRMED</div>
+      </div>
+
+      <div class="check-card">
+        <div>
+          <div class="check-title">Phone & Registry Crosscheck</div>
+          <div class="check-sub">Direct sovereign ledger identity alignment</div>
+        </div>
+        <div class="status-tag">✓ MATCHED</div>
+      </div>
+
+      <div class="check-card">
+        <div>
+          <div class="check-title">Matrimonial Readiness Pledge</div>
+          <div class="check-sub">Confirmed single, unattached, seeking lifelong vows</div>
+        </div>
+        <div class="status-tag">✓ COMMITTED</div>
+      </div>
+
+      <div class="guarantee-card">
+        <div class="guarantee-icon">🛡️</div>
+        <div>
+          <div class="guarantee-title">KNOT SOVEREIGN TRUST GUARANTEE</div>
+          <div class="guarantee-text">Every candidate you meet on Knot has passed rigorous biometric identity authentication. Zero bots. Zero scams.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

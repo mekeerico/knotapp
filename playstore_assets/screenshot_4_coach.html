@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&display=swap">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1080px; height: 2400px; background: #06080C; color: #FFFFFF; font-family: 'Inter', sans-serif;
+      overflow: hidden; position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 130px;
+    }
+    .ambient-glow-top {
+      position: absolute; top: -180px; left: 50%; transform: translateX(-50%); width: 950px; height: 680px;
+      background: radial-gradient(circle, rgba(226, 125, 141, 0.18) 0%, rgba(212, 175, 55, 0.10) 45%, transparent 75%);
+      pointer-events: none; z-index: 0;
+    }
+    .marketing-header { position: relative; z-index: 2; text-align: center; max-width: 960px; margin-bottom: 70px; }
+    .tag-pill {
+      display: inline-flex; align-items: center; padding: 10px 30px; border-radius: 9999px;
+      background: rgba(226, 125, 141, 0.12); border: 1.5px solid rgba(226, 125, 141, 0.5); color: #FFA3B4;
+      font-size: 22px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 24px;
+      box-shadow: 0 0 25px rgba(226, 125, 141, 0.2);
+    }
+    .main-headline {
+      font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 900; line-height: 1.15;
+      color: #FAF8F5; margin-bottom: 18px; letter-spacing: -0.01em;
+    }
+    .main-headline span.rose { color: #FF7590; }
+    .sub-headline { font-size: 28px; font-weight: 500; line-height: 1.45; color: #A0AEC0; max-width: 860px; margin: 0 auto; }
+    
+    .phone-container {
+      position: relative; z-index: 2; width: 880px; height: 1720px; background: #0E131C;
+      border-radius: 76px; border: 7px solid #283344;
+      box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.95), 0 0 0 2px rgba(226, 125, 141, 0.35);
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .phone-status-bar {
+      height: 60px; padding: 0 44px; display: flex; align-items: center; justify-content: space-between;
+      font-size: 22px; font-weight: 700; color: #A0AEC0; background: #0E131C;
+    }
+    .dynamic-island { width: 170px; height: 34px; background: #000000; border-radius: 20px; }
+    .phone-app-bar {
+      height: 80px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: #0E131C;
+    }
+    .coach-info { display: flex; align-items: center; gap: 14px; }
+    .coach-avatar { width: 44px; height: 44px; border-radius: 50%; background: #D4AF37; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #000; }
+    .coach-name { font-size: 24px; font-weight: 800; color: #FFF; }
+    .coach-online { font-size: 16px; color: #10B981; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    
+    .screen-content { flex: 1; padding: 32px; display: flex; flex-direction: column; gap: 24px; overflow: hidden; }
+    
+    .chat-bubble {
+      max-width: 82%; padding: 24px 28px; border-radius: 30px; font-size: 22px; line-height: 1.45;
+    }
+    .chat-bubble.coach {
+      background: #141A26; border: 1.5px solid rgba(212, 175, 55, 0.25); color: #E2E8F0; align-self: flex-start;
+      border-bottom-left-radius: 6px;
+    }
+    .chat-bubble.user {
+      background: linear-gradient(135deg, #7A2846 0%, #3B1425 100%);
+      border: 1.5px solid rgba(226, 125, 141, 0.4); color: #FFFFFF; align-self: flex-end;
+      border-bottom-right-radius: 6px;
+    }
+    
+    .chips-row { display: flex; gap: 14px; margin-top: auto; overflow-x: hidden; padding-bottom: 8px; }
+    .chip {
+      padding: 12px 24px; border-radius: 9999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+      font-size: 18px; font-weight: 600; color: #CBD5E1; white-space: nowrap;
+    }
+    .input-box {
+      height: 80px; background: #121722; border: 1.5px solid rgba(255,255,255,0.12); border-radius: 40px;
+      padding: 0 24px 0 32px; display: flex; align-items: center; justify-content: space-between; font-size: 20px; color: #94A3B8;
+    }
+    .send-btn {
+      width: 52px; height: 52px; border-radius: 50%; background: #D4AF37; display: flex; align-items: center; justify-content: center;
+      color: #000; font-size: 26px; font-weight: 900;
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow-top"></div>
+  
+  <div class="marketing-header">
+    <div class="tag-pill">24/7 RELATIONSHIP CONCIERGE</div>
+    <h1 class="main-headline">Your Private AI Courtship Coach<br><span class="rose">From Spark To Vows</span></h1>
+    <p class="sub-headline">Confidential guidance on meaningful discussions, boundaries, and emotional alignment.</p>
+  </div>
+
+  <div class="phone-container">
+    <div class="phone-status-bar">
+      <span>9:41</span>
+      <div class="dynamic-island"></div>
+      <span>5G 100%</span>
+    </div>
+
+    <div class="phone-app-bar">
+      <div class="coach-info">
+        <div class="coach-avatar">✦</div>
+        <div>
+          <div class="coach-name">Counselor KNOT</div>
+          <div class="coach-online">● 24/7 AI Matrimonial Concierge</div>
+        </div>
+      </div>
+      <div style="color: #D4AF37; font-size: 28px;">⚙</div>
+    </div>
+
+    <div class="screen-content">
+      <div class="chat-bubble coach">
+        Welcome. You and Michael share exceptional 97% synergy. His 'Intentional Builder' archetype prioritizes clarity and shared life vision. How can I assist your courtship conversation today?
+      </div>
+
+      <div class="chat-bubble user">
+        How should I approach discussing career goals and family vision in our next conversation?
+      </div>
+
+      <div class="chat-bubble coach">
+        Focus on shared long-term horizons rather than immediate logistics first. Frame it as partnership: explore what creating an intentional home looks like, and affirm how both careers can thrive symbiotically.
+      </div>
+
+      <div class="chips-row">
+        <div class="chip">💡 Conversation Starters</div>
+        <div class="chip">🏡 Family Vision</div>
+        <div class="chip">🕊️ Conflict Harmony</div>
+      </div>
+
+      <div class="input-box">
+        <span>Ask your coach for courtship advice...</span>
+        <div class="send-btn">↑</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
