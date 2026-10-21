@@ -51,6 +51,20 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return parts.isNotEmpty ? parts.join(', ') : 'Not specified';
   }
 
+  String _formatCityCountry(String city, String country) {
+    final c = city.trim();
+    final co = country.trim();
+    if (c.isNotEmpty && co.isNotEmpty) {
+      if (c.toLowerCase() == co.toLowerCase()) return co;
+      return '$c, $co';
+    } else if (c.isNotEmpty) {
+      return c;
+    } else if (co.isNotEmpty) {
+      return co;
+    }
+    return 'Not specified';
+  }
+
   void _openFullscreenGallery(BuildContext context, List<String> photos, int initialIndex) {
     if (photos.isEmpty) return;
 
@@ -145,9 +159,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   Widget build(BuildContext context) {
     final photos = profile.photos;
 
-    final residenceFormatted = _formatLocation(
+    final residenceFormatted = _formatCityCountry(
       profile.city,
-      profile.residenceState,
       profile.country,
     );
 
@@ -237,9 +250,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 background: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Swipable Carousel for all pictures
+                    // Swipable Carousel for all pictures with smooth sideways sliding
                     PageView.builder(
                       controller: _photoPageController,
+                      physics: const BouncingScrollPhysics(),
                       itemCount: photos.isNotEmpty ? photos.length : 1,
                       onPageChanged: (idx) => setState(() => _selectedPhotoIndex = idx),
                       itemBuilder: (context, idx) {
@@ -273,49 +287,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       ),
                     ),
 
-                    // Left/Right Tap zones for quick photo flip
+                    // Visible Chevron Arrows for Easy One-Tap Switching
                     if (photos.length > 1) ...[
-                      Positioned(
-                        top: 80,
-                        bottom: 90,
-                        left: 0,
-                        width: MediaQuery.of(context).size.width * 0.35,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onTap: () {
-                            if (_selectedPhotoIndex > 0) {
-                              _photoPageController.previousPage(
-                                duration: const Duration(milliseconds: 240),
-                                curve: Curves.easeInOut,
-                              );
-                            }
-                          },
-                        ),
-                      ),
-                      Positioned(
-                        top: 80,
-                        bottom: 90,
-                        right: 0,
-                        width: MediaQuery.of(context).size.width * 0.35,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-                          onTap: () {
-                            if (_selectedPhotoIndex < photos.length - 1) {
-                              _photoPageController.nextPage(
-                                duration: const Duration(milliseconds: 240),
-                                curve: Curves.easeInOut,
-                              );
-                            }
-                          },
-                        ),
-                      ),
-
-                      // Visible Chevron Arrows for Header Photo Carousel
                       if (_selectedPhotoIndex > 0)
                         Positioned(
                           left: 12,
                           top: 0,
-                          bottom: 70,
+                          bottom: 0,
                           child: Center(
                             child: GestureDetector(
                               onTap: () {
@@ -325,13 +303,19 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                 );
                               },
                               child: Container(
-                                padding: const EdgeInsets.all(7),
+                                padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: AppColors.obsidianBlack.withValues(alpha: 0.7),
+                                  color: AppColors.obsidianBlack.withValues(alpha: 0.75),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.6), width: 1),
+                                  border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.7), width: 1.2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.5),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
                                 ),
-                                child: const Icon(Icons.chevron_left, color: AppColors.champagneGold, size: 22),
+                                child: const Icon(Icons.chevron_left, color: AppColors.champagneGold, size: 24),
                               ),
                             ),
                           ),
@@ -340,7 +324,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         Positioned(
                           right: 12,
                           top: 0,
-                          bottom: 70,
+                          bottom: 0,
                           child: Center(
                             child: GestureDetector(
                               onTap: () {
@@ -350,20 +334,26 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                 );
                               },
                               child: Container(
-                                padding: const EdgeInsets.all(7),
+                                padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: AppColors.obsidianBlack.withValues(alpha: 0.7),
+                                  color: AppColors.obsidianBlack.withValues(alpha: 0.75),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.6), width: 1),
+                                  border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.7), width: 1.2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.5),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
                                 ),
-                                child: const Icon(Icons.chevron_right, color: AppColors.champagneGold, size: 22),
+                                child: const Icon(Icons.chevron_right, color: AppColors.champagneGold, size: 24),
                               ),
                             ),
                           ),
                         ),
                     ],
 
-                    // Top Segmented Story Indicators (1, 2, or 3 bars)
+                    // Top Segmented Story Indicators (1 to 4 bars)
                     if (photos.length > 1)
                       Positioned(
                         top: MediaQuery.of(context).padding.top + 10,
@@ -439,60 +429,46 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         ),
                       ),
 
-                    // Thumbnail Selector Strip at Bottom of Header
+                    // Clean Pagination Dots Indicator at Bottom of Header
                     if (photos.length > 1)
                       Positioned(
                         bottom: 16,
-                        left: 20,
-                        right: 20,
-                        child: SizedBox(
-                          height: 54,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: photos.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 10),
-                            itemBuilder: (context, idx) {
-                              final isSelected = idx == _selectedPhotoIndex;
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() => _selectedPhotoIndex = idx);
-                                  _photoPageController.animateToPage(
-                                    idx,
-                                    duration: const Duration(milliseconds: 240),
-                                    curve: Curves.easeInOut,
-                                  );
-                                },
-                                child: Container(
-                                  width: 54,
-                                  height: 54,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? AppColors.champagneGold
-                                          : Colors.white.withOpacity(0.35),
-                                      width: isSelected ? 2.5 : 1.0,
-                                    ),
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: AppColors.champagneGold.withOpacity(0.4),
-                                              blurRadius: 8,
-                                            )
-                                          ]
-                                        : null,
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(10),
-                                    child: KnotImage(
-                                      imageUrl: photos[idx],
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(photos.length, (idx) {
+                            final isSelected = idx == _selectedPhotoIndex;
+                            return GestureDetector(
+                              onTap: () {
+                                _photoPageController.animateToPage(
+                                  idx,
+                                  duration: const Duration(milliseconds: 240),
+                                  curve: Curves.easeInOut,
+                                );
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                margin: const EdgeInsets.symmetric(horizontal: 3.5),
+                                width: isSelected ? 22 : 8,
+                                height: 7,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(4),
+                                  color: isSelected
+                                      ? AppColors.champagneGold
+                                      : Colors.white.withValues(alpha: 0.35),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: AppColors.champagneGold.withValues(alpha: 0.6),
+                                            blurRadius: 6,
+                                          )
+                                        ]
+                                      : null,
                                 ),
-                              );
-                            },
-                          ),
+                              ),
+                            );
+                          }),
                         ),
                       ),
                   ],
@@ -605,7 +581,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'Closest Available Match: ${profile.name.trim().split(RegExp(r"\\s+")).first} is your closest matching candidate in the registry for now. You will be matched appropriately as closer candidates become available.',
+                                'Closest Available Match: ${profile.name.trim().split(RegExp(r'\s+')).first} is your closest matching candidate in the registry for now. You will be matched appropriately as closer candidates become available.',
                                 style: const TextStyle(
                                   color: Color(0xFFD1D5DC),
                                   fontSize: 12,
@@ -718,163 +694,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 18),
-
-                    // 3. Candidate Verified Photos Gallery Card (Show all 4-5 uploaded pictures)
-                    if (photos.isNotEmpty) ...[
-                      GlassCard(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _buildSectionHeader(
-                                  Icons.photo_library_outlined,
-                                  'VERIFIED PHOTO GALLERY',
-                                  iconColor: _trustGold,
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: _trustGold.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: _trustGold.withValues(alpha: 0.45), width: 1),
-                                  ),
-                                  child: Text(
-                                    '${photos.length} Verified Photos',
-                                    style: const TextStyle(
-                                      color: _trustGold,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Tap any photo to open full-screen gallery with pinch-to-zoom.',
-                              style: AppTypography.bodySmall.copyWith(color: _mutedSlate, fontSize: 12),
-                            ),
-                            const SizedBox(height: 16),
-                            GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: photos.length > 2 ? 3 : 2,
-                                crossAxisSpacing: 10,
-                                mainAxisSpacing: 10,
-                                childAspectRatio: 0.85,
-                              ),
-                              itemCount: photos.length,
-                              itemBuilder: (context, idx) {
-                                final isSelected = idx == _selectedPhotoIndex;
-                                return GestureDetector(
-                                  onTap: () => _openFullscreenGallery(context, photos, idx),
-                                  child: Stack(
-                                    fit: StackFit.expand,
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(14),
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? _trustGold
-                                                : Colors.white.withValues(alpha: 0.2),
-                                            width: isSelected ? 2.2 : 1.0,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withValues(alpha: 0.35),
-                                              blurRadius: 6,
-                                              offset: const Offset(0, 3),
-                                            ),
-                                          ],
-                                        ),
-                                        child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(13),
-                                          child: KnotImage(
-                                            imageUrl: photos[idx],
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        top: 6,
-                                        left: 6,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                                          decoration: BoxDecoration(
-                                            color: Colors.black.withValues(alpha: 0.75),
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                          child: Text(
-                                            idx == 0 ? 'Primary' : 'Photo ${idx + 1}',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 9,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      Positioned(
-                                        bottom: 6,
-                                        right: 6,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(3.5),
-                                          decoration: BoxDecoration(
-                                            color: _trustGold.withValues(alpha: 0.85),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: const Icon(Icons.fullscreen, color: Colors.black, size: 13),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 14),
-                            GestureDetector(
-                              onTap: () => _openFullscreenGallery(context, photos, 0),
-                              child: Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: AppColors.darkSlate.withValues(alpha: 0.7),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: AppColors.borderGold.withValues(alpha: 0.4), width: 1),
-                                ),
-                                alignment: Alignment.center,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.photo_size_select_actual_outlined, size: 15, color: _trustGold),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'View All ${photos.length} Photos in Fullscreen',
-                                      style: const TextStyle(
-                                        color: _trustGold,
-                                        fontSize: 12.5,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.4,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                    ],
-
-                    // 4. Personal Bio
+                    // 3. Candidate Biography
                     GlassCard(
                       padding: const EdgeInsets.all(20),
                       child: Column(
