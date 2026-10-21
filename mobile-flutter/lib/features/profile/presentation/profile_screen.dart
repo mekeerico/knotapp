@@ -121,7 +121,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               onTap: () async {
                 await ref.read(authProvider.notifier).logout();
                 if (context.mounted) {
-                  context.go('/auth');
+                  context.go('/auth?mode=login');
                 }
               },
               child: Container(

@@ -30,6 +30,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   String _primaryPhoto = '';
   List<String> _allPhotos = [];
   bool _hasChangedPhoto = false;
+  bool _headerVisible = true;
 
   @override
   void initState() {
@@ -157,13 +158,31 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
         title: 'EDIT CANDIDATE PROFILE',
+        isTitleVisible: _headerVisible,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.champagneGold, size: 18),
           onPressed: () => context.pop(),
         ),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
+      body: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) {
+          if (_headerVisible) {
+            setState(() => _headerVisible = false);
+          }
+        },
+        onPointerUp: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        onPointerCancel: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        child: SafeArea(
+          child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             children: [
@@ -336,6 +355,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

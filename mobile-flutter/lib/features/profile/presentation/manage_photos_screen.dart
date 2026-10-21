@@ -21,6 +21,7 @@ class _ManagePhotosScreenState extends ConsumerState<ManagePhotosScreen> {
   final ImagePicker _picker = ImagePicker();
   List<String> _photos = [];
   bool _isSaving = false;
+  bool _headerVisible = true;
   static const int _maxPhotos = 5; // 1 Primary + up to 4 Additional
 
   @override
@@ -200,13 +201,31 @@ class _ManagePhotosScreenState extends ConsumerState<ManagePhotosScreen> {
       backgroundColor: AppColors.obsidianBlack,
       appBar: KnotAppBar(
         title: 'MANAGE PHOTOS',
+        isTitleVisible: _headerVisible,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: AppColors.champagneGold, size: 18),
           onPressed: () => context.pop(),
         ),
       ),
-      body: SafeArea(
-        child: Padding(
+      body: Listener(
+        behavior: HitTestBehavior.translucent,
+        onPointerDown: (_) {
+          if (_headerVisible) {
+            setState(() => _headerVisible = false);
+          }
+        },
+        onPointerUp: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        onPointerCancel: (_) {
+          if (!_headerVisible) {
+            setState(() => _headerVisible = true);
+          }
+        },
+        child: SafeArea(
+          child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -351,6 +370,7 @@ class _ManagePhotosScreenState extends ConsumerState<ManagePhotosScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

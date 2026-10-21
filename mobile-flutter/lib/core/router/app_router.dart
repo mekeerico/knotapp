@@ -93,8 +93,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth',
         builder: (context, state) {
-          final isRegister = state.uri.queryParameters['mode'] == 'register';
-          return AuthScreen(initialSignUp: isRegister);
+          final mode = state.uri.queryParameters['mode'];
+          final authState = ref.read(authProvider);
+          final bool isSignUp;
+          if (mode == 'register') {
+            isSignUp = true;
+          } else if (mode == 'login') {
+            isSignUp = false;
+          } else {
+            // First-time install defaults to sign up; returning users default to sign in
+            isSignUp = !authState.hasSeenWelcome;
+          }
+          return AuthScreen(initialSignUp: isSignUp);
         },
       ),
       GoRoute(

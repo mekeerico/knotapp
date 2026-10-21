@@ -7,11 +7,11 @@ import '../../../core/theme/app_typography.dart';
 import '../providers/auth_provider.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
-  final bool initialSignUp;
+  final bool? initialSignUp;
 
   const AuthScreen({
     super.key,
-    this.initialSignUp = false,
+    this.initialSignUp,
   });
 
   @override
@@ -43,7 +43,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   void initState() {
     super.initState();
-    _isSignUp = widget.initialSignUp;
+    _isSignUp = widget.initialSignUp ?? true;
     _loadSavedCredentials();
   }
 
@@ -75,9 +75,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   void didUpdateWidget(covariant AuthScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.initialSignUp != widget.initialSignUp) {
+    if (oldWidget.initialSignUp != widget.initialSignUp && widget.initialSignUp != null) {
       setState(() {
-        _isSignUp = widget.initialSignUp;
+        _isSignUp = widget.initialSignUp!;
       });
     }
   }
@@ -252,11 +252,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           children: [
                             // Card Title & Subtitle
                             Text(
-                              _isSignUp ? 'Join the Registry' : 'Welcome Back',
+                              _isSignUp ? 'WELCOME TO KNOT' : 'WELCOME BACK',
                               style: AppTypography.headingLarge.copyWith(
-                                fontSize: 22,
+                                fontSize: 21,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: const Color(0xFFD1D5DC),
+                                letterSpacing: 1.2,
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -583,12 +584,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           children: [
                                             Text(
-                                              _isSignUp ? 'Apply & Join Registry' : 'Access Registry',
+                                              _isSignUp ? 'Sign Up' : 'Sign In',
                                               style: AppTypography.labelLarge.copyWith(
                                                 color: Colors.white,
-                                                fontSize: 13.5,
+                                                fontSize: 14.5,
                                                 fontWeight: FontWeight.w900,
-                                                letterSpacing: 0.4,
+                                                letterSpacing: 0.6,
                                               ),
                                             ),
                                             const SizedBox(width: 8),
@@ -607,35 +608,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ),
                     ),
                     const SizedBox(height: 18),
-
-                    // Quick Switch Link
-                    GestureDetector(
-                      onTap: () => setState(() => _isSignUp = !_isSignUp),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: RichText(
-                          text: TextSpan(
-                            style: AppTypography.bodySmall.copyWith(
-                              color: _webSlateMuted,
-                              fontSize: 12,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: _isSignUp ? 'Already a member? ' : 'Not on the registry yet? ',
-                              ),
-                              TextSpan(
-                                text: _isSignUp ? 'Sign In' : 'Apply here',
-                                style: const TextStyle(
-                                  color: _webGold,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
 
                     // Return to Welcome Page Link
                     TextButton.icon(

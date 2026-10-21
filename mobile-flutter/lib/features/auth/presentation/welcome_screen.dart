@@ -371,50 +371,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
         ),
         const SizedBox(height: 24),
 
-        // Hero CTA Buttons (Matches Web)
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _navigateToAuth(isRegister: true),
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    gradient: _webRoseGlowGradient,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _webRose.withValues(alpha: 0.3),
-                        blurRadius: 14,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'Begin AI Guided Interview',
-                        style: AppTypography.labelLarge.copyWith(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      const Icon(
-                        Icons.arrow_forward,
-                        color: Colors.white,
-                        size: 15,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
+        // Verification System Link
         GestureDetector(
           onTap: _scrollToTrustSection,
           child: Container(
@@ -605,32 +562,36 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               // Name & Subtitle
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Gabriel, 29',
-                                    style: AppTypography.headingLarge.copyWith(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Gabriel, 29',
+                                      style: AppTypography.headingLarge.copyWith(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'Architect • Intentional Builder',
-                                    style: AppTypography.bodySmall.copyWith(
-                                      color: _webGold,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Architect • Intentional Builder',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: const Color(0xFF9DABBF), // Muted Slate Grey / Cool Slate Blue
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
+                              const SizedBox(width: 8),
 
                               // Match Score Pill (Matches Web)
                               Container(
@@ -1535,10 +1496,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Begin AI Guided Interview',
+                    'Join the Registry',
                     style: AppTypography.labelLarge.copyWith(
                       color: Colors.white,
-                      fontSize: 14,
+                      fontSize: 14.5,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.5,
                     ),

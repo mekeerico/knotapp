@@ -96,7 +96,7 @@ export default function Home() {
                   <div className="flex items-end justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white">Gabriel, 29</h3>
-                      <p className="text-xs text-[#D4AF37]">Architect • Intentional Builder</p>
+                      <p className="text-xs text-[#9DABBF]">Architect • Intentional Builder</p>
                     </div>
                     <div className="bg-[#D4AF37]/20 border border-[#D4AF37] px-2.5 py-1 rounded-lg text-center">
                       <div className="text-[9px] uppercase tracking-wider text-gray-300 font-bold">Match Score</div>
