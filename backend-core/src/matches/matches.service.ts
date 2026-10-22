@@ -224,9 +224,14 @@ export class MatchesService {
       where: {
         id: { not: userId },
         ...(userEmail ? { email: { not: userEmail } } : {}),
+        passwordHash: { startsWith: '$2' }, // Strictly only real humans with bcrypt password hashes
         NOT: [
-          { email: { contains: 'mock.com', mode: 'insensitive' } },
+          { email: { contains: 'mock', mode: 'insensitive' } },
           { email: { contains: 'test', mode: 'insensitive' } },
+          { id: { startsWith: 'match_' } },
+          { id: { startsWith: 'mock_' } },
+          { id: { startsWith: 'user_' } },
+          { firstName: { in: ['Amara', 'Dr. Amara'], mode: 'insensitive' } },
         ],
         profileImages: {
           some: {}, // Strictly only real humans who have uploaded at least one profile photo

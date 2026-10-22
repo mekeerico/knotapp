@@ -318,6 +318,21 @@ export default function Dashboard() {
         const pLast = (partner.lastName || m.lastName || '').trim().toLowerCase();
         const partnerFullName = `${pFirst} ${pLast}`.trim();
 
+        // 0. Strict Mock & Seed Profile Exclusion
+        const partnerName = partnerFullName.toLowerCase();
+        if (
+          partnerId.startsWith('match_') ||
+          partnerId.startsWith('mock_') ||
+          partnerId.startsWith('user_') ||
+          partnerEmail.includes('mock') ||
+          partnerEmail.includes('test') ||
+          partnerName.includes('amara okonkwo') ||
+          partnerName.includes('dr. amara') ||
+          pFirst === 'amara'
+        ) {
+          return false;
+        }
+
         // 1. Strict Self-Exclusion: User should NEVER be matched to themselves
         if (currentUserId && partnerId === currentUserId) return false;
         if (currentUserEmail && partnerEmail && partnerEmail === currentUserEmail) return false;

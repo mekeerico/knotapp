@@ -17,6 +17,41 @@ async function bootstrap() {
   const prisma = app.get(PrismaService);
   const httpAdapter = app.getHttpAdapter().getInstance();
 
+  // Automatic database purge on server deployment to eliminate all seeded/mock demo profiles
+  try {
+    const deleted = await prisma.user.deleteMany({
+      where: {
+        AND: [
+          // Never delete the real user account (e.g. Emeke)
+          {
+            NOT: [
+              { email: { contains: 'emeke', mode: 'insensitive' } },
+              { firstName: { contains: 'Emeke', mode: 'insensitive' } },
+            ],
+          },
+          {
+            OR: [
+              { passwordHash: 'mock' },
+              { passwordHash: { not: { startsWith: '$2' } } },
+              { id: { startsWith: 'match_' } },
+              { id: { startsWith: 'mock_' } },
+              { id: { startsWith: 'user_' } },
+              { email: { contains: 'mock', mode: 'insensitive' } },
+              { email: { contains: 'test', mode: 'insensitive' } },
+              { firstName: 'Amara', lastName: 'Okonkwo' },
+              { firstName: 'Dr. Amara' },
+            ],
+          },
+        ],
+      },
+    });
+    if (deleted.count > 0) {
+      console.log(`[DATABASE PURGE] Successfully purged ${deleted.count} legacy mock/demo users from production database.`);
+    }
+  } catch (err: any) {
+    console.warn(`[DATABASE PURGE NOTICE] ${err.message}`);
+  }
+
   // Fast binary image endpoint for database-stored profile photos
   httpAdapter.get('/uploads/db-image/:id', async (req: express.Request, res: express.Response) => {
     try {
