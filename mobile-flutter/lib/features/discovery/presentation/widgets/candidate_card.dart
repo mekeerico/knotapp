@@ -30,7 +30,7 @@ class _CandidateCardState extends State<CandidateCard> {
     final hasMultiplePhotos = photos.length > 1;
     final photo = photos.isNotEmpty
         ? photos[_currentPhotoIndex.clamp(0, photos.length - 1)]
-        : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800';
+        : '';
 
     return Container(
       decoration: BoxDecoration(

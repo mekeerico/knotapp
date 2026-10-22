@@ -233,6 +233,23 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
       if (response.data is List) {
         var list = (response.data as List)
             .map((item) => MatchProfile.fromJson(item))
+            .where((c) {
+              // Strictly real human candidates:
+              // 1. Exclude test/mock seed accounts
+              final idLower = c.id.toLowerCase();
+              final nameLower = c.name.toLowerCase();
+              if (idLower.contains('mock') || idLower.contains('dummy') || idLower.contains('test_')) {
+                return false;
+              }
+              if (nameLower.contains('mock') || nameLower.contains('test user') || nameLower == 'candidate') {
+                return false;
+              }
+              // 2. Must have at least 1 real uploaded photo
+              if (c.photos.isEmpty) {
+                return false;
+              }
+              return true;
+            })
             .toList();
 
         final authState = _ref.read(authProvider);

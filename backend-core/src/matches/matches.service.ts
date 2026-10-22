@@ -219,11 +219,18 @@ export class MatchesService {
     const maleVariants = ['male', 'man', 'gentleman', 'm', 'he', 'boy'];
     const targetVariants = targetGender === 'Male' ? maleVariants : femaleVariants;
 
-    // Query opposite-sex candidates excluding current user ID and current user email
+    // Query opposite-sex candidates excluding current user ID, current user email, and any mock/test accounts
     const allCandidates = await this.prisma.user.findMany({
       where: {
         id: { not: userId },
         ...(userEmail ? { email: { not: userEmail } } : {}),
+        NOT: [
+          { email: { contains: 'mock.com', mode: 'insensitive' } },
+          { email: { contains: 'test', mode: 'insensitive' } },
+        ],
+        profileImages: {
+          some: {}, // Strictly only real humans who have uploaded at least one profile photo
+        },
         OR: [
           { gender: { in: targetVariants, mode: 'insensitive' } },
           { gender: '' },

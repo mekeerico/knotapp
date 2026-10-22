@@ -218,11 +218,8 @@ class MatchProfile {
       return url;
     }).toList();
 
-    if (photoList.isEmpty) {
-      photoList = [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800',
-      ];
-    }
+    // Only keep real valid photo URLs
+    // Do not inject any fake Unsplash stock photos
 
     final firstName = partner['firstName']?.toString().trim() ?? '';
     final lastName = partner['lastName']?.toString().trim() ?? '';
@@ -231,9 +228,9 @@ class MatchProfile {
       firstName.isNotEmpty ? '$firstName $lastName'.trim() : 'Candidate',
     );
 
-    final residenceCity = _nonEmpty(partner['city'], _nonEmpty(partner['residenceCity'], 'London'));
+    final residenceCity = _nonEmpty(partner['city'], _nonEmpty(partner['residenceCity']));
     final residenceState = _nonEmpty(partner['residenceState']);
-    final residenceCountry = _nonEmpty(partner['country'], _nonEmpty(partner['residenceCountry'], 'United Kingdom'));
+    final residenceCountry = _nonEmpty(partner['country'], _nonEmpty(partner['residenceCountry']));
 
     final originCountry = _nonEmpty(partner['originCountry'], residenceCountry);
     final originState = _nonEmpty(partner['originState']);
@@ -271,34 +268,25 @@ class MatchProfile {
       preferredResidenceState: preferredResidenceState,
       preferredOriginCountry: preferredOriginCountry,
       preferredOriginState: preferredOriginState,
-      occupation: _nonEmpty(partner['occupation'], 'Professional'),
+      occupation: _nonEmpty(partner['occupation']),
       education: _nonEmpty(partner['education']),
-      religion: _nonEmpty(partner['religion'], 'Christian'),
+      religion: _nonEmpty(partner['religion']),
       culturalBackground: _nonEmpty(partner['culturalBackground']),
-      languagesSpoken: _parseStringList(partner['languagesSpoken'], const ['English']),
-      maritalStatus: _nonEmpty(partner['maritalStatus'], 'Never married'),
-      childrenStatus: _nonEmpty(partner['childrenStatus'], 'No kids'),
-      smoking: _nonEmpty(partner['smoking'], 'Non-smoker'),
-      drinking: _nonEmpty(partner['drinking'], 'Non-drinker'),
-      marriageTimeline: _nonEmpty(partner['marriageTimeline'], '1-2 years'),
-      willingToRelocate: _nonEmpty(partner['willingToRelocate'], 'Open to relocation'),
-      childrenPreference: _nonEmpty(partner['childrenPreference'], 'Open to children'),
+      languagesSpoken: _parseStringList(partner['languagesSpoken'], const []),
+      maritalStatus: _nonEmpty(partner['maritalStatus']),
+      childrenStatus: _nonEmpty(partner['childrenStatus']),
+      smoking: _nonEmpty(partner['smoking']),
+      drinking: _nonEmpty(partner['drinking']),
+      marriageTimeline: _nonEmpty(partner['marriageTimeline']),
+      willingToRelocate: _nonEmpty(partner['willingToRelocate']),
+      childrenPreference: _nonEmpty(partner['childrenPreference']),
       marriageExpectations: _nonEmpty(partner['marriageExpectations']),
       careerGoals: _nonEmpty(partner['careerGoals']),
-      bio: _nonEmpty(
-        partner['bio'],
-        'Intentional candidate seeking a covenant marriage built on shared values, emotional safety, and mutual growth.',
-      ),
-      personalValues: _parseStringList(
-        partner['personalValues'],
-        const ['Faith', 'Family', 'Integrity'],
-      ),
-      idealPartnerTraits: _parseStringList(
-        partner['idealPartnerTraits'],
-        const ['Kind', 'Honest', 'Family-oriented'],
-      ),
-      personalityArchetype: _nonEmpty(partner['personalityArchetype'], 'The Intentional Builder'),
-      attachmentStyle: _nonEmpty(partner['attachmentStyle'], 'Secure'),
+      bio: _nonEmpty(partner['bio']),
+      personalValues: _parseStringList(partner['personalValues'], const []),
+      idealPartnerTraits: _parseStringList(partner['idealPartnerTraits'], const []),
+      personalityArchetype: _nonEmpty(partner['personalityArchetype']),
+      attachmentStyle: _nonEmpty(partner['attachmentStyle']),
       compatibilityScore: (scores['compatibilityScore'] ?? partner['compatibilityScore'] ?? json['compatibilityScore'] ?? 92) is num
           ? ((scores['compatibilityScore'] ?? partner['compatibilityScore'] ?? json['compatibilityScore'] ?? 92) as num).toInt()
           : 92,
@@ -319,10 +307,7 @@ class MatchProfile {
           : 95,
       aiExplanation: _nonEmpty(
         json['aiExplanation'],
-        _nonEmpty(
-          partner['aiExplanation'],
-          'High emotional safety and mutual vision for permanent family building.',
-        ),
+        _nonEmpty(partner['aiExplanation']),
       ),
       isVerified: partner['isVerified'] == true || partner['idVerified'] == true,
       verificationBadge: _nonEmpty(partner['verificationBadge'], 'GOLD'),

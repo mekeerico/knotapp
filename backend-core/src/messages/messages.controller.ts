@@ -89,14 +89,8 @@ export class MessagesController {
       });
       this.gateway.notifyNewMessage(saved);
 
-      // If the matched candidate is not actively connected on a live WebSocket
-      // (e.g. seeded/curated candidate or offline partner), generate an authentic
-      // in-character reply so the conversation flows naturally.
-      if (!this.gateway.isUserOnline(matchId)) {
-        this.triggerCandidateAutoReply(sender, matchId, textContent).catch((err) => {
-          this.logger.warn(`Auto-reply notice for match ${matchId}: ${err.message}`);
-        });
-      }
+      // Candidate auto-reply disabled: Only real humans send messages.
+      // Real-time messages are delivered directly via WebSocket or saved to DB for when partner comes online.
 
       return saved;
     } catch (e: any) {

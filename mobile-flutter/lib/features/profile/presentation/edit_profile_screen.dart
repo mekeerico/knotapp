@@ -53,7 +53,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     } else if (user?.selfieUrl != null && user!.selfieUrl!.isNotEmpty) {
       _primaryPhoto = user.selfieUrl!;
     } else {
-      _primaryPhoto = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800';
+      _primaryPhoto = '';
     }
   }
 
@@ -126,12 +126,38 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   void _save() async {
+    final occ = _occupationController.text.trim();
+    final city = _cityController.text.trim();
+    final country = _countryController.text.trim();
+
+    if (occ.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid occupation.'),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (city.length < 2 || country.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter your city and country of residence.'),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
     final Map<String, dynamic> updateData = {
       'bio': _bioController.text.trim(),
-      'occupation': _occupationController.text.trim(),
+      'occupation': occ,
       'education': _educationController.text.trim(),
-      'residenceCity': _cityController.text.trim(),
-      'residenceCountry': _countryController.text.trim(),
+      'residenceCity': city,
+      'residenceCountry': country,
       'marriageTimeline': _timeline,
     };
 

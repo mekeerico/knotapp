@@ -7,43 +7,31 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       width: 1080px; height: 2400px; background: #06080C; color: #FFFFFF; font-family: 'Inter', sans-serif;
-      overflow: hidden; position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 130px;
+      overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center;
     }
     .ambient-glow-top {
-      position: absolute; top: -180px; left: 50%; transform: translateX(-50%); width: 950px; height: 680px;
+      position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 1000px; height: 800px;
       background: radial-gradient(circle, rgba(212, 175, 55, 0.16) 0%, rgba(226, 125, 141, 0.12) 45%, transparent 75%);
       pointer-events: none; z-index: 0;
     }
-    .marketing-header { position: relative; z-index: 2; text-align: center; max-width: 960px; margin-bottom: 70px; }
-    .tag-pill {
-      display: inline-flex; align-items: center; padding: 10px 30px; border-radius: 9999px;
-      background: rgba(212, 175, 55, 0.12); border: 1.5px solid rgba(212, 175, 55, 0.45); color: #E5C378;
-      font-size: 22px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 24px;
-      box-shadow: 0 0 25px rgba(212, 175, 55, 0.18);
-    }
-    .main-headline {
-      font-family: 'Playfair Display', serif; font-size: 64px; font-weight: 900; line-height: 1.15;
-      color: #FAF8F5; margin-bottom: 18px; letter-spacing: -0.01em;
-    }
-    .main-headline span.gold { color: #E5C378; }
-    .sub-headline { font-size: 28px; font-weight: 500; line-height: 1.45; color: #A0AEC0; max-width: 860px; margin: 0 auto; }
     
     .phone-container {
-      position: relative; z-index: 2; width: 880px; height: 1720px; background: #0E131C;
+      position: relative; z-index: 2; width: 980px; height: 2260px; background: #0E131C;
       border-radius: 76px; border: 7px solid #283344;
-      box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.95), 0 0 0 2px rgba(212, 175, 55, 0.4), 0 0 70px rgba(226, 125, 141, 0.2);
+      box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.95), 0 0 0 2px rgba(212, 175, 55, 0.4), 0 0 80px rgba(226, 125, 141, 0.22);
       overflow: hidden; display: flex; flex-direction: column;
     }
     .phone-status-bar {
-      height: 60px; padding: 0 44px; display: flex; align-items: center; justify-content: space-between;
-      font-size: 22px; font-weight: 700; color: #A0AEC0; background: #0E131C;
+      height: 52px; padding: 0 44px; display: flex; align-items: center; justify-content: center;
+      background: #0E131C;
     }
-    .dynamic-island { width: 170px; height: 34px; background: #000000; border-radius: 20px; }
+    .dynamic-island { width: 170px; height: 32px; background: #000000; border-radius: 20px; }
+    
     .phone-app-bar {
-      height: 80px; padding: 0 40px; display: flex; align-items: center; justify-content: space-between;
+      height: 84px; padding: 0 44px; display: flex; align-items: center; justify-content: space-between;
       border-bottom: 1px solid rgba(255, 255, 255, 0.08); background: #0E131C;
     }
-    .brand-logo { font-family: 'Cinzel', serif; font-size: 38px; font-weight: 900; letter-spacing: 0.12em; color: #FFFFFF; display: flex; align-items: center; gap: 8px; }
+    .brand-logo { font-family: 'Cinzel', serif; font-size: 40px; font-weight: 900; letter-spacing: 0.12em; color: #FFFFFF; display: flex; align-items: center; gap: 8px; }
     .brand-logo .dot { color: #D4AF37; }
     .appbar-bell { position: relative; display: flex; align-items: center; }
     .bell-badge {
@@ -54,10 +42,10 @@
     }
     
     /* Discovery Card */
-    .discovery-card-wrapper { flex: 1; padding: 24px 32px 14px; display: flex; flex-direction: column; }
+    .discovery-card-wrapper { flex: 1; padding: 24px 34px 16px; display: flex; flex-direction: column; }
     .candidate-card {
-      flex: 1; border-radius: 44px; overflow: hidden; position: relative;
-      border: 1.5px solid rgba(212, 175, 55, 0.35); box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+      flex: 1; border-radius: 46px; overflow: hidden; position: relative;
+      border: 1.5px solid rgba(212, 175, 55, 0.35); box-shadow: 0 25px 50px rgba(0,0,0,0.85);
       background: #121721;
     }
     .candidate-photo {
@@ -65,80 +53,62 @@
     }
     .card-vignette {
       position: absolute; inset: 0;
-      background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.45) 65%, #0B0E14 98%);
+      background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.02) 40%, rgba(0,0,0,0.45) 70%, #0B0E14 98%);
     }
     .card-top-row {
-      position: absolute; top: 24px; left: 24px; right: 24px; display: flex; align-items: center; justify-content: space-between; z-index: 5;
-    }
-    .pill-badge {
-      background: rgba(10, 14, 20, 0.85); backdrop-filter: blur(10px);
-      border: 1.5px solid rgba(226, 125, 141, 0.55); color: #FFA3B4;
-      font-size: 20px; font-weight: 800; padding: 8px 20px; border-radius: 9999px;
-      display: flex; align-items: center; gap: 8px;
+      position: absolute; top: 26px; right: 26px; z-index: 5;
     }
     .pill-badge.trust-gold {
       background: #D4AF37; color: #0B0E14; border: none; font-weight: 900; letter-spacing: 0.05em;
+      font-size: 20px; padding: 9px 22px; border-radius: 9999px;
+      display: inline-flex; align-items: center; gap: 8px;
       box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
     }
-    .gallery-dots {
-      position: absolute; top: 32px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5;
-    }
-    .gallery-dot { width: 28px; height: 6px; border-radius: 4px; background: rgba(255,255,255,0.4); }
-    .gallery-dot.active { background: #D4AF37; width: 44px; }
     
     .card-bottom-info {
-      position: absolute; bottom: 28px; left: 32px; right: 32px; z-index: 5;
+      position: absolute; bottom: 32px; left: 36px; right: 36px; z-index: 5;
     }
     .candidate-name {
-      font-size: 44px; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; gap: 14px;
-      font-family: 'Playfair Display', serif; margin-bottom: 8px;
+      font-size: 46px; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; gap: 14px;
+      font-family: 'Playfair Display', serif; margin-bottom: 10px;
     }
     .verified-icon { width: 34px; height: 34px; border-radius: 50%; background: #D4AF37; display: inline-flex; align-items: center; justify-content: center; color: #000; font-size: 22px; font-weight: 900; }
-    .candidate-sub { font-size: 24px; color: #E2E8F0; font-weight: 600; display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-    .candidate-link { font-size: 22px; font-weight: 700; color: #E5C378; display: flex; align-items: center; gap: 8px; }
+    .candidate-sub { font-size: 25px; color: #E2E8F0; font-weight: 600; display: flex; align-items: center; gap: 10px; }
 
     /* Action Buttons Row: TWO PILL BUTTONS (Pass & Connect) */
     .action-row {
-      height: 115px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; gap: 20px;
+      height: 125px; padding: 0 34px; display: flex; align-items: center; justify-content: space-between; gap: 22px;
     }
     .btn-pill-pass {
-      flex: 1; height: 80px; border-radius: 9999px;
+      flex: 1; height: 86px; border-radius: 9999px;
       background: #191E2E; border: 1.5px solid #374151;
-      color: #FFFFFF; font-size: 30px; font-weight: 700;
+      color: #FFFFFF; font-size: 32px; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.4);
     }
     .btn-pill-connect {
-      flex: 1.35; height: 80px; border-radius: 9999px;
+      flex: 1.35; height: 86px; border-radius: 9999px;
       background: linear-gradient(90deg, #E27D8D, #9353D3);
-      color: #FFFFFF; font-size: 30px; font-weight: 800;
-      display: flex; align-items: center; justify-content: center; gap: 12px;
-      cursor: pointer; box-shadow: 0 8px 25px rgba(226, 125, 141, 0.45);
+      color: #FFFFFF; font-size: 32px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      box-shadow: 0 8px 25px rgba(226, 125, 141, 0.45);
     }
-    .btn-pill-connect svg { width: 28px; height: 28px; fill: none; stroke: #FFFFFF; stroke-width: 2.4; }
+    .btn-pill-connect svg { width: 30px; height: 30px; fill: none; stroke: #FFFFFF; stroke-width: 2.4; }
 
     .phone-bottom-nav {
-      height: 110px; background: #0C1017; border-top: 1px solid rgba(255, 255, 255, 0.08);
+      height: 115px; background: #0C1017; border-top: 1px solid rgba(255, 255, 255, 0.08);
       display: flex; align-items: center; justify-content: space-around; padding: 0 20px 10px;
     }
-    .nav-tab { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #64748B; font-size: 18px; font-weight: 700; }
+    .nav-tab { display: flex; flex-direction: column; align-items: center; gap: 6px; color: #64748B; font-size: 19px; font-weight: 700; }
     .nav-tab.active { color: #E5C378; }
   </style>
 </head>
 <body>
   <div class="ambient-glow-top"></div>
-  
-  <div class="marketing-header">
-    <div class="tag-pill">WHERE TRUE RELATIONSHIP LEADS TO VOW</div>
-    <h1 class="main-headline">Curated Intentional Matches<br>For <span class="gold">Lifelong Marriage</span></h1>
-    <p class="sub-headline">Deep matrimonial curation for verified, high-caliber singles ready for permanent partnership.</p>
-  </div>
 
   <div class="phone-container">
     <div class="phone-status-bar">
-      <span>9:41</span>
       <div class="dynamic-island"></div>
-      <span>5G 100%</span>
     </div>
 
     <div class="phone-app-bar">
@@ -155,19 +125,10 @@
         <div class="card-vignette"></div>
 
         <div class="card-top-row">
-          <div class="pill-badge">♥ 97% ALIGNED</div>
           <div class="pill-badge trust-gold">
             <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: #0B0E14;"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
             <span>TRUST 98%</span>
           </div>
-        </div>
-
-        <div class="gallery-dots">
-          <div class="gallery-dot active"></div>
-          <div class="gallery-dot"></div>
-          <div class="gallery-dot"></div>
-          <div class="gallery-dot"></div>
-          <div class="gallery-dot"></div>
         </div>
 
         <div class="card-bottom-info">
@@ -176,7 +137,6 @@
             <span class="verified-icon">✓</span>
           </div>
           <div class="candidate-sub">💼 Engineer • 📍 San Francisco, USA</div>
-          <div class="candidate-link">View Psychological Compatibility & Vows ›</div>
         </div>
       </div>
     </div>

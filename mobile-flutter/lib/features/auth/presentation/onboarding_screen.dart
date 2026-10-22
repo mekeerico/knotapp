@@ -141,8 +141,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   void _nextStep() {
     // Screen 1 Validation: Legal Identity
     if (_currentStep == 0) {
-      if (_firstNameController.text.trim().isEmpty || _lastNameController.text.trim().isEmpty) {
-        _showError('Please enter your legal first and last name.');
+      final firstName = _firstNameController.text.trim();
+      final lastName = _lastNameController.text.trim();
+      if (firstName.length < 2 || lastName.length < 2) {
+        _showError('Please enter your full legal first and last name (at least 2 letters each).');
+        return;
+      }
+      final nameRegex = RegExp(r"^[a-zA-ZÀ-ÿ\s'-]+$");
+      if (!nameRegex.hasMatch(firstName) || !nameRegex.hasMatch(lastName)) {
+        _showError('Legal name should only contain letters, hyphens, or apostrophes.');
         return;
       }
     }
@@ -165,15 +172,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     // Screen 3 Validation: Vocation, Education & Faith
     if (_currentStep == 2) {
-      if (_occupationController.text.trim().isEmpty) {
-        _showError('Please enter your occupation.');
+      if (_occupationController.text.trim().length < 2) {
+        _showError('Please enter your occupation (at least 2 characters).');
         return;
       }
-      if (_educationSelect == 'Other' && _educationCustomController.text.trim().isEmpty) {
+      if (_educationSelect == 'Other' && _educationCustomController.text.trim().length < 2) {
         _showError('Please specify your highest educational qualification.');
         return;
       }
-      if (_religionSelect == 'Other' && _religionCustomController.text.trim().isEmpty) {
+      if (_religionSelect == 'Other' && _religionCustomController.text.trim().length < 2) {
         _showError('Please specify your religion or faith.');
         return;
       }
@@ -185,7 +192,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         _showError('Please select at least one language spoken.');
         return;
       }
-      if (_selectedLanguages.contains('Other') && _otherLanguageController.text.trim().isEmpty) {
+      if (_selectedLanguages.contains('Other') && _otherLanguageController.text.trim().length < 2) {
         _showError('Please specify your other language.');
         return;
       }
@@ -193,16 +200,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     // Screen 5 Validation: Current Residence
     if (_currentStep == 4) {
-      if (_residenceCountry.isEmpty || _residenceCityController.text.trim().isEmpty) {
+      final resCity = _residenceCityController.text.trim();
+      if (_residenceCountry.isEmpty || resCity.length < 2) {
         _showError('Please provide your country of residence and city.');
+        return;
+      }
+      final resStateList = KnotLocationData.statesFor(_residenceCountry);
+      if (resStateList.isEmpty && _residenceStateCustomController.text.trim().length < 2) {
+        _showError('Please enter your residence state, province, or region.');
         return;
       }
     }
 
     // Screen 6 Validation: Heritage & Origin
     if (_currentStep == 5) {
-      if (_originCountry.isEmpty || _originCityController.text.trim().isEmpty) {
+      final originCity = _originCityController.text.trim();
+      if (_originCountry.isEmpty || originCity.length < 2) {
         _showError('Please provide your country of heritage/origin and ancestral city/town.');
+        return;
+      }
+      final originStateList = KnotLocationData.statesFor(_originCountry);
+      if (originStateList.isEmpty && _originStateCustomController.text.trim().length < 2) {
+        _showError('Please enter your ancestral state, province, or heritage region.');
         return;
       }
     }
@@ -211,12 +230,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     // Screen 8 Validation: Preferred Future Partner Residence & Cultural Origin
     if (_currentStep == 7) {
-      if (_prefResCountry == 'Enter Choice Country' && _prefResCountryCustomController.text.trim().isEmpty) {
+      if (_prefResCountry == 'Enter Choice Country' && _prefResCountryCustomController.text.trim().length < 2) {
         _showError('Please specify preferred country of residence.');
         return;
       }
-      if (_prefOriCountry == 'Enter Choice Country' && _prefOriCountryCustomController.text.trim().isEmpty) {
+      if (_prefResState == 'Enter State/Province/Region' && _prefResStateCustomController.text.trim().length < 2) {
+        _showError('Please specify preferred state or province.');
+        return;
+      }
+      if (_prefOriCountry == 'Enter Choice Country' && _prefOriCountryCustomController.text.trim().length < 2) {
         _showError('Please specify preferred heritage country.');
+        return;
+      }
+      if (_prefOriState == 'Enter Native Heritage' && _prefOriCustomController.text.trim().length < 2) {
+        _showError('Please specify preferred native heritage.');
         return;
       }
     }
@@ -225,6 +252,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (_currentStep == 8) {
       if (_idealPartnerTraits.isEmpty) {
         _showError('Please select at least one ideal partner trait.');
+        return;
+      }
+      if (_idealPartnerTraits.contains('Other') && _otherTraitController.text.trim().length < 2) {
+        _showError('Please describe your custom ideal partner trait.');
+        return;
+      }
+      if (_selectedCoreValues.isEmpty) {
+        _showError('Please select at least one core value.');
         return;
       }
     }

@@ -14,7 +14,7 @@ class KnotImage extends StatelessWidget {
   final BoxFit fit;
   final BorderRadius? borderRadius;
   final bool isCircle;
-  final String fallbackUrl;
+  final String? fallbackUrl;
 
   const KnotImage({
     super.key,
@@ -24,7 +24,7 @@ class KnotImage extends StatelessWidget {
     this.fit = BoxFit.cover,
     this.borderRadius,
     this.isCircle = false,
-    this.fallbackUrl = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800',
+    this.fallbackUrl,
   });
 
   static Uint8List _decodeCached(String url) {
@@ -53,16 +53,21 @@ class KnotImage extends StatelessWidget {
   }
 
   static ImageProvider resolveProvider(String? raw, {String? fallback}) {
-    final effectiveFallback = fallback ?? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800';
     if (raw == null || raw.trim().isEmpty) {
-      return CachedNetworkImageProvider(effectiveFallback);
+      if (fallback != null && fallback.isNotEmpty) {
+        return CachedNetworkImageProvider(fallback);
+      }
+      return const AssetImage('assets/icons/app_icon.png');
     }
     final url = raw.trim();
     if (url.startsWith('data:image')) {
       try {
         return MemoryImage(_decodeCached(url));
       } catch (_) {
-        return CachedNetworkImageProvider(effectiveFallback);
+        if (fallback != null && fallback.isNotEmpty) {
+          return CachedNetworkImageProvider(fallback);
+        }
+        return const AssetImage('assets/icons/app_icon.png');
       }
     }
     if (url.startsWith('/uploads/')) {
@@ -75,7 +80,10 @@ class KnotImage extends StatelessWidget {
     if (File(url).existsSync()) {
       return FileImage(File(url));
     }
-    return CachedNetworkImageProvider(effectiveFallback);
+    if (fallback != null && fallback.isNotEmpty) {
+      return CachedNetworkImageProvider(fallback);
+    }
+    return const AssetImage('assets/icons/app_icon.png');
   }
 
   @override
@@ -153,15 +161,27 @@ class KnotImage extends StatelessWidget {
   }
 
   Widget _buildFallback() {
-    return CachedNetworkImage(
-      imageUrl: fallbackUrl,
-      fit: fit,
-      width: width,
-      height: height,
-      placeholder: (_, __) => Container(color: AppColors.darkSlate),
-      errorWidget: (_, __, ___) => Container(
-        color: AppColors.darkSlate,
-        child: const Icon(Icons.person, color: AppColors.textSubtle, size: 40),
+    if (fallbackUrl != null && fallbackUrl!.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: fallbackUrl!,
+        fit: fit,
+        width: width,
+        height: height,
+        placeholder: (_, __) => Container(color: AppColors.darkSlate),
+        errorWidget: (_, __, ___) => _buildPlaceholderBox(),
+      );
+    }
+    return _buildPlaceholderBox();
+  }
+
+  Widget _buildPlaceholderBox() {
+    return Container(
+      color: AppColors.darkSlate,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.person,
+        color: AppColors.champagneGold.withValues(alpha: 0.45),
+        size: width != null ? (width! * 0.4).clamp(18.0, 48.0) : 32.0,
       ),
     );
   }
