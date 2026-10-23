@@ -17,3 +17,5 @@ For help getting started with Flutter development, view the
 samples, guidance on mobile development, and a full API reference.
 
 <!-- Release trigger 1.0.3+4 -->
+
+<!-- Verified Play Store Signing Trigger -->
