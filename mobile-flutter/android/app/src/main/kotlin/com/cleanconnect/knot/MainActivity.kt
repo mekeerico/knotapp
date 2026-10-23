@@ -1,4 +1,4 @@
-package com.knot.marriage.knot_mobile
+package com.cleanconnect.knot
 
 import io.flutter.embedding.android.FlutterActivity
 
