@@ -79,40 +79,38 @@ class _CandidateCardState extends State<CandidateCard> {
               top: 16,
               right: 16,
               child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD4AF37),
-                      borderRadius: BorderRadius.circular(999),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFD4AF37).withOpacity(0.35),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFD4AF37),
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFD4AF37).withOpacity(0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.shield_outlined,
-                          size: 13,
-                          color: Color(0xFF0B0E14),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'TRUST ${candidate.trustScore > 0 ? candidate.trustScore : 97}%',
-                          style: const TextStyle(
-                            color: Color(0xFF0B0E14),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ],
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.shield_outlined,
+                      size: 13,
+                      color: Color(0xFF0B0E14),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    Text(
+                      'TRUST ${candidate.trustScore > 0 ? candidate.trustScore : 97}%',
+                      style: const TextStyle(
+                        color: Color(0xFF0B0E14),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
