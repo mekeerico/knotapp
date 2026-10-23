@@ -507,5 +507,148 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
       ),
     );
   }
+
+  void _showLoopLimitNotice(BuildContext context, UserModel? user, bool hasExhaustedLimit) {
+    final isFreeTier = !(user?.isPremium ?? false) &&
+        !['executive', 'elite', 'premium'].contains(user?.subscriptionTier.toLowerCase() ?? '');
+
+    final String title = hasExhaustedLimit
+        ? 'Matches Allocation Completed'
+        : 'All Available Matches Reviewed';
+
+    final String message = hasExhaustedLimit
+        ? (isFreeTier
+            ? "You have reviewed all available curated matches for this allocation. Upgrade your tier to unlock 15+ verified matches immediately, or wait until next month for your next free tier allocation."
+            : "You have completed reviewing your daily ${user?.subscriptionTier ?? 'current'} tier matches. Your deck refreshes at midnight, or upgrade to expand your candidate pool.")
+        : "These are the only available matches in your region for now. More aligned candidates will be presented as new verified members complete onboarding.";
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFF121721),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: AppColors.champagneGold, width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.6),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.champagneGold.withOpacity(0.15),
+                  border: Border.all(color: AppColors.champagneGold, width: 1.5),
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: AppColors.champagneGold,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                style: AppTypography.headingMedium.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+              Text(
+                message,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: const Color(0xFFD1D5DC),
+                  height: 1.5,
+                  fontSize: 13,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 22),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        side: const BorderSide(color: Color(0xFF4B5563)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text(
+                        'Keep Browsing',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFE27D8D), Color(0xFF8C52FF)],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFE27D8D).withOpacity(0.4),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.of(ctx).pop();
+                          context.push('/paywall');
+                        },
+                        child: const Text(
+                          'Upgrade ✨',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
