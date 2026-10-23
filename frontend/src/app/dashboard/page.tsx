@@ -35,6 +35,34 @@ export default function Dashboard() {
     }
     return str;
   };
+  const [showClosestNotice, setShowClosestNotice] = useState<boolean>(false);
+  const [isCoachTyping, setIsCoachTyping] = useState<boolean>(false);
+  const quickCoachPrompts = [
+    "How do I discuss marriage timelines?",
+    "Navigating differences in faith",
+    "Cultivating secure attachment",
+    "First meeting conversation guide",
+  ];
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let loginTime = sessionStorage.getItem("knot_session_login_time");
+    if (!loginTime) {
+      loginTime = Date.now().toString();
+      sessionStorage.setItem("knot_session_login_time", loginTime);
+    }
+    const elapsed = Date.now() - parseInt(loginTime, 10);
+    if (elapsed < 120000) {
+      setShowClosestNotice(true);
+      const timer = setTimeout(() => {
+        setShowClosestNotice(false);
+      }, 120000 - elapsed);
+      return () => clearTimeout(timer);
+    } else {
+      setShowClosestNotice(false);
+    }
+  }, []);
+
   const [activeTab, setActiveTab] = useState("matches"); // matches, insights, coach, messages, profile
   const [isPremium, setIsPremium] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -449,13 +477,14 @@ export default function Dashboard() {
     return () => clearTimeout(timeoutId);
   }, [coachMessages, chatMessages, activeTab]);
 
-  const handleSendCoachMessage = async () => {
-    if (!coachInput.trim()) return;
+  const handleSendCoachMessage = async (customPrompt?: string) => {
+    const userQ = (typeof customPrompt === 'string' ? customPrompt : coachInput).trim();
+    if (!userQ) return;
     
-    const userQ = coachInput;
     const updatedMessages = [...coachMessages, { role: "user", text: userQ }];
     setCoachMessages(updatedMessages);
-    setCoachInput("");
+    if (typeof customPrompt !== 'string') setCoachInput("");
+    setIsCoachTyping(true);
 
     // Optional: Set a typing state if desired, here we just await fetch
     try {
@@ -481,6 +510,8 @@ export default function Dashboard() {
       }
     } catch (e) {
       setCoachMessages(prev => [...prev, { role: "ai", text: "I'm having a little trouble connecting with my insights right now." }]);
+    } finally {
+      setIsCoachTyping(false);
     }
   };
 
@@ -657,7 +688,8 @@ export default function Dashboard() {
         aiExplanation: activeMatch?.aiExplanation || "You share a strong foundational alignment based on matrimonial values and life vision.",
       });
       setIsCalculatingMatch(false);
-      setShowMatchModal(true);
+      // Navigate directly to the candidate's full profile details page (matching mobile)
+      setActiveTab("matchProfile");
     });
   };
 
@@ -1409,52 +1441,7 @@ export default function Dashboard() {
               </button>
               
               <div className="glass-card rounded-[32px] overflow-hidden border border-[#E27D8D]/30 shadow-2xl">
-                {/* 1. Horizontal Thumbnail Strip at top of Candidate's Picture */}
-                {(() => {
-                  const extraDemoPhotos = [
-                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800",
-                    "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800",
-                    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800",
-                    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=800",
-                  ];
-                  const candidatePhotos = [
-                    ...(activeMatch.imageUrls || []),
-                    ...(activeMatch.photoUrl && !(activeMatch.imageUrls || []).includes(activeMatch.photoUrl) ? [activeMatch.photoUrl] : [])
-                  ];
-                  if (candidatePhotos.length < 5) {
-                    candidatePhotos.push(...extraDemoPhotos.slice(0, 5 - candidatePhotos.length));
-                  }
-                  return candidatePhotos.length > 1 ? (
-                    <div className="px-5 py-3.5 bg-[#0B0E14]/95 backdrop-blur-md border-b border-white/10 flex items-center gap-3 overflow-x-auto scrollbar-none">
-                      <div className="flex items-center gap-1.5 text-xs text-[#E27D8D] font-bold shrink-0 mr-1">
-                        <Camera className="w-4 h-4" />
-                        <span>{candidatePhotos.length} Photos:</span>
-                      </div>
-                      <div className="flex items-center gap-2.5">
-                        {candidatePhotos.map((url: string, idx: number) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setActiveMatchImageIndex(idx)}
-                            className={`relative shrink-0 w-14 h-16 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                              idx === activeMatchImageIndex
-                                ? 'border-[#E27D8D] scale-105 shadow-lg shadow-[#E27D8D]/40 ring-2 ring-[#E27D8D]/50'
-                                : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/60'
-                            }`}
-                            title={`View Photo ${idx + 1}`}
-                          >
-                            <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
-                            <span className="absolute bottom-0.5 right-0.5 bg-black/85 text-[9px] text-white px-1 rounded font-bold">
-                              {idx + 1}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null;
-                })()}
-
-                {/* 2. Main Candidate Hero Picture with Left/Right Navigation */}
+                {/* Main Candidate Hero Picture with Left/Right Navigation and Top Lines */}
                 {(() => {
                   const extraDemoPhotos = [
                     "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800",
@@ -1472,7 +1459,7 @@ export default function Dashboard() {
                   const currentPhoto = candidatePhotos[activeMatchImageIndex] || candidatePhotos[0] || activeMatch.photoUrl;
 
                   return (
-                    <div className="relative h-[420px] md:h-[520px] group">
+                    <div className="relative h-[440px] md:h-[540px] group">
                       {currentPhoto ? (
                         <img src={currentPhoto} alt={activeMatch.firstName} className="w-full h-full object-cover object-center transition-all duration-500" />
                       ) : (
@@ -1484,40 +1471,65 @@ export default function Dashboard() {
                       {candidatePhotos.length > 1 && (
                         <>
                           <button 
+                            type="button"
                             onClick={() => setActiveMatchImageIndex(prev => prev > 0 ? prev - 1 : candidatePhotos.length - 1)} 
-                            className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/55 text-white hover:bg-black/80 transition-all z-20"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/55 text-white hover:bg-black/80 transition-all z-20 cursor-pointer"
                             title="Previous photo"
                           >
                             <ChevronLeft className="w-5 h-5" />
                           </button>
                           <button 
+                            type="button"
                             onClick={() => setActiveMatchImageIndex(prev => prev < candidatePhotos.length - 1 ? prev + 1 : 0)} 
-                            className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/55 text-white hover:bg-black/80 transition-all z-20"
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/55 text-white hover:bg-black/80 transition-all z-20 cursor-pointer"
                             title="Next photo"
                           >
                             <ChevronRight className="w-5 h-5" />
                           </button>
+                          {/* Segment lines at the top of candidate photo */}
                           <div className="absolute top-4 left-0 right-0 flex justify-center gap-2 px-8 z-10">
                             {candidatePhotos.map((_: any, i: number) => (
-                              <div key={i} className={`h-1.5 flex-1 rounded-full ${i === activeMatchImageIndex ? 'bg-[#E27D8D] shadow-lg shadow-[#E27D8D]/50' : 'bg-white/30'}`} />
+                              <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i === activeMatchImageIndex ? 'bg-[#D4AF37] shadow-lg shadow-[#D4AF37]/50' : 'bg-white/30'}`} />
                             ))}
                           </div>
-                          <div className="absolute top-8 right-6 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-[#E27D8D]/40 text-xs font-bold text-[#E27D8D] z-10">
-                            {activeMatchImageIndex + 1} / {candidatePhotos.length}
+                          {/* Number of photos badge at top right */}
+                          <div className="absolute top-8 right-6 px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-[#D4AF37]/60 text-xs font-bold text-[#D4AF37] flex items-center gap-1.5 z-10">
+                            <Camera className="w-3.5 h-3.5" />
+                            <span>{activeMatchImageIndex + 1}/{candidatePhotos.length} PHOTOS</span>
                           </div>
                         </>
                       )}
 
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none z-0" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent pointer-events-none z-0" />
                       <div className="absolute bottom-0 left-0 p-8 z-10">
-                        <h2 className="text-4xl font-black text-white">{activeMatch.firstName} {activeMatch.lastName}{formatAgeOrDob(activeMatch.dateOfBirth) ? `, ${formatAgeOrDob(activeMatch.dateOfBirth)}` : ''}</h2>
-                        <p className="text-gray-400 font-bold tracking-widest uppercase text-sm mt-2">{activeMatch.occupation} • {[activeMatch.residenceCity, activeMatch.residenceCountry].filter(Boolean).join(', ')}</p>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-4xl font-serif font-black text-white">{activeMatch.firstName} {activeMatch.lastName}{formatAgeOrDob(activeMatch.dateOfBirth) ? `, ${formatAgeOrDob(activeMatch.dateOfBirth)}` : ''}</h2>
+                          <span className="w-6 h-6 rounded-full bg-gradient-to-br from-[#F3E5AB] via-[#E27D8D] to-[#AA7C11] flex items-center justify-center text-black text-xs font-black shadow-sm">
+                            ✓
+                          </span>
+                        </div>
+                        <p className="text-gray-300 font-bold tracking-widest uppercase text-sm mt-2 flex items-center gap-2">
+                          <Briefcase className="w-4 h-4 text-[#D4AF37]" />
+                          <span>{activeMatch.occupation || 'Professional'}</span>
+                          <span className="text-gray-500">•</span>
+                          <MapPin className="w-4 h-4 text-gray-400" />
+                          <span>{[activeMatch.residenceCity, activeMatch.residenceCountry].filter(Boolean).join(', ') || 'Global Registry'}</span>
+                        </p>
                       </div>
                     </div>
                   );
                 })()}
 
-                <div className="p-8 space-y-8">
+                {/* 2-Minute Temporary Closest Available Match Banner (stays 2 mins on login, then auto-hides) */}
+                {showClosestNotice && ((activeMatch.compatibilityScore || 0) < 80 || activeMatch.isClosestAvailable || activeMatch.aiExplanation?.includes('closest') || activeMatch.aiExplanation?.includes('Closest')) && (
+                  <div className="mx-6 sm:mx-8 mt-5 p-4 rounded-2xl bg-[#D4AF37]/10 border border-[#D4AF37]/40 flex items-start gap-3 transition-opacity duration-500 animate-in fade-in">
+                    <Award className="w-5 h-5 text-[#D4AF37] shrink-0 mt-0.5" />
+                    <p className="text-xs text-gray-200 leading-relaxed font-sans">
+                      <strong className="text-[#D4AF37] font-bold">Closest Available Match:</strong> {activeMatch.firstName} is your closest matching candidate in the registry for now. You will be matched appropriately as closer candidates become available.
+                    </p>
+                  </div>
+                )}
+<div className="p-8 space-y-8">
                   {/* Tags */}
                   <div className="flex flex-wrap gap-2">
                     <span className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-gray-300">Archetype: {activeMatch.archetype}</span>
@@ -1700,93 +1712,173 @@ export default function Dashboard() {
           )}
 
           {/* TAB 2: INSIGHTS DASHBOARD */}
-          {activeTab === "insights" && (
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="p-6 rounded-[24px] glass-card border border-[#E27D8D]/20 text-center space-y-2">
-                  <Award className="w-8 h-8 text-[#E27D8D] mx-auto" />
-                  <div className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Readiness Index</div>
-                  <div className="text-3xl font-serif font-black text-white">88%</div>
-                  <span className="text-[9px] text-[#10B981] font-bold uppercase">Highly Marriage Ready</span>
-                </div>
-                <div className="p-6 rounded-[24px] glass-card border border-white/5 text-center space-y-2">
-                  <TrendingUp className="w-8 h-8 text-white mx-auto" />
-                  <div className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Seriousness index</div>
-                  <div className="text-3xl font-serif font-black text-white">94%</div>
-                  <span className="text-[9px] text-gray-400 uppercase">Elite Intention Index</span>
-                </div>
-                <div className="p-6 rounded-[24px] glass-card border border-[#10B981]/20 text-center space-y-2">
-                  <ShieldCheck className="w-8 h-8 text-[#10B981] mx-auto" />
-                  <div className="text-[10px] text-gray-500 uppercase tracking-widest font-black">Safety trust</div>
-                  <div className="text-3xl font-serif font-black text-white">98%</div>
-                  <span className="text-[9px] text-[#10B981] font-bold uppercase">Authentic Signature</span>
-                </div>
-              </div>
+          {activeTab === "insights" && (() => {
+            const readiness = userProfile?.readinessScore || 88;
+            const seriousness = userProfile?.seriousnessLevel || 94;
+            const trust = userProfile?.trustScore || 98;
+            const archetype = userProfile?.personalityArchetype || 'The Intentional Builder';
+            const attachment = userProfile?.attachmentStyle || 'Secure';
+            const values = Array.isArray(userProfile?.personalValues) && userProfile.personalValues.length > 0
+              ? userProfile.personalValues
+              : ['Faith', 'Family', 'Loyalty', 'Integrity'];
 
-              {/* Attachment styles */}
-              <div className="glass-card rounded-[32px] p-8 border border-white/10 space-y-6">
-                <h3 className="text-xl font-serif font-bold">Psychological Alignment Map</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-[#E27D8D]">Personality Archetype</h4>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      You are registered as an **Intentional Builder**. You approach relationship milestones deliberately, prioritizing family values, structural boundaries, and joint growth curves.
-                    </p>
+            const getArchetypeDesc = (arch: string) => {
+              switch (arch) {
+                case 'The Grounded Romantic':
+                  return 'You prioritize deep emotional availability and shared life dreams, valuing stability, long-term romantic integrity, and warm daily connection.';
+                case 'The Calm Connector':
+                  return 'You value emotional regulation and ease in conversation, managing boundaries with gentle reassurance and steady commitment timelines.';
+                case 'The Loyal Partner':
+                  return 'You focus on long-term safety, loyalty, and dependability, building on clear mutual expectations and structural boundaries.';
+                default:
+                  return 'You approach relationship milestones deliberately, prioritizing family values, structural boundaries, and joint growth curves.';
+              }
+            };
+
+            const getAttachmentDesc = (att: string) => {
+              switch (att) {
+                case 'Anxious-Preoccupied':
+                  return 'High intimacy capacity with a desire for clear, steady reassurance. You flourish when partners communicate transparently and consistently.';
+                case 'Dismissive-Avoidant':
+                  return 'High independence and self-reliance, with growing capacity to create safe, collaborative intimacy.';
+                default:
+                  return 'Secure attachment. You express intimacy comfortably, navigate friction with calm collaborative intelligence, and recover smoothly.';
+              }
+            };
+
+            return (
+              <div className="space-y-8 animate-in fade-in duration-500">
+                <div>
+                  <h3 className="text-xl font-serif font-bold text-[#D1D5DC]">Psychological Alignment Vectors</h3>
+                  <p className="text-xs text-[#9DABBF] mt-1">
+                    Extracted from your AI onboarding interview & verified by knot behavioral engines
+                  </p>
+                </div>
+
+                {/* 3-Metric Index Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="p-6 rounded-[24px] glass-card border border-[#D4AF37]/30 text-center space-y-2">
+                    <Heart className="w-8 h-8 text-[#D4AF37] mx-auto" />
+                    <div className="text-3xl font-serif font-black text-[#D4AF37]">{readiness}%</div>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-widest font-black">READINESS</div>
                   </div>
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-[#E27D8D]">Attachment Profile</h4>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      Your attachment is **Secure**. You comfortably express intimacy, manage boundaries with high collaborative intelligence, and recover from relationship friction smoothly.
-                    </p>
+                  <div className="p-6 rounded-[24px] glass-card border border-[#E27D8D]/30 text-center space-y-2">
+                    <Lock className="w-8 h-8 text-[#E27D8D] mx-auto" />
+                    <div className="text-3xl font-serif font-black text-[#E27D8D]">{seriousness}%</div>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-widest font-black">SERIOUSNESS</div>
+                  </div>
+                  <div className="p-6 rounded-[24px] glass-card border border-[#10B981]/30 text-center space-y-2">
+                    <ShieldCheck className="w-8 h-8 text-[#10B981] mx-auto" />
+                    <div className="text-3xl font-serif font-black text-[#10B981]">{trust}%</div>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-widest font-black">TRUST SCORE</div>
+                  </div>
+                </div>
+
+                {/* Personality Archetype Card */}
+                <div className="glass-card rounded-[28px] p-6 border border-white/10 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold tracking-widest uppercase text-[#9DABBF]">PERSONALITY ARCHETYPE</span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 text-[10px] font-black text-[#D4AF37]">
+                      ✓ GOLD VERIFIED
+                    </span>
+                  </div>
+                  <h4 className="text-xl font-serif font-bold text-white">{archetype}</h4>
+                  <p className="text-sm text-gray-300 leading-relaxed font-sans">{getArchetypeDesc(archetype)}</p>
+                </div>
+
+                {/* Attachment Style Card */}
+                <div className="glass-card rounded-[28px] p-6 border border-white/10 space-y-3">
+                  <span className="text-xs font-bold tracking-widest uppercase text-[#9DABBF]">ATTACHMENT STYLE</span>
+                  <h4 className="text-xl font-serif font-bold text-white">{attachment}</h4>
+                  <p className="text-sm text-gray-300 leading-relaxed font-sans">{getAttachmentDesc(attachment)}</p>
+                </div>
+
+                {/* Sacred Value Vectors Card */}
+                <div className="glass-card rounded-[28px] p-6 border border-white/10 space-y-4">
+                  <span className="text-xs font-bold tracking-widest uppercase text-white">SACRED VALUE VECTORS</span>
+                  <div className="flex flex-wrap gap-2.5">
+                    {values.map((val: string, idx: number) => (
+                      <span
+                        key={idx}
+                        className="px-4 py-2 rounded-2xl bg-[#161B26] border border-[#D4AF37]/60 text-xs font-bold text-[#9DABBF]"
+                      >
+                        {val}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* TAB 3: AI RELATIONSHIP COACH */}
           {activeTab === "coach" && (
-            <div className="glass-card rounded-[32px] border border-white/10 flex flex-col h-[550px] overflow-hidden">
-              <div className="p-4 bg-[#121721]/90 border-b border-white/5 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#E27D8D]/10 flex items-center justify-center text-[#E27D8D] border border-[#E27D8D]/20">
-                  <Bot className="w-6 h-6" />
+            <div className="glass-card rounded-[32px] border border-white/10 flex flex-col h-[600px] overflow-hidden">
+              <div className="p-4 bg-[#121721] border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/15 flex items-center justify-center text-[#D4AF37] border border-[#D4AF37]/30">
+                    <Bot className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">AI RELATIONSHIP COACH</h4>
+                    <p className="text-[10px] uppercase tracking-wider text-[#D4AF37] font-bold">Counselor KNOT Active Session</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-sm font-bold">Counselor KNOT</h4>
-                  <p className="text-[9px] uppercase tracking-wider text-[#E27D8D] font-bold">Active Coaching Session</p>
-                </div>
+              </div>
+
+              {/* Quick Prompts Bar (Matches Mobile) */}
+              <div className="px-4 py-2.5 bg-[#161B26]/80 border-b border-white/5 flex items-center gap-2 overflow-x-auto scrollbar-none">
+                {quickCoachPrompts.map((prompt, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handleSendCoachMessage(prompt)}
+                    className="px-3.5 py-1.5 rounded-full bg-[#161B26] border border-[#D4AF37] text-[11px] font-bold text-[#D4AF37] hover:bg-[#D4AF37]/15 transition-all whitespace-nowrap shrink-0 cursor-pointer"
+                  >
+                    {prompt}
+                  </button>
+                ))}
               </div>
 
               <div className="flex-1 p-6 overflow-y-auto space-y-4">
                 {coachMessages.map((m, idx) => (
-                  <div key={idx} className={`flex items-start gap-3 ${m.role === "user" ? "justify-end" : ""}`}>
+                  <div key={idx} className={`flex items-start gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                     {m.role === "ai" && (
-                      <div className="w-8 h-8 rounded-full bg-[#E27D8D]/15 flex items-center justify-center text-[#E27D8D] text-xs font-bold flex-shrink-0">AI</div>
+                      <div className="w-8 h-8 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#D4AF37] text-xs font-bold shrink-0">
+                        AI
+                      </div>
                     )}
-                    <div className={`p-4 rounded-[22px] text-xs leading-relaxed max-w-[80%] ${
+                    <div className={`p-4 rounded-[22px] text-xs leading-relaxed max-w-[80%] shadow-md ${
                       m.role === "user" 
-                        ? "bg-[#E27D8D]/15 border border-[#E27D8D]/25 rounded-tr-none text-white"
-                        : "bg-white/5 border border-white/5 rounded-tl-none text-gray-300"
+                        ? "bg-[#4C1D95] border border-[#6D28D9] rounded-tr-none text-white font-medium"
+                        : "bg-[#121721] border border-[#D4AF37]/30 rounded-tl-none text-[#D1D5DC]"
                     }`}>
                       {m.text}
                     </div>
                   </div>
                 ))}
+                {isCoachTyping && (
+                  <div className="flex items-center gap-2.5 text-xs text-[#D4AF37] bg-[#121721] border border-[#D4AF37]/30 p-3 rounded-2xl w-fit animate-pulse">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Coach is thinking...</span>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="p-4 bg-[#121721]/90 border-t border-white/5 flex items-center gap-2">
+              <div className="p-4 bg-[#121721] border-t border-white/10 flex items-center gap-2">
                 <input 
                   type="text" 
                   value={coachInput}
                   onChange={e => setCoachInput(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && handleSendCoachMessage()}
-                  placeholder="Ask for advice on attachment, relocation, timelines..."
-                  className="flex-1 bg-white/5 border border-white/5 rounded-full py-3 px-6 text-xs text-white focus:outline-none focus:border-[#E27D8D]/50"
+                  placeholder="Ask your Relationship Coach..."
+                  className="flex-1 bg-white/5 border border-white/10 rounded-full py-3 px-6 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-[#D4AF37]"
                 />
                 <button 
-                  onClick={handleSendCoachMessage}
-                  className="w-10 h-10 rounded-full bg-[#2D1B4E] flex items-center justify-center text-white hover:bg-[#E27D8D] hover:text-black transition-colors"
+                  onClick={() => handleSendCoachMessage()}
+                  className="w-11 h-11 rounded-full bg-gradient-to-r from-[#E27D8D] via-[#B85FA8] to-[#9353D3] flex items-center justify-center text-white shadow-lg shadow-[#E27D8D]/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  title="Send message"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -1915,290 +2007,168 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* TAB 5: MY PROFILE */}
+          {/* TAB 5: MY PROFILE (Matches Mobile Sovereign Identity Screen) */}
           {activeTab === "profile" && (
-            <div className="glass-card rounded-[32px] p-6 sm:p-8 border border-white/10 space-y-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pb-6 border-b border-white/5">
-                {/* Profile User Info & Edit Card */}
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-4 flex flex-col justify-center">
-                  <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 sm:gap-6">
-                    <div className="relative group w-20 h-20 flex-shrink-0">
-                      <div className="w-20 h-20 rounded-full bg-[#2D1B4E] border border-white/10 flex items-center justify-center text-gray-300 text-3xl font-black overflow-hidden relative">
-                        {userPhotos.length > 0 ? (
-                          <img src={userPhotos[primaryPhotoIndex]} alt="Profile" className="w-full h-full object-cover" />
-                        ) : (
-                          "G"
-                        )}
+            <div className="space-y-6 animate-in fade-in duration-500 max-w-3xl mx-auto">
+              {/* Sovereign Identity Header */}
+              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <h3 className="text-sm font-black uppercase tracking-widest text-[#D1D5DC]">SOVEREIGN IDENTITY</h3>
+                <button 
+                  onClick={() => setShowPreferencesModal(true)}
+                  className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-[#D4AF37] border border-[#D4AF37]/40 flex items-center gap-2 text-xs font-bold transition-all cursor-pointer"
+                  title="Partner Match Preferences"
+                >
+                  <Sliders className="w-4 h-4" />
+                  <span>Preferences</span>
+                </button>
+              </div>
+
+              {/* User Avatar & Name Card (Matching Mobile) */}
+              <div className="glass-card rounded-[32px] p-8 border border-white/10 text-center flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-[#121721] border-2 border-[#D4AF37] p-1 shadow-lg shadow-[#D4AF37]/30 overflow-hidden">
+                    {userPhotos.length > 0 ? (
+                      <img src={userPhotos[primaryPhotoIndex]} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full rounded-full bg-[#2D1B4E] flex items-center justify-center text-white text-2xl font-black">
+                        {userProfile?.firstName?.charAt(0) || "U"}
                       </div>
-                      <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                        <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full">
-                          <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                            if (e.target.files && e.target.files[0]) {
-                              const newPhotoUrl = URL.createObjectURL(e.target.files[0]);
-                              const newPhotos = [...userPhotos];
-                              newPhotos[primaryPhotoIndex] = newPhotoUrl;
-                              setUserPhotos(newPhotos);
-                            }
-                          }} />
-                          <span className="text-[9px] font-bold text-white uppercase tracking-wider text-center">Update<br/>Photo</span>
-                        </label>
-                      </div>
+                    )}
+                  </div>
+                  {userProfile?.isVerified !== false && (
+                    <span className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-gradient-to-br from-[#F3E5AB] via-[#E27D8D] to-[#AA7C11] flex items-center justify-center text-black text-xs font-black shadow-md border-2 border-[#0A0D14]">
+                      ✓
+                    </span>
+                  )}
+                </div>
+                <div>
+                  <h4 className="text-2xl font-serif font-black text-white">
+                    {userProfile?.firstName || "Sovereign"}, {formatAgeOrDob(userProfile?.dateOfBirth) || "29"}
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {userProfile?.occupation || "Professional"} • {[userProfile?.residenceCity, userProfile?.residenceCountry].filter(Boolean).join(", ") || "Global Registry"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Didit KYC Verification Card (Matches Mobile) */}
+              <div className={`p-6 rounded-[28px] border transition-all ${
+                userProfile?.isVerified !== false
+                  ? "bg-[#10B981]/10 border-[#10B981]/40"
+                  : "bg-[#D4AF37]/10 border-[#D4AF37]/40"
+              }`}>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      userProfile?.isVerified !== false ? "bg-[#10B981]/20 text-[#10B981]" : "bg-[#D4AF37]/20 text-[#D4AF37]"
+                    }`}>
+                      <ShieldCheck className="w-6 h-6" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold">{userProfile ? `${userProfile.firstName}, 29` : "Gabriel, 29"}</h3>
-                      <p className="text-xs text-gray-400">{userProfile?.occupation || "Software Engineer"} • {userProfile?.residenceCity || "Boston"}, {userProfile?.residenceCountry || "MA"}</p>
-                      {userProfile?.isVerified === false ? (
-                        <div className="mt-2">
-                          <span className="inline-block px-3 py-1 rounded-full bg-red-500/20 border border-red-500/30 text-[9px] font-black text-red-400 uppercase tracking-wider">Unverified Profile</span>
-                          <p className="text-[10px] text-gray-400 mt-1">Please verify your ID and Selfie to become visible to the public.</p>
-                        </div>
-                      ) : (
-                        <span className="inline-block mt-2 px-3 py-1 rounded-full bg-[#10B981]/25 border border-[#10B981]/30 text-[9px] font-black text-[#10B981] uppercase tracking-wider">Verified Registry Member</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-black uppercase tracking-wider ${
+                          userProfile?.isVerified !== false ? "text-[#10B981]" : "text-[#D4AF37]"
+                        }`}>
+                          {userProfile?.isVerified !== false ? "VERIFIED PROFILE" : "UNVERIFIED PROFILE"}
+                        </span>
+                        {userProfile?.isVerified !== false && (
+                          <span className="text-[10px] bg-[#10B981] text-black px-1.5 py-0.2 rounded font-black">✓</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-300 mt-1">
+                        {userProfile?.isVerified !== false
+                          ? "Biometric 1:1 match and government document certified."
+                          : "Complete biometric scan to unlock high-intent marriage matches."}
+                      </p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
-                    <button 
-                      onClick={() => setShowPreferencesModal(true)}
-                      className="w-full py-2.5 px-3 rounded-xl bg-[#E27D8D]/15 border border-[#E27D8D]/40 text-xs font-bold text-[#E27D8D] hover:bg-[#E27D8D]/25 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                    >
-                      <Sliders className="w-3.5 h-3.5" /> Match Preferences
-                    </button>
-                    <button 
-                      onClick={() => router.push('/edit-profile')}
-                      className="w-full py-2.5 px-3 rounded-xl bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:bg-white/20 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      <Settings className="w-3.5 h-3.5" /> Edit My Profile
-                    </button>
-                  </div>
-                </div>
-
-                {/* Identity Verification */}
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-3 flex flex-col justify-center">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black mb-1">Identity Verification</h4>
-                    <span className="text-[10px] text-[#E27D8D] font-bold">Didit Sovereign KYC</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span>Government ID Scan</span>
-                    <span className={userProfile?.isVerified === false ? "text-red-400 font-bold" : "text-[#10B981] font-bold"}>{userProfile?.isVerified === false ? "Pending" : "Approved"}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span>Liveness Selfie Match</span>
-                    <span className={userProfile?.isVerified === false ? "text-red-400 font-bold" : "text-[#10B981] font-bold"}>{userProfile?.isVerified === false ? "Pending" : "Approved"}</span>
-                  </div>
-                  {userProfile?.isVerified === false ? (
+                  {userProfile?.isVerified === false && (
                     <button
+                      type="button"
                       onClick={() => setShowDiditModal(true)}
-                      className="mt-3 py-2.5 px-4 rounded-xl text-xs font-black bg-[#E27D8D] text-black hover:bg-[#E5C158] transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                      className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#E27D8D] to-[#AA7C11] text-black text-xs font-black uppercase tracking-wider hover:opacity-95 transition-opacity shrink-0 cursor-pointer shadow-md"
                     >
-                      <ShieldCheck className="w-4 h-4" /> Verify with Didit
-                    </button>
-                  ) : (
-                    <div className="mt-3 p-2.5 rounded-xl text-[10px] font-black text-center uppercase tracking-wide bg-[#10B981]/10 border border-[#10B981]/20 text-[#10B981]">
-                      Identity Verified via Didit
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* My Photos Section */}
-              <div className="pt-6 border-t border-white/5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black">My Photos</h4>
-                  <span className="text-[10px] text-gray-500 font-bold">{userPhotos.length} / 5 Uploaded</span>
-                </div>
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                  {userPhotos.map((photo, idx) => (
-                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group">
-                      <img src={photo} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
-                      {idx === primaryPhotoIndex ? (
-                        <div className="absolute top-2 left-2 bg-[#E27D8D] px-2 py-0.5 rounded-md text-[8px] font-black uppercase text-black z-10">
-                          Primary
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setPrimaryPhotoIndex(idx)}
-                          className="absolute bottom-2 left-2 bg-black/70 hover:bg-[#E27D8D] hover:text-black text-[8px] font-black uppercase text-white px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                        >
-                          Set Primary
-                        </button>
-                      )}
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-                        <button onClick={() => {
-                          const newPhotos = userPhotos.filter((_, i) => i !== idx);
-                          setUserPhotos(newPhotos);
-                          if (primaryPhotoIndex === idx) setPrimaryPhotoIndex(0);
-                          else if (primaryPhotoIndex > idx) setPrimaryPhotoIndex(prev => prev - 1);
-                        }} className="text-[9px] font-bold text-red-400 hover:text-red-300 uppercase tracking-wider">
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  {userPhotos.length < 5 && (
-                    <button onClick={() => router.push('/edit-profile')} className="aspect-square rounded-xl border-2 border-dashed border-white/20 flex flex-col items-center justify-center gap-2 hover:border-[#E27D8D]/50 hover:bg-[#E27D8D]/5 transition-all">
-                      <Camera className="w-6 h-6 text-gray-400" />
-                      <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Add Photo</span>
+                      VERIFY
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* Full Profile Detail Section */}
-              <div className="pt-6 border-t border-white/5 space-y-8">
-                {/* 1. Psychological Profile (Requested to keep) */}
-                <div className="space-y-4">
-                  <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black">Psychological Profile</h4>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="px-3 py-1.5 rounded-full bg-white/5 border border-white/5 text-xs text-gray-300 font-medium">✔ The Intentional Builder</span>
-                    <span className="px-3 py-1.5 rounded-full bg-[#2D1B4E]/30 border border-[#E27D8D]/20 text-xs text-[#E27D8D] font-medium">✔ Secure Attachment</span>
+              {/* Profile Actions Menu (Matches Mobile Menu Cards) */}
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setShowPreferencesModal(true)}
+                  className="w-full p-4 rounded-2xl glass-card border border-white/10 hover:border-[#D4AF37]/50 flex items-center justify-between transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <Sliders className="w-5 h-5 text-[#D4AF37]" />
+                    <span className="text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
+                      Partner Match Preferences
+                    </span>
                   </div>
-                </div>
+                  <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
+                </button>
 
-                {/* 2. Identity & Roots */}
-                <div className="space-y-4">
-                  <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black border-b border-white/5 pb-2">Identity & Roots</h4>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Marriage History</div>
-                      <div className="text-sm text-white font-bold">{userProfile?.maritalStatus || "Not specified"}</div>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Occupation</div>
-                      <div className="text-sm text-white font-bold">{userProfile?.occupation || "Not specified"}</div>
-                    </div>
+                <button
+                  type="button"
+                  onClick={() => router.push('/edit-profile')}
+                  className="w-full p-4 rounded-2xl glass-card border border-white/10 hover:border-[#D4AF37]/50 flex items-center justify-between transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <Settings className="w-5 h-5 text-[#D4AF37]" />
+                    <span className="text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
+                      Edit Your Profile
+                    </span>
                   </div>
+                  <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
+                </button>
 
-                  <div className="p-5 rounded-2xl bg-[#121721] border border-white/10">
-                    <h5 className="text-[10px] text-[#E27D8D] uppercase tracking-widest font-black mb-3">Current Residence</h5>
-                    <div className="grid grid-cols-3 gap-2 mb-4">
-                      <div><div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Country</div><div className="text-sm text-white font-bold">{userProfile?.residenceCountry || "USA"}</div></div>
-                      <div><div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">State</div><div className="text-sm text-white font-bold">{userProfile?.residenceState || "MA"}</div></div>
-                      <div><div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">City</div><div className="text-sm text-white font-bold">{userProfile?.residenceCity || "Boston"}</div></div>
-                    </div>
+                <button
+                  type="button"
+                  onClick={() => router.push('/edit-profile')}
+                  className="w-full p-4 rounded-2xl glass-card border border-white/10 hover:border-[#D4AF37]/50 flex items-center justify-between transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <Camera className="w-5 h-5 text-[#D4AF37]" />
+                    <span className="text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
+                      Manage Your Photos
+                    </span>
                   </div>
+                  <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
+                </button>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Languages Spoken</div>
-                      <div className="text-sm text-white font-bold">{userProfile?.languagesSpoken?.join(", ") || "English"}</div>
-                    </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSubscriptionModal(true)}
+                  className="w-full p-4 rounded-2xl glass-card border border-white/10 hover:border-[#D4AF37]/50 flex items-center justify-between transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+                    <span className="text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
+                      Upgrade Membership
+                    </span>
                   </div>
-                </div>
-
-                {/* 3. Lifestyle & Beliefs */}
-                <div className="space-y-4">
-                  <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black border-b border-white/5 pb-2">Lifestyle & Beliefs</h4>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Faith/Religion</div>
-                      <div className="text-sm text-white font-bold">Christian</div>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Smoking</div>
-                      <div className="text-sm text-white font-bold">Never</div>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Drinking</div>
-                      <div className="text-sm text-white font-bold">Socially</div>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Children</div>
-                      <div className="text-sm text-white font-bold">No kids</div>
-                    </div>
-                  </div>
-                  
-
-                </div>
-
-                {/* 4. Marriage Expectations */}
-                <div className="space-y-4">
-                  <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black border-b border-white/5 pb-2">Marriage Expectations</h4>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Vow Timeline</div>
-                      <div className="text-sm text-white font-bold">1-2 years</div>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Relocation</div>
-                      <div className="text-sm text-white font-bold">Maybe</div>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Children Intent</div>
-                      <div className="text-sm text-white font-bold">Wants children</div>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Partner Age</div>
-                      <div className="text-sm text-white font-bold">25 - 30 years</div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                    <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-2">Ideal Partner Traits</div>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="px-3 py-1.5 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 text-[#E27D8D] text-[10px] font-bold uppercase tracking-wider">Emotionally Available</span>
-                      <span className="px-3 py-1.5 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 text-[#E27D8D] text-[10px] font-bold uppercase tracking-wider">Loyal</span>
-                      <span className="px-3 py-1.5 rounded-full bg-[#E27D8D]/10 border border-[#E27D8D]/30 text-[#E27D8D] text-[10px] font-bold uppercase tracking-wider">Driven</span>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                    <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Registry Expectations</div>
-                    <div className="text-sm text-white leading-relaxed">Looking for someone who is ready to settle down, has done their emotional work, and is excited to build a legacy based on mutual respect and shared faith.</div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Readiness</div>
-                      <div className="text-sm text-[#10B981] font-bold">94% (Elite)</div>
-                    </div>
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                      <div className="text-[9px] text-gray-500 uppercase tracking-widest font-black mb-1">Trust Score</div>
-                      <div className="text-sm text-[#10B981] font-bold">98% (Verified)</div>
-                    </div>
-                  </div>
-                </div>
+                  <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
+                </button>
               </div>
 
-              {/* Membership Subscription (Moved to Bottom) */}
-              <div className="pt-6 border-t border-white/5">
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-3">
-                  <h4 className="text-xs text-gray-400 uppercase tracking-widest font-black mb-2">Membership Subscription</h4>
-                  {isPremium ? (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span>Active Plan</span>
-                        <span className="text-[#E27D8D] font-bold">Premium Alignment (Live)</span>
-                      </div>
-                      <div className="flex items-center justify-between text-xs">
-                        <span>Renews On</span>
-                        <span className="text-gray-400">June 16, 2026</span>
-                      </div>
-                      <div className="mt-2 p-2.5 rounded-xl bg-[#E27D8D]/10 border border-[#E27D8D]/20 text-[10px] text-[#E27D8D] font-black text-center uppercase tracking-wide">
-                        🌟 Premium Membership Active
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between text-xs">
-                        <span>Active Plan</span>
-                        <span className="text-gray-400 font-bold">Base Member</span>
-                      </div>
-                      <button
-                        onClick={() => setShowSubscriptionModal(true)}
-                        className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-[#E27D8D] to-[#AA7C11] text-[#0A0E14] font-black text-xs uppercase tracking-wider hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
-                      >
-                        <Sparkles className="w-4 h-4" /> Upgrade to Premium
-                      </button>
-                    </div>
-                  )}
-                </div>
+              {/* Sign Out Pill Button (Matches Mobile) */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem("knot_token");
+                    localStorage.removeItem("knot_user");
+                    sessionStorage.clear();
+                    router.push("/login");
+                  }}
+                  className="w-full py-4 rounded-full bg-gradient-to-r from-[#E27D8D] via-[#B85FA8] to-[#9353D3] text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#E27D8D]/25 hover:opacity-95 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer"
+                >
+                  <span>Sign Out</span>
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
-
             </div>
           )}
 

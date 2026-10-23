@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -27,6 +28,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   int _selectedPhotoIndex = 0;
   late final PageController _photoPageController;
+  static DateTime? _sessionLoginTime;
+  static bool _closestBadgeDismissed = false;
+  bool _showClosestNotice = false;
+  Timer? _closestNoticeTimer;
 
   MatchProfile get profile => widget.profile;
 
@@ -34,10 +39,28 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   void initState() {
     super.initState();
     _photoPageController = PageController();
+
+    _sessionLoginTime ??= DateTime.now();
+    final elapsedSec = DateTime.now().difference(_sessionLoginTime!).inSeconds;
+    if (elapsedSec < 120 && !_closestBadgeDismissed) {
+      _showClosestNotice = true;
+      _closestNoticeTimer = Timer(Duration(seconds: 120 - elapsedSec), () {
+        if (mounted) {
+          setState(() {
+            _showClosestNotice = false;
+            _closestBadgeDismissed = true;
+          });
+        }
+      });
+    } else {
+      _showClosestNotice = false;
+      _closestBadgeDismissed = true;
+    }
   }
 
   @override
   void dispose() {
+    _closestNoticeTimer?.cancel();
     _photoPageController.dispose();
     super.dispose();
   }
@@ -251,7 +274,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           slivers: [
             // Collapsible Image AppBar with Swipable PageView, Story Bars & Fullscreen Preview
             SliverAppBar(
-              expandedHeight: 480,
+              expandedHeight: 440,
               pinned: false,
               automaticallyImplyLeading: false,
               backgroundColor: AppColors.obsidianBlack,
@@ -276,106 +299,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         );
                       },
                     ),
-
-                    // Top Horizontal Thumbnail Strip for Left-to-Right Scrolling
-                    if (photos.length > 1)
-                      Positioned(
-                        top: MediaQuery.of(context).padding.top + 48,
-                        left: 12,
-                        right: 12,
-                        height: 60,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.obsidianBlack.withOpacity(0.72),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: AppColors.champagneGold.withOpacity(0.35),
-                              width: 0.8,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.4),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: photos.length,
-                            separatorBuilder: (_, __) => const SizedBox(width: 8),
-                            itemBuilder: (context, idx) {
-                              final isSelected = idx == _selectedPhotoIndex;
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() => _selectedPhotoIndex = idx);
-                                  if (_photoPageController.hasClients) {
-                                    _photoPageController.animateToPage(
-                                      idx,
-                                      duration: const Duration(milliseconds: 250),
-                                      curve: Curves.easeInOut,
-                                    );
-                                  }
-                                },
-                                child: Container(
-                                  width: 44,
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: isSelected
-                                          ? AppColors.champagneGold
-                                          : Colors.white.withOpacity(0.25),
-                                      width: isSelected ? 2.0 : 0.8,
-                                    ),
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: AppColors.champagneGold.withOpacity(0.55),
-                                              blurRadius: 6,
-                                            )
-                                          ]
-                                        : null,
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(9),
-                                    child: Stack(
-                                      fit: StackFit.expand,
-                                      children: [
-                                        KnotImage(
-                                          imageUrl: photos[idx],
-                                          fit: BoxFit.cover,
-                                        ),
-                                        Positioned(
-                                          bottom: 2,
-                                          right: 2,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 3.5, vertical: 1),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withOpacity(0.8),
-                                              borderRadius: BorderRadius.circular(4),
-                                            ),
-                                            child: Text(
-                                              '${idx + 1}',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 8.5,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
 
                     // Vignette Scrim (Keeping face completely clear) - Wrapped in IgnorePointer so taps pass through
                     IgnorePointer(
@@ -674,8 +597,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         ),
                       ],
                     ),
-                    if (profile.isClosestAvailable) ...[
-                      Container(
+                    if (profile.isClosestAvailable && _showClosestNotice) ...[
+                      AnimatedOpacity(
+                        opacity: _showClosestNotice ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 350),
+                        child: Container(
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
@@ -701,6 +627,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           ],
                         ),
                       ),
+                    ),
                     ],
 
                     // 1. Compatibility Profile Card
