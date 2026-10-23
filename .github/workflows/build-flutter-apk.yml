@@ -63,12 +63,22 @@ jobs:
               echo "keyPassword=$KEYSTORE_PASSWORD" >> android/key.properties
               echo "Verified release keystore using KEYSTORE_PASSWORD as keyPassword."
             else
-              echo "Warning: Keystore secret or password mismatch. Falling back to default signing."
-              rm -f android/app/upload.keystore android/key.properties
+              echo "::error::Keystore password/alias mismatch. Refusing to build with a debug key (Play Console would reject it)."
+              echo "Check ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD secrets."
+              rm -f android/app/upload.keystore android/key.properties /tmp/verify.p12
+              exit 1
             fi
             rm -f /tmp/verify.p12
+            EXPECTED_SHA1="8D:AE:D2:FA:5C:FB:67:7C:45:13:D8:07:22:D9:EB:1F:B7:93:92:05"
+            ACTUAL_SHA1=$(keytool -list -v -keystore android/app/upload.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" | grep -m1 'SHA1:' | awk '{print $2}')
+            if [ "$ACTUAL_SHA1" != "$EXPECTED_SHA1" ]; then
+              echo "::error::Keystore SHA1 $ACTUAL_SHA1 does not match the Play Console upload key $EXPECTED_SHA1."
+              exit 1
+            fi
+            echo "Upload key fingerprint matches Play Console ($EXPECTED_SHA1)."
           else
-            echo "No keystore secrets configured. Using default signing."
+            echo "::error::Release keystore secrets are not configured. Refusing to build an unsigned/debug-signed release."
+            exit 1
           fi
         working-directory: mobile-flutter
 
@@ -140,12 +150,22 @@ jobs:
               echo "keyPassword=$KEYSTORE_PASSWORD" >> android/key.properties
               echo "Verified release keystore using KEYSTORE_PASSWORD as keyPassword."
             else
-              echo "Warning: Keystore secret or password mismatch. Falling back to default signing."
-              rm -f android/app/upload.keystore android/key.properties
+              echo "::error::Keystore password/alias mismatch. Refusing to build with a debug key (Play Console would reject it)."
+              echo "Check ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD secrets."
+              rm -f android/app/upload.keystore android/key.properties /tmp/verify.p12
+              exit 1
             fi
             rm -f /tmp/verify.p12
+            EXPECTED_SHA1="8D:AE:D2:FA:5C:FB:67:7C:45:13:D8:07:22:D9:EB:1F:B7:93:92:05"
+            ACTUAL_SHA1=$(keytool -list -v -keystore android/app/upload.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" | grep -m1 'SHA1:' | awk '{print $2}')
+            if [ "$ACTUAL_SHA1" != "$EXPECTED_SHA1" ]; then
+              echo "::error::Keystore SHA1 $ACTUAL_SHA1 does not match the Play Console upload key $EXPECTED_SHA1."
+              exit 1
+            fi
+            echo "Upload key fingerprint matches Play Console ($EXPECTED_SHA1)."
           else
-            echo "No keystore secrets configured. Using default signing."
+            echo "::error::Release keystore secrets are not configured. Refusing to build an unsigned/debug-signed release."
+            exit 1
           fi
         working-directory: mobile-flutter
 
