@@ -47,39 +47,67 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ]; then
-            echo "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > android/app/upload.keystore || true
-            rm -f /tmp/verify.p12
-            if keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$KEYSTORE_PASSWORD" -srcalias "$KEY_ALIAS" -srckeypass "$KEY_PASSWORD" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt >/dev/null 2>&1; then
-              echo "storeFile=upload.keystore" > android/key.properties
-              echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
-              echo "keyAlias=$KEY_ALIAS" >> android/key.properties
-              echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
-              echo "Verified release keystore with KEY_PASSWORD."
-            elif keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$KEYSTORE_PASSWORD" -srcalias "$KEY_ALIAS" -srckeypass "$KEYSTORE_PASSWORD" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt >/dev/null 2>&1; then
-              echo "storeFile=upload.keystore" > android/key.properties
-              echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
-              echo "keyAlias=$KEY_ALIAS" >> android/key.properties
-              echo "keyPassword=$KEYSTORE_PASSWORD" >> android/key.properties
-              echo "Verified release keystore using KEYSTORE_PASSWORD as keyPassword."
-            else
-              echo "::error::Keystore password/alias mismatch. Refusing to build with a debug key (Play Console would reject it)."
-              echo "Check ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD secrets."
-              rm -f android/app/upload.keystore android/key.properties /tmp/verify.p12
-              exit 1
-            fi
-            rm -f /tmp/verify.p12
-            EXPECTED_SHA1="8D:AE:D2:FA:5C:FB:67:7C:45:13:D8:07:22:D9:EB:1F:B7:93:92:05"
-            ACTUAL_SHA1=$(keytool -list -v -keystore android/app/upload.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" | grep -m1 'SHA1:' | awk '{print $2}')
-            if [ "$ACTUAL_SHA1" != "$EXPECTED_SHA1" ]; then
-              echo "::error::Keystore SHA1 $ACTUAL_SHA1 does not match the Play Console upload key $EXPECTED_SHA1."
-              exit 1
-            fi
-            echo "Upload key fingerprint matches Play Console ($EXPECTED_SHA1)."
-          else
+          set +e
+          # Strip any accidental spaces / newlines / CRs pasted into the secrets
+          B64=$(printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]')
+          SP=$(printf '%s' "$KEYSTORE_PASSWORD" | tr -d '[:space:]')
+          KA=$(printf '%s' "$KEY_ALIAS" | tr -d '[:space:]')
+          KP=$(printf '%s' "$KEY_PASSWORD" | tr -d '[:space:]')
+          [ -z "$KP" ] && KP="$SP"
+
+          echo "Secret diagnostics (lengths only, values hidden):"
+          echo "  ANDROID_KEYSTORE_BASE64 length: ${#B64} (expected 2928)"
+          echo "  ANDROID_KEYSTORE_PASSWORD length: ${#SP} (expected 32)"
+          echo "  ANDROID_KEY_ALIAS length: ${#KA} (expected 32)"
+          echo "  ANDROID_KEY_PASSWORD length: ${#KP} (expected 32)"
+
+          if [ -z "$B64" ] || [ -z "$SP" ] || [ -z "$KA" ]; then
             echo "::error::Release keystore secrets are not configured. Refusing to build an unsigned/debug-signed release."
             exit 1
           fi
+
+          printf '%s' "$B64" | base64 --decode > android/app/upload.keystore
+          echo "  Decoded keystore size: $(stat -c%s android/app/upload.keystore) bytes (expected 2195)"
+
+          if ! keytool -list -keystore android/app/upload.keystore -storepass "$SP" > /tmp/kt_store.log 2>&1; then
+            echo "::error::ANDROID_KEYSTORE_PASSWORD does not open the keystore (or ANDROID_KEYSTORE_BASE64 is not the right file)."
+            sed 's/^/  keytool: /' /tmp/kt_store.log | head -5
+            exit 1
+          fi
+          echo "  Keystore password OK. Aliases in keystore:"
+          grep -i 'PrivateKeyEntry' /tmp/kt_store.log | sed 's/^/    /'
+
+          if ! keytool -list -keystore android/app/upload.keystore -storepass "$SP" -alias "$KA" > /dev/null 2>&1; then
+            echo "::error::ANDROID_KEY_ALIAS '$KA' was not found in the keystore."
+            exit 1
+          fi
+
+          rm -f /tmp/verify.p12
+          if keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$SP" -srcalias "$KA" -srckeypass "$KP" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt > /tmp/kt_key.log 2>&1; then
+            :
+          elif keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$SP" -srcalias "$KA" -srckeypass "$SP" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt > /tmp/kt_key.log 2>&1; then
+            KP="$SP"
+          else
+            echo "::error::ANDROID_KEY_PASSWORD does not unlock key '$KA'."
+            sed 's/^/  keytool: /' /tmp/kt_key.log | head -5
+            exit 1
+          fi
+          rm -f /tmp/verify.p12
+
+          EXPECTED_SHA1="8D:AE:D2:FA:5C:FB:67:7C:45:13:D8:07:22:D9:EB:1F:B7:93:92:05"
+          ACTUAL_SHA1=$(keytool -list -v -keystore android/app/upload.keystore -storepass "$SP" -alias "$KA" | grep -m1 'SHA1:' | awk '{print $2}')
+          if [ "$ACTUAL_SHA1" != "$EXPECTED_SHA1" ]; then
+            echo "::error::Keystore SHA1 $ACTUAL_SHA1 does not match the Play Console upload key $EXPECTED_SHA1."
+            exit 1
+          fi
+
+          {
+            echo "storeFile=upload.keystore"
+            echo "storePassword=$SP"
+            echo "keyAlias=$KA"
+            echo "keyPassword=$KP"
+          } > android/key.properties
+          echo "Upload key fingerprint matches Play Console ($EXPECTED_SHA1)."
         working-directory: mobile-flutter
 
       - name: Build Android App Bundle (AAB) for Play Store
@@ -134,39 +162,67 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ]; then
-            echo "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]' | base64 --decode > android/app/upload.keystore || true
-            rm -f /tmp/verify.p12
-            if keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$KEYSTORE_PASSWORD" -srcalias "$KEY_ALIAS" -srckeypass "$KEY_PASSWORD" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt >/dev/null 2>&1; then
-              echo "storeFile=upload.keystore" > android/key.properties
-              echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
-              echo "keyAlias=$KEY_ALIAS" >> android/key.properties
-              echo "keyPassword=$KEY_PASSWORD" >> android/key.properties
-              echo "Verified release keystore with KEY_PASSWORD."
-            elif keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$KEYSTORE_PASSWORD" -srcalias "$KEY_ALIAS" -srckeypass "$KEYSTORE_PASSWORD" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt >/dev/null 2>&1; then
-              echo "storeFile=upload.keystore" > android/key.properties
-              echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
-              echo "keyAlias=$KEY_ALIAS" >> android/key.properties
-              echo "keyPassword=$KEYSTORE_PASSWORD" >> android/key.properties
-              echo "Verified release keystore using KEYSTORE_PASSWORD as keyPassword."
-            else
-              echo "::error::Keystore password/alias mismatch. Refusing to build with a debug key (Play Console would reject it)."
-              echo "Check ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD secrets."
-              rm -f android/app/upload.keystore android/key.properties /tmp/verify.p12
-              exit 1
-            fi
-            rm -f /tmp/verify.p12
-            EXPECTED_SHA1="8D:AE:D2:FA:5C:FB:67:7C:45:13:D8:07:22:D9:EB:1F:B7:93:92:05"
-            ACTUAL_SHA1=$(keytool -list -v -keystore android/app/upload.keystore -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" | grep -m1 'SHA1:' | awk '{print $2}')
-            if [ "$ACTUAL_SHA1" != "$EXPECTED_SHA1" ]; then
-              echo "::error::Keystore SHA1 $ACTUAL_SHA1 does not match the Play Console upload key $EXPECTED_SHA1."
-              exit 1
-            fi
-            echo "Upload key fingerprint matches Play Console ($EXPECTED_SHA1)."
-          else
+          set +e
+          # Strip any accidental spaces / newlines / CRs pasted into the secrets
+          B64=$(printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '[:space:]')
+          SP=$(printf '%s' "$KEYSTORE_PASSWORD" | tr -d '[:space:]')
+          KA=$(printf '%s' "$KEY_ALIAS" | tr -d '[:space:]')
+          KP=$(printf '%s' "$KEY_PASSWORD" | tr -d '[:space:]')
+          [ -z "$KP" ] && KP="$SP"
+
+          echo "Secret diagnostics (lengths only, values hidden):"
+          echo "  ANDROID_KEYSTORE_BASE64 length: ${#B64} (expected 2928)"
+          echo "  ANDROID_KEYSTORE_PASSWORD length: ${#SP} (expected 32)"
+          echo "  ANDROID_KEY_ALIAS length: ${#KA} (expected 32)"
+          echo "  ANDROID_KEY_PASSWORD length: ${#KP} (expected 32)"
+
+          if [ -z "$B64" ] || [ -z "$SP" ] || [ -z "$KA" ]; then
             echo "::error::Release keystore secrets are not configured. Refusing to build an unsigned/debug-signed release."
             exit 1
           fi
+
+          printf '%s' "$B64" | base64 --decode > android/app/upload.keystore
+          echo "  Decoded keystore size: $(stat -c%s android/app/upload.keystore) bytes (expected 2195)"
+
+          if ! keytool -list -keystore android/app/upload.keystore -storepass "$SP" > /tmp/kt_store.log 2>&1; then
+            echo "::error::ANDROID_KEYSTORE_PASSWORD does not open the keystore (or ANDROID_KEYSTORE_BASE64 is not the right file)."
+            sed 's/^/  keytool: /' /tmp/kt_store.log | head -5
+            exit 1
+          fi
+          echo "  Keystore password OK. Aliases in keystore:"
+          grep -i 'PrivateKeyEntry' /tmp/kt_store.log | sed 's/^/    /'
+
+          if ! keytool -list -keystore android/app/upload.keystore -storepass "$SP" -alias "$KA" > /dev/null 2>&1; then
+            echo "::error::ANDROID_KEY_ALIAS '$KA' was not found in the keystore."
+            exit 1
+          fi
+
+          rm -f /tmp/verify.p12
+          if keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$SP" -srcalias "$KA" -srckeypass "$KP" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt > /tmp/kt_key.log 2>&1; then
+            :
+          elif keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$SP" -srcalias "$KA" -srckeypass "$SP" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt > /tmp/kt_key.log 2>&1; then
+            KP="$SP"
+          else
+            echo "::error::ANDROID_KEY_PASSWORD does not unlock key '$KA'."
+            sed 's/^/  keytool: /' /tmp/kt_key.log | head -5
+            exit 1
+          fi
+          rm -f /tmp/verify.p12
+
+          EXPECTED_SHA1="8D:AE:D2:FA:5C:FB:67:7C:45:13:D8:07:22:D9:EB:1F:B7:93:92:05"
+          ACTUAL_SHA1=$(keytool -list -v -keystore android/app/upload.keystore -storepass "$SP" -alias "$KA" | grep -m1 'SHA1:' | awk '{print $2}')
+          if [ "$ACTUAL_SHA1" != "$EXPECTED_SHA1" ]; then
+            echo "::error::Keystore SHA1 $ACTUAL_SHA1 does not match the Play Console upload key $EXPECTED_SHA1."
+            exit 1
+          fi
+
+          {
+            echo "storeFile=upload.keystore"
+            echo "storePassword=$SP"
+            echo "keyAlias=$KA"
+            echo "keyPassword=$KP"
+          } > android/key.properties
+          echo "Upload key fingerprint matches Play Console ($EXPECTED_SHA1)."
         working-directory: mobile-flutter
 
       - name: Build Release APK
