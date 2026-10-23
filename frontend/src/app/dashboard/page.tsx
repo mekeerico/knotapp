@@ -1589,36 +1589,7 @@ export default function Dashboard() {
                     <p className="text-gray-200 leading-relaxed font-serif text-lg italic">"{activeMatch.bio}"</p>
                   </div>
 
-                  {/* ══ VERIFIED PHOTO GALLERY ══ */}
-                  {activeMatch.imageUrls && activeMatch.imageUrls.length > 0 && (
-                    <div className="space-y-4 mt-8">
-                      <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-                          <Camera className="w-4 h-4 text-[#D4AF37]" /> Verified Photo Gallery ({activeMatch.imageUrls.length} Photos)
-                        </h3>
-                        <span className="text-xs text-[#D4AF37] font-semibold">Click any photo to preview</span>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                        {activeMatch.imageUrls.map((url: string, idx: number) => (
-                          <div 
-                            key={idx}
-                            onClick={() => setActiveMatchImageIndex(idx)}
-                            className={`group relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer border-2 transition-all ${idx === activeMatchImageIndex ? 'border-[#D4AF37] shadow-lg shadow-[#D4AF37]/30 scale-[1.02]' : 'border-white/10 hover:border-[#D4AF37]/50'}`}
-                          >
-                            <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm text-[10px] font-bold text-white">
-                              {idx === 0 ? 'Primary' : `Photo ${idx + 1}`}
-                            </div>
-                            {idx === activeMatchImageIndex && (
-                              <div className="absolute bottom-2 right-2 px-2 py-0.5 rounded-md bg-[#D4AF37] text-black text-[10px] font-black">
-                                VIEWING
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+
 
                   {/* ══ IDENTITY & ROOTS ══ */}
                   <div className="space-y-4 mt-8">
