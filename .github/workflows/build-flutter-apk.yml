@@ -69,18 +69,50 @@ jobs:
           printf '%s' "$B64" | base64 --decode > android/app/upload.keystore
           echo "  Decoded keystore size: $(stat -c%s android/app/upload.keystore) bytes (expected 2195)"
 
-          if ! keytool -list -keystore android/app/upload.keystore -storepass "$SP" > /tmp/kt_store.log 2>&1; then
-            echo "::error::ANDROID_KEYSTORE_PASSWORD does not open the keystore (or ANDROID_KEYSTORE_BASE64 is not the right file)."
-            sed 's/^/  keytool: /' /tmp/kt_store.log | head -5
+          EXPECTED_FILE_SHA="a0d7687698e6f34ad396a9c4556c7cdfa21d814cd4850347096b162d40a023d8"
+          ACTUAL_FILE_SHA=$(sha256sum android/app/upload.keystore | awk '{print $1}')
+          if [ "$ACTUAL_FILE_SHA" = "$EXPECTED_FILE_SHA" ]; then
+            echo "  ANDROID_KEYSTORE_BASE64: OK (correct keystore file)"
+          else
+            echo "::error::ANDROID_KEYSTORE_BASE64 decodes to a different file than the Play Store keystore."
             exit 1
           fi
-          echo "  Keystore password OK. Aliases in keystore:"
-          grep -i 'PrivateKeyEntry' /tmp/kt_store.log | sed 's/^/    /'
 
-          if ! keytool -list -keystore android/app/upload.keystore -storepass "$SP" -alias "$KA" > /dev/null 2>&1; then
-            echo "::error::ANDROID_KEY_ALIAS '$KA' was not found in the keystore."
+          # The three 32-char secrets may have been pasted into the wrong boxes. Try every arrangement.
+          names=(ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD)
+          vals=("$SP" "$KA" "$KP")
+          FOUND=""
+          for i in 0 1 2; do
+            if keytool -list -keystore android/app/upload.keystore -storepass "${vals[$i]}" > /tmp/kt_store.log 2>&1; then
+              SP="${vals[$i]}"
+              echo "  Keystore password found in secret: ${names[$i]}"
+              [ "$i" != "0" ] && echo "::warning::The keystore password is stored in ${names[$i]} instead of ANDROID_KEYSTORE_PASSWORD."
+              FOUND=1
+              break
+            fi
+          done
+          if [ -z "$FOUND" ]; then
+            echo "::error::None of ANDROID_KEYSTORE_PASSWORD / ANDROID_KEY_ALIAS / ANDROID_KEY_PASSWORD opens the keystore. Re-paste the Keystore password (99cc9e3c...)."
+            sed 's/^/  keytool: /' /tmp/kt_store.log | head -3
             exit 1
           fi
+
+          # Use the real alias from the keystore (there is only one key entry)
+          REAL_ALIAS=$(keytool -list -keystore android/app/upload.keystore -storepass "$SP" 2>/dev/null | grep -i 'PrivateKeyEntry' | head -1 | cut -d',' -f1 | tr -d '[:space:]')
+          if [ -n "$REAL_ALIAS" ] && [ "$REAL_ALIAS" != "$KA" ]; then
+            echo "::warning::ANDROID_KEY_ALIAS does not match the keystore; using the alias found inside the keystore instead."
+          fi
+          [ -n "$REAL_ALIAS" ] && KA="$REAL_ALIAS"
+          echo "  Using key alias: $KA"
+
+          # Find the key password among the three values too
+          for v in "${vals[@]}"; do
+            rm -f /tmp/verify.p12
+            if keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$SP" -srcalias "$KA" -srckeypass "$v" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt > /dev/null 2>&1; then
+              KP="$v"
+              break
+            fi
+          done
 
           rm -f /tmp/verify.p12
           if keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$SP" -srcalias "$KA" -srckeypass "$KP" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt > /tmp/kt_key.log 2>&1; then
@@ -184,18 +216,50 @@ jobs:
           printf '%s' "$B64" | base64 --decode > android/app/upload.keystore
           echo "  Decoded keystore size: $(stat -c%s android/app/upload.keystore) bytes (expected 2195)"
 
-          if ! keytool -list -keystore android/app/upload.keystore -storepass "$SP" > /tmp/kt_store.log 2>&1; then
-            echo "::error::ANDROID_KEYSTORE_PASSWORD does not open the keystore (or ANDROID_KEYSTORE_BASE64 is not the right file)."
-            sed 's/^/  keytool: /' /tmp/kt_store.log | head -5
+          EXPECTED_FILE_SHA="a0d7687698e6f34ad396a9c4556c7cdfa21d814cd4850347096b162d40a023d8"
+          ACTUAL_FILE_SHA=$(sha256sum android/app/upload.keystore | awk '{print $1}')
+          if [ "$ACTUAL_FILE_SHA" = "$EXPECTED_FILE_SHA" ]; then
+            echo "  ANDROID_KEYSTORE_BASE64: OK (correct keystore file)"
+          else
+            echo "::error::ANDROID_KEYSTORE_BASE64 decodes to a different file than the Play Store keystore."
             exit 1
           fi
-          echo "  Keystore password OK. Aliases in keystore:"
-          grep -i 'PrivateKeyEntry' /tmp/kt_store.log | sed 's/^/    /'
 
-          if ! keytool -list -keystore android/app/upload.keystore -storepass "$SP" -alias "$KA" > /dev/null 2>&1; then
-            echo "::error::ANDROID_KEY_ALIAS '$KA' was not found in the keystore."
+          # The three 32-char secrets may have been pasted into the wrong boxes. Try every arrangement.
+          names=(ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD)
+          vals=("$SP" "$KA" "$KP")
+          FOUND=""
+          for i in 0 1 2; do
+            if keytool -list -keystore android/app/upload.keystore -storepass "${vals[$i]}" > /tmp/kt_store.log 2>&1; then
+              SP="${vals[$i]}"
+              echo "  Keystore password found in secret: ${names[$i]}"
+              [ "$i" != "0" ] && echo "::warning::The keystore password is stored in ${names[$i]} instead of ANDROID_KEYSTORE_PASSWORD."
+              FOUND=1
+              break
+            fi
+          done
+          if [ -z "$FOUND" ]; then
+            echo "::error::None of ANDROID_KEYSTORE_PASSWORD / ANDROID_KEY_ALIAS / ANDROID_KEY_PASSWORD opens the keystore. Re-paste the Keystore password (99cc9e3c...)."
+            sed 's/^/  keytool: /' /tmp/kt_store.log | head -3
             exit 1
           fi
+
+          # Use the real alias from the keystore (there is only one key entry)
+          REAL_ALIAS=$(keytool -list -keystore android/app/upload.keystore -storepass "$SP" 2>/dev/null | grep -i 'PrivateKeyEntry' | head -1 | cut -d',' -f1 | tr -d '[:space:]')
+          if [ -n "$REAL_ALIAS" ] && [ "$REAL_ALIAS" != "$KA" ]; then
+            echo "::warning::ANDROID_KEY_ALIAS does not match the keystore; using the alias found inside the keystore instead."
+          fi
+          [ -n "$REAL_ALIAS" ] && KA="$REAL_ALIAS"
+          echo "  Using key alias: $KA"
+
+          # Find the key password among the three values too
+          for v in "${vals[@]}"; do
+            rm -f /tmp/verify.p12
+            if keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$SP" -srcalias "$KA" -srckeypass "$v" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt > /dev/null 2>&1; then
+              KP="$v"
+              break
+            fi
+          done
 
           rm -f /tmp/verify.p12
           if keytool -importkeystore -srckeystore android/app/upload.keystore -srcstorepass "$SP" -srcalias "$KA" -srckeypass "$KP" -destkeystore /tmp/verify.p12 -deststoretype PKCS12 -deststorepass verify123 -destkeypass verify123 -noprompt > /tmp/kt_key.log 2>&1; then
