@@ -1531,12 +1531,6 @@ export default function Dashboard() {
                           >
                             <ChevronRight className="w-5 h-5" />
                           </button>
-                          {/* Segment lines at the top of candidate photo */}
-                          <div className="absolute top-4 left-0 right-0 flex justify-center gap-2 px-8 z-10">
-                            {candidatePhotos.map((_: any, i: number) => (
-                              <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i === activeMatchImageIndex ? 'bg-[#D4AF37] shadow-lg shadow-[#D4AF37]/50' : 'bg-white/30'}`} />
-                            ))}
-                          </div>
                           {/* Number of photos badge at top right */}
                           <div className="absolute top-8 right-6 px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-[#D4AF37]/60 text-xs font-bold text-[#D4AF37] flex items-center gap-1.5 z-10">
                             <Camera className="w-3.5 h-3.5" />

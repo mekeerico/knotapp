@@ -385,47 +385,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         ),
                     ],
 
-                    // Top Segmented Story Indicators (1 to 4 bars)
-                    if (photos.length > 1)
-                      Positioned(
-                        top: MediaQuery.of(context).padding.top + 10,
-                        left: 64,
-                        right: 64,
-                        child: Row(
-                          children: List.generate(photos.length, (idx) {
-                            final isActive = idx == _selectedPhotoIndex;
-                            return Expanded(
-                              child: GestureDetector(
-                                onTap: () {
-                                  _photoPageController.animateToPage(
-                                    idx,
-                                    duration: const Duration(milliseconds: 240),
-                                    curve: Curves.easeInOut,
-                                  );
-                                },
-                                child: Container(
-                                  height: 3.5,
-                                  margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(2),
-                                    color: isActive
-                                        ? AppColors.champagneGold
-                                        : Colors.white.withValues(alpha: 0.35),
-                                    boxShadow: isActive
-                                        ? [
-                                            BoxShadow(
-                                              color: AppColors.champagneGold.withValues(alpha: 0.7),
-                                              blurRadius: 4,
-                                            )
-                                          ]
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
 
                     // Top Right Match Score Badge (Moved to top right to give full width to candidate name)
                     Positioned(
