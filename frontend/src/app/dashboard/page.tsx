@@ -724,6 +724,14 @@ export default function Dashboard() {
         amount: amount * 100, // Paystack requires amount in kobo/cents
         currency: currency,
         ref: "KNOT-WEB-" + Date.now(),
+        metadata: {
+          user_id: userProfile?.id,
+          tier: tierName,
+          custom_fields: [
+            { display_name: "User ID", variable_name: "user_id", value: userProfile?.id },
+            { display_name: "Subscription Tier", variable_name: "tier", value: tierName },
+          ],
+        },
         callback: function(response: any) {
           console.log("Paystack payment successful! Reference:", response.reference);
           // Run async logic inside a standard function to prevent Paystack type-check errors
@@ -738,12 +746,22 @@ export default function Dashboard() {
                   reference: response.reference,
                   userId: userProfile?.id,
                   months: 1,
+                  tier: tierName,
                 }),
               });
               const verifyData = await verifyRes.json();
               if (verifyData && verifyData.success) {
                 setIsPremium(true);
-                setUserProfile({ ...userProfile, subscriptionTier: tierName });
+                const updated = {
+                  ...userProfile,
+                  isPremium: true,
+                  subscriptionTier: tierName,
+                  subscriptionDate: new Date().toISOString(),
+                };
+                setUserProfile(updated);
+                try {
+                  localStorage.setItem("knot_user", JSON.stringify(updated));
+                } catch (_) {}
                 setShowSubscriptionModal(false);
                 alert(`🌟 ${tierName} Registry Activated!\n\nWelcome to ${tierName} Alignment. You now have expanded access to matches, advanced compatibility analysis, and our 24/7 AI Relationship Coach.`);
               } else {

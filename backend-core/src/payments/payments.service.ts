@@ -48,7 +48,7 @@ export class PaymentsService {
     }
   }
 
-  async verifyTransaction(reference: string, userId: string, months: number) {
+  async verifyTransaction(reference: string, userId: string, months: number, tier?: string) {
     if (!this.paystackSecretKey) {
       throw new InternalServerErrorException('Paystack configuration key is missing.');
     }
@@ -68,14 +68,27 @@ export class PaymentsService {
         const amount = paymentData.amount / 100;
         const currency = paymentData.currency;
 
-        // Toggle user premium status in the database
+        const effectiveTier =
+          tier ||
+          paymentData.metadata?.tier ||
+          paymentData.metadata?.subscriptionTier ||
+          paymentData.metadata?.custom_fields?.find((f: any) => f.variable_name === 'tier')?.value ||
+          'Premium';
+
+        // Toggle user premium status and persist subscription details in the database
         await this.prisma.user.update({
           where: { id: userId },
-          data: { isPremium: true },
+          data: {
+            isPremium: true,
+            subscriptionTier: effectiveTier,
+            subscriptionAmount: amount,
+            subscriptionPeriod: months > 1 ? 'annual' : 'monthly',
+            subscriptionDate: new Date(),
+          },
         });
 
-        console.log(`User ${userId} successfully upgraded to Premium via verification. Reference: ${reference}, Amount: ${amount} ${currency}`);
-        return { success: true };
+        console.log(`User ${userId} successfully upgraded to ${effectiveTier} via verification. Reference: ${reference}, Amount: ${amount} ${currency}`);
+        return { success: true, tier: effectiveTier };
       } else {
         throw new BadRequestException('Paystack payment verification failed.');
       }
@@ -107,19 +120,26 @@ export class PaymentsService {
     if (body.event === 'charge.success') {
       const { metadata, amount: rawAmount, currency, reference } = body.data;
       
-      // Paystack metadata custom variables can carry user_id
+      // Paystack metadata custom variables can carry user_id and tier
       const userId = metadata?.user_id || metadata?.userId || (metadata?.custom_fields && metadata.custom_fields.find((f: any) => f.variable_name === 'user_id' || f.variable_name === 'userId')?.value);
+      const tier = metadata?.tier || metadata?.subscriptionTier || (metadata?.custom_fields && metadata.custom_fields.find((f: any) => f.variable_name === 'tier')?.value) || 'Premium';
       const amount = rawAmount / 100;
 
       if (userId) {
-        console.log(`Webhook: Successful charge for user ${userId}. Amount: ${amount} ${currency}. Reference: ${reference}`);
+        console.log(`Webhook: Successful charge for user ${userId}. Amount: ${amount} ${currency}. Reference: ${reference}, Tier: ${tier}`);
         
         await this.prisma.user.update({
           where: { id: userId },
-          data: { isPremium: true },
+          data: {
+            isPremium: true,
+            subscriptionTier: tier,
+            subscriptionAmount: amount,
+            subscriptionPeriod: 'monthly',
+            subscriptionDate: new Date(),
+          },
         });
         
-        console.log(`User ${userId} successfully activated as Premium via webhook.`);
+        console.log(`User ${userId} successfully activated as ${tier} via webhook.`);
       } else {
         console.warn('Webhook: Charge successful but no userId found in transaction metadata');
       }
@@ -160,7 +180,10 @@ export class PaymentsService {
         } else if (type === 'EXPIRATION') {
           await this.prisma.user.update({
             where: { id: userId },
-            data: { isPremium: false },
+            data: {
+              isPremium: false,
+              subscriptionTier: 'Essential',
+            },
           });
           console.log(`[RevenueCat Webhook] User ${userId} subscription expired`);
         }

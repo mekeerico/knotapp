@@ -21,12 +21,13 @@ export class PaymentsController {
     @Body('reference') reference: string,
     @Body('userId') userId: string,
     @Body('months') months: number,
+    @Body('tier') tier?: string,
   ) {
-    return this.usersVerify(reference, userId, months || 1);
+    return this.usersVerify(reference, userId, months || 1, tier);
   }
 
-  private async usersVerify(reference: string, userId: string, months: number) {
-    return this.paymentsService.verifyTransaction(reference, userId, months);
+  private async usersVerify(reference: string, userId: string, months: number, tier?: string) {
+    return this.paymentsService.verifyTransaction(reference, userId, months, tier);
   }
 
   @Post('webhook')
