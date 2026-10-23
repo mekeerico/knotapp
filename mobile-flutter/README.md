@@ -19,3 +19,5 @@ samples, guidance on mobile development, and a full API reference.
 <!-- Release trigger 1.0.3+4 -->
 
 <!-- Verified Play Store Signing Trigger -->
+
+<!-- Re-run after keystore password re-paste -->
