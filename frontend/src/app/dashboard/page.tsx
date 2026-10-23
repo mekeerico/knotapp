@@ -1260,9 +1260,9 @@ export default function Dashboard() {
               <div className="md:col-span-7 flex flex-col items-center space-y-5">
                 <div className="w-full glass-card rounded-[32px] overflow-hidden border border-[#E27D8D]/30 p-3 sm:p-4 shadow-2xl">
                   <div className="relative aspect-[4/5] rounded-[24px] overflow-hidden bg-gray-900 flex items-center justify-center group">
-                    {activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl ? (
+                    {activeMatch.photoUrl || (activeMatch.imageUrls && activeMatch.imageUrls[0]) ? (
                       <img 
-                        src={activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl} 
+                        src={activeMatch.photoUrl || activeMatch.imageUrls[0]} 
                         alt={activeMatch.firstName} 
                         className="w-full h-full object-cover brightness-95 transition-all duration-300" 
                       />
@@ -1270,45 +1270,8 @@ export default function Dashboard() {
                       <User className="w-24 h-24 text-gray-700" />
                     )}
 
-                    {/* Multi-photo indicators if more than 1 image */}
-                    {activeMatch.imageUrls?.length > 1 && (
-                      <>
-                        <button 
-                          type="button"
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setActiveMatchImageIndex(prev => prev > 0 ? prev - 1 : activeMatch.imageUrls.length - 1); 
-                          }} 
-                          className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/80 transition-all z-20"
-                          title="Previous photo"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            setActiveMatchImageIndex(prev => prev < activeMatch.imageUrls.length - 1 ? prev + 1 : 0); 
-                          }} 
-                          className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/50 text-white hover:bg-black/80 transition-all z-20"
-                          title="Next photo"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                        <div className="absolute top-3 left-0 right-0 flex justify-center gap-1.5 px-5 z-20">
-                          {activeMatch.imageUrls.map((_: any, i: number) => (
-                            <div 
-                              key={i} 
-                              onClick={(e) => { e.stopPropagation(); setActiveMatchImageIndex(i); }}
-                              className={`h-1 flex-1 rounded-full cursor-pointer transition-all ${i === activeMatchImageIndex ? 'bg-[#E27D8D] shadow-md shadow-[#E27D8D]/60' : 'bg-white/35'}`} 
-                            />
-                          ))}
-                        </div>
-                      </>
-                    )}
-
                     {/* Top Compatibility Pill & Gold Verified Badge */}
-                    <div className={`absolute ${activeMatch.imageUrls?.length > 1 ? 'top-6' : 'top-4'} left-4 right-4 flex items-center justify-between z-20`}>
+                    <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-20">
                       <div className="px-3 py-1.5 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#E27D8D] shadow-[0_0_10px_rgba(212,175,55,0.25)] flex items-center gap-1.5">
                         <Heart className="w-3.5 h-3.5 text-[#E27D8D] fill-[#E27D8D]" />
                         <span className="text-[11px] font-bold tracking-wider text-[#E27D8D]">
@@ -1318,23 +1281,15 @@ export default function Dashboard() {
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
-                        {activeMatch.imageUrls?.length > 1 && (
-                          <span className="px-2.5 py-1 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#E27D8D]/40 text-[10px] font-bold text-[#E27D8D]">
-                            {activeMatchImageIndex + 1}/{activeMatch.imageUrls.length}
-                          </span>
-                        )}
-                        <div className="px-2.5 py-1 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#E27D8D]/50 flex items-center gap-1.5">
-                          <span className="w-4 h-4 rounded-full bg-gradient-to-br from-[#F3E5AB] via-[#E27D8D] to-[#AA7C11] flex items-center justify-center text-black text-[10px] font-black">
-                            ✓
-                          </span>
-                          <span className="text-[10px] font-bold tracking-wider text-[#E27D8D] border border-[#E27D8D]/40 rounded px-1.5 py-0.5">
-                            GOLD
-                          </span>
-                        </div>
+                      <div className="px-2.5 py-1 rounded-full bg-[#0A0D14]/80 backdrop-blur-md border border-[#E27D8D]/50 flex items-center gap-1.5">
+                        <span className="w-4 h-4 rounded-full bg-gradient-to-br from-[#F3E5AB] via-[#E27D8D] to-[#AA7C11] flex items-center justify-center text-black text-[10px] font-black">
+                          ✓
+                        </span>
+                        <span className="text-[10px] font-bold tracking-wider text-[#E27D8D] border border-[#E27D8D]/40 rounded px-1.5 py-0.5">
+                          GOLD
+                        </span>
                       </div>
                     </div>
-
                     {/* Clean Unclustered Bottom Info Overlay (No Archetype or Timeline chips on card) */}
                     <div 
                       onClick={() => setActiveTab("matchProfile")}
@@ -1367,36 +1322,28 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Mobile-Matched Circular Action Buttons (X, Star, and Love) */}
-                <div className="flex items-center justify-center gap-6 pt-1 pb-2">
-                  {/* Pass Button (X) */}
+                {/* Two Action Buttons: Pass & Connect (Matches Flutter mobile design) */}
+                <div className="w-full grid grid-cols-2 gap-4 pt-1 pb-1">
+                  {/* Pass Button */}
                   <button
                     type="button"
                     onClick={handlePass}
                     title="Pass Candidate"
-                    className="w-14 h-14 rounded-full bg-[#121721] border-[1.5px] border-gray-500/40 shadow-[0_4px_14px_rgba(107,114,128,0.25)] flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-300 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    className="py-3.5 px-6 rounded-full bg-[#191E2E] border border-gray-600/50 shadow-lg shadow-black/40 flex items-center justify-center gap-2 text-white font-bold text-sm hover:bg-[#23293D] hover:border-gray-400 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    <X className="w-6 h-6 stroke-[2.2]" />
+                    <X className="w-4 h-4 stroke-[2.5] text-gray-300" />
+                    <span>Pass</span>
                   </button>
 
-                  {/* View Compatibility & Full Profile Button (Star) */}
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("matchProfile")}
-                    title="View Psychological Compatibility & Vows"
-                    className="w-16 h-16 rounded-full bg-[#121721] border-[1.5px] border-[#E27D8D]/60 shadow-[0_4px_18px_rgba(212,175,55,0.3)] flex items-center justify-center text-[#E27D8D] hover:border-[#E27D8D] hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                  >
-                    <Star className="w-7 h-7 fill-[#E27D8D] text-[#E27D8D]" />
-                  </button>
-
-                  {/* Like & Connect Button (Love / Heart) */}
+                  {/* Connect Button */}
                   <button
                     type="button"
                     onClick={handleConnect}
-                    title="Connect & Initiate Marriage Conversation"
-                    className="w-14 h-14 rounded-full bg-[#121721] border-[1.5px] border-[#E27D8D]/50 shadow-[0_4px_16px_rgba(225,29,72,0.3)] flex items-center justify-center text-[#E27D8D] hover:border-[#E27D8D] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                    title="Connect & Initiate Matrimonial Journey"
+                    className="py-3.5 px-6 rounded-full bg-gradient-to-r from-[#E27D8D] via-[#B85FA8] to-[#9353D3] shadow-lg shadow-[#E27D8D]/30 flex items-center justify-center gap-2 text-white font-bold text-sm hover:opacity-95 hover:shadow-[#E27D8D]/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
                   >
-                    <Heart className="w-6 h-6 fill-[#E27D8D] text-[#E27D8D]" />
+                    <span>Connect</span>
+                    <Heart className="w-4 h-4 fill-white text-white" />
                   </button>
                 </div>
               </div>
@@ -1461,38 +1408,114 @@ export default function Dashboard() {
                 <ArrowLeft className="w-5 h-5" /> Back to Curated Match
               </button>
               
-              <div className="glass-card rounded-[32px] overflow-hidden border border-[#E27D8D]/30">
-                <div className="relative h-[400px] md:h-[500px] group">
-                  {activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl ? (
-                    <img src={activeMatch.imageUrls?.[activeMatchImageIndex] || activeMatch.photoUrl} alt={activeMatch.firstName} className="w-full h-full object-cover object-center transition-all duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                      <User className="w-16 h-16 text-gray-700" />
-                    </div>
-                  )}
-                  
-                  {activeMatch.imageUrls?.length > 1 && (
-                    <>
-                      <button onClick={() => setActiveMatchImageIndex(prev => prev > 0 ? prev - 1 : activeMatch.imageUrls.length - 1)} className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 z-20">
-                        <ChevronLeft className="w-5 h-5" />
-                      </button>
-                      <button onClick={() => setActiveMatchImageIndex(prev => prev < activeMatch.imageUrls.length - 1 ? prev + 1 : 0)} className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60 z-20">
-                        <ChevronRight className="w-5 h-5" />
-                      </button>
-                      <div className="absolute top-4 left-0 right-0 flex justify-center gap-2 px-8 z-10">
-                        {activeMatch.imageUrls.map((_: any, i: number) => (
-                          <div key={i} className={`h-1.5 flex-1 rounded-full ${i === activeMatchImageIndex ? 'bg-white shadow-lg shadow-white/50' : 'bg-white/30'}`} />
+              <div className="glass-card rounded-[32px] overflow-hidden border border-[#E27D8D]/30 shadow-2xl">
+                {/* 1. Horizontal Thumbnail Strip at top of Candidate's Picture */}
+                {(() => {
+                  const extraDemoPhotos = [
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800",
+                    "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800",
+                    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800",
+                    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=800",
+                  ];
+                  const candidatePhotos = [
+                    ...(activeMatch.imageUrls || []),
+                    ...(activeMatch.photoUrl && !(activeMatch.imageUrls || []).includes(activeMatch.photoUrl) ? [activeMatch.photoUrl] : [])
+                  ];
+                  if (candidatePhotos.length < 5) {
+                    candidatePhotos.push(...extraDemoPhotos.slice(0, 5 - candidatePhotos.length));
+                  }
+                  return candidatePhotos.length > 1 ? (
+                    <div className="px-5 py-3.5 bg-[#0B0E14]/95 backdrop-blur-md border-b border-white/10 flex items-center gap-3 overflow-x-auto scrollbar-none">
+                      <div className="flex items-center gap-1.5 text-xs text-[#E27D8D] font-bold shrink-0 mr-1">
+                        <Camera className="w-4 h-4" />
+                        <span>{candidatePhotos.length} Photos:</span>
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        {candidatePhotos.map((url: string, idx: number) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setActiveMatchImageIndex(idx)}
+                            className={`relative shrink-0 w-14 h-16 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
+                              idx === activeMatchImageIndex
+                                ? 'border-[#E27D8D] scale-105 shadow-lg shadow-[#E27D8D]/40 ring-2 ring-[#E27D8D]/50'
+                                : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/60'
+                            }`}
+                            title={`View Photo ${idx + 1}`}
+                          >
+                            <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                            <span className="absolute bottom-0.5 right-0.5 bg-black/85 text-[9px] text-white px-1 rounded font-bold">
+                              {idx + 1}
+                            </span>
+                          </button>
                         ))}
                       </div>
-                    </>
-                  )}
+                    </div>
+                  ) : null;
+                })()}
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none z-0" />
-                  <div className="absolute bottom-0 left-0 p-8 z-10">
-                    <h2 className="text-4xl font-black text-white">{activeMatch.firstName} {activeMatch.lastName}, {activeMatch.dateOfBirth}</h2>
-                    <p className="text-gray-400 font-bold tracking-widest uppercase text-sm mt-2">{activeMatch.occupation} • {activeMatch.residenceCity}, {activeMatch.residenceCountry}</p>
-                  </div>
-                </div>
+                {/* 2. Main Candidate Hero Picture with Left/Right Navigation */}
+                {(() => {
+                  const extraDemoPhotos = [
+                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800",
+                    "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800",
+                    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800",
+                    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=800",
+                  ];
+                  const candidatePhotos = [
+                    ...(activeMatch.imageUrls || []),
+                    ...(activeMatch.photoUrl && !(activeMatch.imageUrls || []).includes(activeMatch.photoUrl) ? [activeMatch.photoUrl] : [])
+                  ];
+                  if (candidatePhotos.length < 5) {
+                    candidatePhotos.push(...extraDemoPhotos.slice(0, 5 - candidatePhotos.length));
+                  }
+                  const currentPhoto = candidatePhotos[activeMatchImageIndex] || candidatePhotos[0] || activeMatch.photoUrl;
+
+                  return (
+                    <div className="relative h-[420px] md:h-[520px] group">
+                      {currentPhoto ? (
+                        <img src={currentPhoto} alt={activeMatch.firstName} className="w-full h-full object-cover object-center transition-all duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                          <User className="w-16 h-16 text-gray-700" />
+                        </div>
+                      )}
+                      
+                      {candidatePhotos.length > 1 && (
+                        <>
+                          <button 
+                            onClick={() => setActiveMatchImageIndex(prev => prev > 0 ? prev - 1 : candidatePhotos.length - 1)} 
+                            className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/55 text-white hover:bg-black/80 transition-all z-20"
+                            title="Previous photo"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                          <button 
+                            onClick={() => setActiveMatchImageIndex(prev => prev < candidatePhotos.length - 1 ? prev + 1 : 0)} 
+                            className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/55 text-white hover:bg-black/80 transition-all z-20"
+                            title="Next photo"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                          <div className="absolute top-4 left-0 right-0 flex justify-center gap-2 px-8 z-10">
+                            {candidatePhotos.map((_: any, i: number) => (
+                              <div key={i} className={`h-1.5 flex-1 rounded-full ${i === activeMatchImageIndex ? 'bg-[#E27D8D] shadow-lg shadow-[#E27D8D]/50' : 'bg-white/30'}`} />
+                            ))}
+                          </div>
+                          <div className="absolute top-8 right-6 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md border border-[#E27D8D]/40 text-xs font-bold text-[#E27D8D] z-10">
+                            {activeMatchImageIndex + 1} / {candidatePhotos.length}
+                          </div>
+                        </>
+                      )}
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none z-0" />
+                      <div className="absolute bottom-0 left-0 p-8 z-10">
+                        <h2 className="text-4xl font-black text-white">{activeMatch.firstName} {activeMatch.lastName}{formatAgeOrDob(activeMatch.dateOfBirth) ? `, ${formatAgeOrDob(activeMatch.dateOfBirth)}` : ''}</h2>
+                        <p className="text-gray-400 font-bold tracking-widest uppercase text-sm mt-2">{activeMatch.occupation} • {[activeMatch.residenceCity, activeMatch.residenceCountry].filter(Boolean).join(', ')}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="p-8 space-y-8">
                   {/* Tags */}

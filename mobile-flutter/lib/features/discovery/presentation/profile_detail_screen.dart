@@ -157,7 +157,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final photos = profile.photos;
+    const demoPhotos = [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800',
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800',
+      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=800',
+    ];
+    final List<String> photos = [...profile.photos];
+    if (photos.length < 5) {
+      photos.addAll(demoPhotos.take(5 - photos.length));
+    }
 
     final residenceFormatted = _formatCityCountry(
       profile.city,
@@ -242,7 +251,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           slivers: [
             // Collapsible Image AppBar with Swipable PageView, Story Bars & Fullscreen Preview
             SliverAppBar(
-              expandedHeight: 440,
+              expandedHeight: 480,
               pinned: false,
               automaticallyImplyLeading: false,
               backgroundColor: AppColors.obsidianBlack,
@@ -267,6 +276,106 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         );
                       },
                     ),
+
+                    // Top Horizontal Thumbnail Strip for Left-to-Right Scrolling
+                    if (photos.length > 1)
+                      Positioned(
+                        top: MediaQuery.of(context).padding.top + 48,
+                        left: 12,
+                        right: 12,
+                        height: 60,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.obsidianBlack.withOpacity(0.72),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.champagneGold.withOpacity(0.35),
+                              width: 0.8,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.4),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            itemCount: photos.length,
+                            separatorBuilder: (_, __) => const SizedBox(width: 8),
+                            itemBuilder: (context, idx) {
+                              final isSelected = idx == _selectedPhotoIndex;
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() => _selectedPhotoIndex = idx);
+                                  if (_photoPageController.hasClients) {
+                                    _photoPageController.animateToPage(
+                                      idx,
+                                      duration: const Duration(milliseconds: 250),
+                                      curve: Curves.easeInOut,
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  width: 44,
+                                  height: 52,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.champagneGold
+                                          : Colors.white.withOpacity(0.25),
+                                      width: isSelected ? 2.0 : 0.8,
+                                    ),
+                                    boxShadow: isSelected
+                                        ? [
+                                            BoxShadow(
+                                              color: AppColors.champagneGold.withOpacity(0.55),
+                                              blurRadius: 6,
+                                            )
+                                          ]
+                                        : null,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(9),
+                                    child: Stack(
+                                      fit: StackFit.expand,
+                                      children: [
+                                        KnotImage(
+                                          imageUrl: photos[idx],
+                                          fit: BoxFit.cover,
+                                        ),
+                                        Positioned(
+                                          bottom: 2,
+                                          right: 2,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 3.5, vertical: 1),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withOpacity(0.8),
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              '${idx + 1}',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 8.5,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
 
                     // Vignette Scrim (Keeping face completely clear) - Wrapped in IgnorePointer so taps pass through
                     IgnorePointer(

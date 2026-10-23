@@ -20,17 +20,12 @@ class CandidateCard extends StatefulWidget {
 }
 
 class _CandidateCardState extends State<CandidateCard> {
-  int _currentPhotoIndex = 0;
-
   MatchProfile get candidate => widget.candidate;
 
   @override
   Widget build(BuildContext context) {
     final photos = candidate.photos;
-    final hasMultiplePhotos = photos.length > 1;
-    final photo = photos.isNotEmpty
-        ? photos[_currentPhotoIndex.clamp(0, photos.length - 1)]
-        : '';
+    final photo = photos.isNotEmpty ? photos.first : '';
 
     return Container(
       decoration: BoxDecoration(
@@ -79,165 +74,11 @@ class _CandidateCardState extends State<CandidateCard> {
               ),
             ),
 
-            // 3. Extra Photos Navigation: Left/Right Tap Zones on the photo
-            if (hasMultiplePhotos) ...[
-              Positioned(
-                top: 70,
-                bottom: 120,
-                left: 0,
-                width: MediaQuery.of(context).size.width * 0.35,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: () {
-                    if (_currentPhotoIndex > 0) {
-                      setState(() => _currentPhotoIndex--);
-                    }
-                  },
-                ),
-              ),
-              Positioned(
-                top: 70,
-                bottom: 120,
-                right: 0,
-                width: MediaQuery.of(context).size.width * 0.35,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: () {
-                    if (_currentPhotoIndex < photos.length - 1) {
-                      setState(() => _currentPhotoIndex++);
-                    }
-                  },
-                ),
-              ),
-
-              // Visible Chevron Buttons for Instant Photo Switching
-              if (_currentPhotoIndex > 0)
-                Positioned(
-                  left: 10,
-                  top: 0,
-                  bottom: 120,
-                  child: Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _currentPhotoIndex--);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppColors.obsidianBlack.withValues(alpha: 0.65),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.6), width: 1),
-                        ),
-                        child: const Icon(Icons.chevron_left, color: AppColors.champagneGold, size: 20),
-                      ),
-                    ),
-                  ),
-                ),
-              if (_currentPhotoIndex < photos.length - 1)
-                Positioned(
-                  right: 10,
-                  top: 0,
-                  bottom: 120,
-                  child: Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() => _currentPhotoIndex++);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: AppColors.obsidianBlack.withValues(alpha: 0.65),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.6), width: 1),
-                        ),
-                        child: const Icon(Icons.chevron_right, color: AppColors.champagneGold, size: 20),
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-
-            // 4. Story Progress Bars for Extra Pictures (if candidate has multiple photos)
-            if (hasMultiplePhotos)
-              Positioned(
-                top: 10,
-                left: 18,
-                right: 18,
-                child: Row(
-                  children: List.generate(photos.length, (idx) {
-                    final isActive = idx == _currentPhotoIndex;
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _currentPhotoIndex = idx),
-                        child: Container(
-                          height: 3.5,
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(2),
-                            color: isActive
-                                ? AppColors.champagneGold
-                                : Colors.white.withValues(alpha: 0.35),
-                            boxShadow: isActive
-                                ? [
-                                    BoxShadow(
-                                      color: AppColors.champagneGold.withValues(alpha: 0.6),
-                                      blurRadius: 4,
-                                    )
-                                  ]
-                                : null,
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-
-            // 5. Top Bar: Photo count badge & Golden Trust Badge
+            // 3. Top Bar: Golden Trust Badge
             Positioned(
-              top: hasMultiplePhotos ? 20 : 16,
-              left: 16,
+              top: 16,
               right: 16,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (hasMultiplePhotos)
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _currentPhotoIndex = (_currentPhotoIndex + 1) % photos.length;
-                        });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4.5),
-                        decoration: BoxDecoration(
-                          color: AppColors.obsidianBlack.withValues(alpha: 0.82),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: AppColors.borderGold, width: 0.9),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.photo_library_outlined, size: 12, color: AppColors.champagneGold),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${_currentPhotoIndex + 1}/${photos.length} PHOTOS',
-                              style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.champagneGold,
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    const SizedBox.shrink(),
-
-                  // Golden Trust Badge in percentage
-                  Container(
+              child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
                       color: const Color(0xFFD4AF37),
