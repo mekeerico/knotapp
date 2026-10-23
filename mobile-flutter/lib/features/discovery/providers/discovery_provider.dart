@@ -241,7 +241,7 @@ class DiscoveryNotifier extends StateNotifier<DiscoveryState> {
               if (idLower.contains('mock') || idLower.contains('dummy') || idLower.contains('test_')) {
                 return false;
               }
-              if (nameLower.contains('mock') || nameLower.contains('test user') || nameLower == 'candidate') {
+              if (nameLower.contains('mock') || nameLower.contains('test user') || nameLower == 'candidate' || nameLower.contains('zainab') || nameLower.contains('balogun') || nameLower.contains('amara')) {
                 return false;
               }
               // 2. Must have at least 1 real uploaded photo

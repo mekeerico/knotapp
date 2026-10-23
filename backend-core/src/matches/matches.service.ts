@@ -228,10 +228,13 @@ export class MatchesService {
         NOT: [
           { email: { contains: 'mock', mode: 'insensitive' } },
           { email: { contains: 'test', mode: 'insensitive' } },
+          { email: { contains: 'knotconnect.org', mode: 'insensitive' } },
+          { email: { contains: 'zainab', mode: 'insensitive' } },
           { id: { startsWith: 'match_' } },
           { id: { startsWith: 'mock_' } },
           { id: { startsWith: 'user_' } },
-          { firstName: { in: ['Amara', 'Dr. Amara'], mode: 'insensitive' } },
+          { firstName: { in: ['Amara', 'Dr. Amara', 'Zainab'], mode: 'insensitive' } },
+          { lastName: { in: ['Okonkwo', 'Balogun'], mode: 'insensitive' } },
         ],
         profileImages: {
           some: {}, // Strictly only real humans who have uploaded at least one profile photo

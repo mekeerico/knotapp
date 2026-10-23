@@ -360,7 +360,12 @@ export default function Dashboard() {
           partnerEmail.includes('test') ||
           partnerName.includes('amara okonkwo') ||
           partnerName.includes('dr. amara') ||
-          pFirst === 'amara'
+          partnerName.includes('zainab balogun') ||
+          partnerName.includes('zainab') ||
+          partnerEmail.includes('knotconnect.org') ||
+          partnerEmail.includes('zainab') ||
+          pFirst === 'amara' ||
+          pFirst === 'zainab'
         ) {
           return false;
         }
