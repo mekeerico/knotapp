@@ -85,6 +85,10 @@ export default function Dashboard() {
   });
   const [isMessageLimitReached, setIsMessageLimitReached] = useState(false);
   const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [sessionSwipes, setSessionSwipes] = useState(0);
+  const [hasShownLoopNotice, setHasShownLoopNotice] = useState(false);
+  const [showLoopModal, setShowLoopModal] = useState(false);
+  const [loopModalData, setLoopModalData] = useState({ title: '', message: '', isExhausted: false });
   const [limitNoticeMessage, setLimitNoticeMessage] = useState<string | null>(null);
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
   const [prefSaving, setPrefSaving] = useState(false);
@@ -655,6 +659,28 @@ export default function Dashboard() {
   const handlePass = () => {
     checkLimitAndProceed(() => {
       if (matches.length > 0) {
+        const nextSwipes = sessionSwipes + 1;
+        setSessionSwipes(nextSwipes);
+
+        // After scrolling through available matches over again for the second time:
+        if (nextSwipes >= matches.length * 2 && !hasShownLoopNotice) {
+          setHasShownLoopNotice(true);
+          const isFree = !isPremium && !['Executive', 'Elite', 'Premium'].includes(userProfile?.subscriptionTier || '');
+          const limit = getDailyLimit();
+          const isExhausted = matchesViewedToday >= limit;
+
+          setLoopModalData({
+            title: isExhausted ? 'Matches Allocation Completed' : 'All Available Matches Reviewed',
+            message: isExhausted
+              ? (isFree
+                  ? "You have reviewed all available curated matches for this allocation. Upgrade your tier to unlock 15+ verified matches immediately, or wait until next month for your next free tier allocation."
+                  : `You have completed reviewing your daily ${userProfile?.subscriptionTier || 'membership'} matches. Your deck refreshes at midnight, or upgrade to expand your candidate pool.`)
+              : "These are the only available matches in your region for now. More aligned candidates will be presented as new verified members complete onboarding.",
+            isExhausted,
+          });
+          setShowLoopModal(true);
+        }
+
         setCurrentMatchIndex(prev => (prev + 1) % matches.length);
         setActiveMatchImageIndex(0);
       }
@@ -1400,6 +1426,17 @@ export default function Dashboard() {
 
               {/* Match Details & AI Explanations */}
               <div className="md:col-span-5 space-y-6">
+                {/* 1. Why You Matched Glow Box (Swapped to Top) */}
+                <div className="glass-card rounded-[28px] p-6 border border-[#E27D8D]/30 shadow-lg shadow-[#E27D8D]/5 space-y-4">
+                  <div className="flex items-center gap-2 text-sm text-[#E27D8D] font-black">
+                    <Bot className="w-5 h-5 animate-pulse" /> Why You Matched
+                  </div>
+                  <p className="text-xs text-gray-300 leading-relaxed font-sans">
+                    {activeMatch.aiExplanation}
+                  </p>
+                </div>
+
+                {/* 2. Compatibility Profile */}
                 <div className="glass-card rounded-[28px] p-6 border border-white/10 space-y-6">
                   <h4 className="text-xs uppercase tracking-widest text-[#E27D8D] font-black">Compatibility Profile</h4>
                   
@@ -1432,16 +1469,6 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* AI Explanation Glow Box */}
-                <div className="glass-card rounded-[28px] p-6 border border-[#E27D8D]/30 shadow-lg shadow-[#E27D8D]/5 space-y-4">
-                  <div className="flex items-center gap-2 text-sm text-[#E27D8D] font-black">
-                    <Bot className="w-5 h-5 animate-pulse" /> Why You Matched
-                  </div>
-                  <p className="text-xs text-gray-300 leading-relaxed font-sans">
-                    {activeMatch.aiExplanation}
-                  </p>
                 </div>
               </div>
             </div>
@@ -2192,6 +2219,44 @@ export default function Dashboard() {
 
         </div>
       </main>
+
+      {/* Available Matches Cycle & Allocation Modal */}
+      {showLoopModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+          <div className="glass-card rounded-[32px] max-w-sm w-full p-7 border border-[#D4AF37]/40 text-center space-y-5 animate-in fade-in zoom-in duration-300">
+            <div className="w-14 h-14 mx-auto rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+              <Sparkles className="w-7 h-7" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-serif font-black text-white">{loopModalData.title}</h3>
+              <p className="text-xs text-gray-300 font-sans leading-relaxed">
+                {loopModalData.message}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLoopModal(false);
+                  setShowSubscriptionModal(true);
+                }}
+                className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#E27D8D] via-[#B85FA8] to-[#9353D3] text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-[#E27D8D]/25 hover:opacity-95 transition-opacity cursor-pointer"
+              >
+                Upgrade to Premium ✨
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowLoopModal(false)}
+                className="w-full py-3 rounded-full text-xs font-semibold bg-white/5 border border-white/10 hover:bg-white/10 text-gray-400 transition-colors cursor-pointer"
+              >
+                Keep Browsing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mutual Match Modal */}
       {showMatchModal && (

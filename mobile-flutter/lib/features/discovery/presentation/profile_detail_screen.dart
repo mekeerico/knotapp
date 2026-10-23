@@ -427,39 +427,45 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         ),
                       ),
 
-                    // Photo Count & Tap to Enlarge Pill
-                    if (photos.length > 1)
-                      Positioned(
-                        top: MediaQuery.of(context).padding.top + 20,
-                        right: 16,
-                        child: GestureDetector(
-                          onTap: () => _openFullscreenGallery(context, photos, _selectedPhotoIndex),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppColors.obsidianBlack.withValues(alpha: 0.85),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(color: AppColors.champagneGold.withValues(alpha: 0.8), width: 1),
+                    // Top Right Match Score Badge (Moved to top right to give full width to candidate name)
+                    Positioned(
+                      top: MediaQuery.of(context).padding.top + 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _trustGold,
+                          borderRadius: BorderRadius.circular(999),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _trustGold.withValues(alpha: 0.4),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.photo_library_outlined, size: 14, color: AppColors.champagneGold),
-                                const SizedBox(width: 6),
-                                Text(
-                                  '${_selectedPhotoIndex + 1}/${photos.length} PHOTOS',
-                                  style: AppTypography.labelSmall.copyWith(
-                                    color: AppColors.champagneGold,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10.5,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.shield_outlined,
+                              size: 13,
+                              color: Color(0xFF0B0E14),
                             ),
-                          ),
+                            const SizedBox(width: 4.5),
+                            Text(
+                              '${profile.compatibilityScore}% MATCH',
+                              style: const TextStyle(
+                                color: Color(0xFF0B0E14),
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.1,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    ),
 
                     // Clean Pagination Dots Indicator at Bottom of Header
                     if (photos.length > 1)
@@ -515,85 +521,44 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Name, Age, Verified & Match Score Badge
-                    Row(
+                    // Candidate Full Name, Age, Verified Badge & Location (Spacious Unrestricted Row)
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      '${profile.name}, ${profile.age}',
-                                      style: AppTypography.displayMedium.copyWith(fontSize: 22),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  const VerifiedBadge(size: 20),
-                                ],
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                '${profile.name}, ${profile.age}',
+                                style: AppTypography.displayMedium.copyWith(fontSize: 24),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  const Icon(
-                                    Icons.location_on_outlined,
-                                    size: 15,
-                                    color: AppColors.champagneGold,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      residenceFormatted,
-                                      style: AppTypography.bodyMedium,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(width: 8),
+                            const VerifiedBadge(size: 22),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: _trustGold,
-                            borderRadius: BorderRadius.circular(999),
-                            boxShadow: [
-                              BoxShadow(
-                                color: _trustGold.withOpacity(0.35),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.shield_outlined,
-                                size: 13,
-                                color: Color(0xFF0B0E14),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${profile.compatibilityScore}% MATCH',
-                                style: const TextStyle(
-                                  color: Color(0xFF0B0E14),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.2,
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 16,
+                              color: AppColors.champagneGold,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                residenceFormatted,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textSubtle,
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -630,7 +595,40 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ),
                     ],
 
-                    // 1. Compatibility Profile Card
+                    // 1. Why You Matched Card (Swapped to top position directly below candidate name & location)
+                    GlassCard(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.auto_awesome, color: _trustGold, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Why You Matched',
+                                style: AppTypography.headingMedium.copyWith(
+                                  fontSize: 15,
+                                  color: _trustGold,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            _formatConciseAiExplanation(profile.aiExplanation, profile),
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: _mutedSlate,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // 2. Compatibility Profile Card (Positioned after Why You Matched)
                     GlassCard(
                       padding: const EdgeInsets.all(20),
                       child: Column(
@@ -693,39 +691,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                                 ),
                               ),
                             ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-
-                    // 2. Why You Matched Card (Separated Card)
-                    GlassCard(
-                      padding: const EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.auto_awesome, color: _trustGold, size: 18),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Why You Matched',
-                                style: AppTypography.headingMedium.copyWith(
-                                  fontSize: 15,
-                                  color: _trustGold,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            _formatConciseAiExplanation(profile.aiExplanation, profile),
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: _mutedSlate,
-                              height: 1.5,
-                            ),
                           ),
                         ],
                       ),

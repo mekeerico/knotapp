@@ -24,6 +24,8 @@ class DiscoveryScreen extends ConsumerStatefulWidget {
 class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
   final CardSwiperController _swiperController = CardSwiperController();
   int _currentCardIndex = 0;
+  int _sessionSwipes = 0;
+  bool _hasShownExhaustedOrCycleNotice = false;
 
   @override
   void initState() {
@@ -197,7 +199,19 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                   if (currentIndex != null && displayCandidates.isNotEmpty) {
                                     setState(() {
                                       _currentCardIndex = currentIndex % displayCandidates.length;
+                                      _sessionSwipes++;
                                     });
+
+                                    // After scrolling through available matches over again for the 2nd time:
+                                    if (_sessionSwipes >= displayCandidates.length * 2 && !_hasShownExhaustedOrCycleNotice) {
+                                      _hasShownExhaustedOrCycleNotice = true;
+                                      final isExhausted = state.hasExceededLimit || state.viewsToday >= state.dailyLimit;
+                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                        if (mounted) {
+                                          _showLoopLimitNotice(context, authState.user, isExhausted);
+                                        }
+                                      });
+                                    }
                                   }
                                   if (previousIndex >= 0 && previousIndex < displayCandidates.length) {
                                     final candidate = displayCandidates[previousIndex];
