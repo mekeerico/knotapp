@@ -252,18 +252,6 @@ export default function Dashboard() {
           imageUrls = [resolveImageUrl(m.selfieUrl)];
         }
 
-        // 4 extra high-resolution pictures added for multi-photo gallery demonstration
-        const extraDemoPhotos = [
-          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800",
-          "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800",
-          "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800",
-          "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=800",
-        ];
-        if (imageUrls.length < 5) {
-          const needed = 5 - imageUrls.length;
-          imageUrls = [...imageUrls, ...extraDemoPhotos.slice(0, needed)];
-        }
-
         const primaryPhoto = imageUrls[0] || (partner.photoUrl ? resolveImageUrl(partner.photoUrl) : (m.photoUrl ? resolveImageUrl(m.photoUrl) : ''));
 
         return {
@@ -330,7 +318,20 @@ export default function Dashboard() {
         const pLast = (partner.lastName || m.lastName || '').trim().toLowerCase();
         const partnerFullName = `${pFirst} ${pLast}`.trim();
 
-        // Mock filter temporarily relaxed for photo gallery demonstration
+        // 0. Strict Mock & Seed Profile Exclusion
+        const partnerName = partnerFullName.toLowerCase();
+        if (
+          partnerId.startsWith('match_') ||
+          partnerId.startsWith('mock_') ||
+          partnerId.startsWith('user_') ||
+          partnerEmail.includes('mock') ||
+          partnerEmail.includes('test') ||
+          partnerName.includes('amara okonkwo') ||
+          partnerName.includes('dr. amara') ||
+          pFirst === 'amara'
+        ) {
+          return false;
+        }
 
         // 1. Strict Self-Exclusion: User should NEVER be matched to themselves
         if (currentUserId && partnerId === currentUserId) return false;
@@ -1366,57 +1367,38 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Two Action Buttons: Pass & Connect (Matches Flutter mobile design) */}
-                <div className="w-full grid grid-cols-2 gap-4 pt-1 pb-1">
-                  {/* Pass Button */}
+                {/* Mobile-Matched Circular Action Buttons (X, Star, and Love) */}
+                <div className="flex items-center justify-center gap-6 pt-1 pb-2">
+                  {/* Pass Button (X) */}
                   <button
                     type="button"
                     onClick={handlePass}
                     title="Pass Candidate"
-                    className="py-3.5 px-6 rounded-full bg-[#191E2E] border border-gray-600/50 shadow-lg shadow-black/40 flex items-center justify-center gap-2 text-white font-bold text-sm hover:bg-[#23293D] hover:border-gray-400 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                    className="w-14 h-14 rounded-full bg-[#121721] border-[1.5px] border-gray-500/40 shadow-[0_4px_14px_rgba(107,114,128,0.25)] flex items-center justify-center text-gray-400 hover:text-white hover:border-gray-300 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
-                    <X className="w-4 h-4 stroke-[2.5] text-gray-300" />
-                    <span>Pass</span>
+                    <X className="w-6 h-6 stroke-[2.2]" />
                   </button>
 
-                  {/* Connect Button */}
+                  {/* View Compatibility & Full Profile Button (Star) */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("matchProfile")}
+                    title="View Psychological Compatibility & Vows"
+                    className="w-16 h-16 rounded-full bg-[#121721] border-[1.5px] border-[#E27D8D]/60 shadow-[0_4px_18px_rgba(212,175,55,0.3)] flex items-center justify-center text-[#E27D8D] hover:border-[#E27D8D] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+                  >
+                    <Star className="w-7 h-7 fill-[#E27D8D] text-[#E27D8D]" />
+                  </button>
+
+                  {/* Like & Connect Button (Love / Heart) */}
                   <button
                     type="button"
                     onClick={handleConnect}
-                    title="Connect & Initiate Matrimonial Journey"
-                    className="py-3.5 px-6 rounded-full bg-gradient-to-r from-[#E27D8D] via-[#B85FA8] to-[#9353D3] shadow-lg shadow-[#E27D8D]/30 flex items-center justify-center gap-2 text-white font-bold text-sm hover:opacity-95 hover:shadow-[#E27D8D]/40 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                    title="Connect & Initiate Marriage Conversation"
+                    className="w-14 h-14 rounded-full bg-[#121721] border-[1.5px] border-[#E27D8D]/50 shadow-[0_4px_16px_rgba(225,29,72,0.3)] flex items-center justify-center text-[#E27D8D] hover:border-[#E27D8D] hover:scale-105 active:scale-95 transition-all cursor-pointer"
                   >
-                    <span>Connect</span>
-                    <Heart className="w-4 h-4 fill-white text-white" />
+                    <Heart className="w-6 h-6 fill-[#E27D8D] text-[#E27D8D]" />
                   </button>
                 </div>
-
-                {/* Multi-Photo Demonstration Gallery: Thumbnail Strip showing 5 photos */}
-                {activeMatch.imageUrls?.length > 1 && (
-                  <div className="w-full flex items-center justify-center gap-2.5 pt-2 pb-1">
-                    {activeMatch.imageUrls.map((url: string, idx: number) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveMatchImageIndex(idx);
-                        }}
-                        title={`View Photo ${idx + 1} of ${activeMatch.imageUrls.length}`}
-                        className={`relative w-12 h-14 sm:w-14 sm:h-16 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${
-                          idx === activeMatchImageIndex
-                            ? 'border-[#E27D8D] scale-105 shadow-md shadow-[#E27D8D]/50 ring-2 ring-[#E27D8D]/40'
-                            : 'border-white/20 opacity-60 hover:opacity-100 hover:border-white/50'
-                        }`}
-                      >
-                        <img src={url} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
-                        <span className="absolute bottom-0.5 right-0.5 bg-black/80 text-[9px] text-white px-1 rounded font-bold">
-                          {idx + 1}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Match Details & AI Explanations */}
@@ -2532,4 +2514,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
