@@ -12,6 +12,8 @@
 	<string>KNOT requires camera access for in-app document scanning and biometric liveness verification via Didit.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>KNOT requires photo library access to upload portfolio photos and identity documents.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>KNOT requires microphone access for audio recording during identity verification.</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -19,7 +21,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>knot_mobile</string>
+	<string>KNOT</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>

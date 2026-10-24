@@ -1,0 +1,70 @@
+name: Build Flutter iOS App (IPA & Archive)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'mobile-flutter/ios/**'
+      - 'mobile-flutter/lib/**'
+      - 'mobile-flutter/pubspec.yaml'
+      - '.github/workflows/build-flutter-ios.yml'
+
+jobs:
+  build-ios:
+    name: Build iOS Archive & IPA
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.4'
+          channel: 'stable'
+          cache: true
+
+      - name: Get Flutter Dependencies
+        run: flutter pub get
+        working-directory: mobile-flutter
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install --repo-update
+        working-directory: mobile-flutter
+
+      - name: Build iOS App (Release Archive / IPA)
+        run: |
+          echo "Starting iOS Release Archive compilation..."
+          flutter build ipa --release --no-codesign --dart-define=API_URL=http://knotconnect.duckdns.org:8080
+          echo "iOS build completed successfully."
+        working-directory: mobile-flutter
+
+      - name: Package Unsigned IPA Payload
+        run: |
+          mkdir -p build/ios/ipa
+          cd build/ios/archive/Runner.xcarchive/Products/Applications
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r ../../../../ipa/KNOT-unsigned.ipa Payload
+          cd ../../../..
+          echo "Unsigned IPA packaged successfully."
+        working-directory: mobile-flutter
+
+      - name: Upload iOS XCArchive (Xcode Archive for TestFlight / App Store)
+        uses: actions/upload-artifact@v4
+        with:
+          name: knot-ios-xcarchive
+          path: mobile-flutter/build/ios/archive/Runner.xcarchive
+          retention-days: 30
+
+      - name: Upload Unsigned IPA (For AltStore / TrollStore / Enterprise Signing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: knot-ios-ipa
+          path: mobile-flutter/build/ios/ipa/KNOT-unsigned.ipa
+          retention-days: 30
