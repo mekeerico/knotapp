@@ -12,6 +12,20 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
+class InitialAuthState {
+  final bool hasSeenWelcome;
+  final bool hasToken;
+
+  const InitialAuthState({
+    this.hasSeenWelcome = false,
+    this.hasToken = false,
+  });
+}
+
+final initialAuthStateProvider = Provider<InitialAuthState>((ref) {
+  return const InitialAuthState();
+});
+
 class AuthState {
   final AuthStatus status;
   final UserModel? user;
@@ -48,7 +62,15 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repo;
 
-  AuthNotifier(this._repo) : super(const AuthState()) {
+  AuthNotifier(this._repo, InitialAuthState initial)
+      : super(AuthState(
+          status: initial.hasToken
+              ? AuthStatus.loading
+              : (initial.hasSeenWelcome
+                  ? AuthStatus.unauthenticated
+                  : AuthStatus.initial),
+          hasSeenWelcome: initial.hasSeenWelcome,
+        )) {
     checkAuth();
   }
 
@@ -151,5 +173,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repo = ref.watch(authRepositoryProvider);
-  return AuthNotifier(repo);
+  final initial = ref.watch(initialAuthStateProvider);
+  return AuthNotifier(repo, initial);
 });

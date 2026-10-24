@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/data/location_data.dart';
 import 'core/router/app_router.dart';
 import 'core/services/revenue_cat_service.dart';
+import 'core/storage/secure_storage_service.dart';
 import 'core/theme/app_colors.dart';
 import 'core/theme/app_theme.dart';
+import 'features/auth/providers/auth_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +29,12 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
+  // Fast pre-flight check of local secure storage so router opens directly to the right screen with zero flash
+  final storage = SecureStorageService();
+  final hasSeenWelcome = await storage.hasSeenWelcome();
+  final token = await storage.getToken();
+  final hasToken = token != null && token.isNotEmpty;
+
   // Initialize RevenueCat In-App Purchases
   await RevenueCatService.init();
 
@@ -34,8 +42,16 @@ void main() async {
   await KnotLocationData.load();
 
   runApp(
-    const ProviderScope(
-      child: KnotApp(),
+    ProviderScope(
+      overrides: [
+        initialAuthStateProvider.overrideWithValue(
+          InitialAuthState(
+            hasSeenWelcome: hasSeenWelcome,
+            hasToken: hasToken,
+          ),
+        ),
+      ],
+      child: const KnotApp(),
     ),
   );
 }

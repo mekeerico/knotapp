@@ -47,6 +47,15 @@ class RouterNotifier extends ChangeNotifier {
     final isOnboardingRoute = state.matchedLocation == '/onboarding';
     final isVerificationRoute = state.matchedLocation == '/verification';
 
+    // 1. While auth status is loading/checking on startup
+    if (authState.status == AuthStatus.loading || authState.status == AuthStatus.initial) {
+      // Returning user who has completed welcome must NEVER see /welcome (unless explicitly previewing)
+      if (authState.hasSeenWelcome && isWelcomeRoute && !isPreviewWelcome) {
+        return '/auth';
+      }
+      return null;
+    }
+
     if (!isAuth) {
       if (isWelcomeRoute) {
         // Returning users who already completed welcome go directly to /auth unless explicitly previewing
@@ -79,10 +88,20 @@ final routerNotifierProvider = Provider<RouterNotifier>((ref) {
 
 final routerProvider = Provider<GoRouter>((ref) {
   final notifier = ref.watch(routerNotifierProvider);
+  final initialAuth = ref.watch(initialAuthStateProvider);
+
+  final String initialRoute;
+  if (initialAuth.hasToken) {
+    initialRoute = '/discovery';
+  } else if (initialAuth.hasSeenWelcome) {
+    initialRoute = '/auth';
+  } else {
+    initialRoute = '/welcome';
+  }
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/discovery',
+    initialLocation: initialRoute,
     refreshListenable: notifier,
     redirect: notifier.redirect,
     routes: [
