@@ -289,4 +289,60 @@ export class UsersService {
     }
     return { success: true };
   }
+
+  async createSupportTicket(dto: {
+    userId?: string;
+    userEmail?: string;
+    userName?: string;
+    category?: string;
+    subject?: string;
+    message?: string;
+  }) {
+    let userEmail = (dto.userEmail || '').trim().toLowerCase();
+    let userName = (dto.userName || '').trim();
+    let validUserId: string | null = null;
+
+    if (dto.userId) {
+      const u = await this.prisma.user.findUnique({
+        where: { id: dto.userId },
+        select: { id: true, email: true, firstName: true, lastName: true },
+      });
+      if (u) {
+        validUserId = u.id;
+        if (!userEmail) userEmail = u.email;
+        if (!userName) userName = `${u.firstName || ''} ${u.lastName || ''}`.trim();
+      }
+    }
+
+    const ticket = await this.prisma.supportTicket.create({
+      data: {
+        userId: validUserId,
+        userEmail,
+        userName: userName || 'KNOT Member',
+        category: (dto.category || 'General Enquiry').trim(),
+        subject: (dto.subject || '').trim(),
+        message: (dto.message || '').trim(),
+        status: 'OPEN',
+      },
+    });
+
+    return ticket;
+  }
+
+  async getUserSupportTickets(userId: string) {
+    const u = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true },
+    });
+
+    return this.prisma.supportTicket.findMany({
+      where: {
+        OR: [
+          { userId },
+          ...(u?.email ? [{ userEmail: u.email.toLowerCase() }] : []),
+        ],
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

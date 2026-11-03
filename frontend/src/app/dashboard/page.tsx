@@ -104,6 +104,80 @@ export default function Dashboard() {
   const [prefTraits, setPrefTraits] = useState<string[]>(["Emotionally mature", "Family-oriented", "Loyal & Devoted"]);
   const [exchangeRates, setExchangeRates] = useState<Record<string, number> | null>(null);
 
+  // Support & Enquiry Modal States
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [supportCategory, setSupportCategory] = useState("General Enquiry");
+  const [supportSubject, setSupportSubject] = useState("");
+  const [supportMessage, setSupportMessage] = useState("");
+  const [supportSubmitting, setSupportSubmitting] = useState(false);
+  const [supportSuccess, setSupportSuccess] = useState("");
+  const [supportError, setSupportError] = useState("");
+  const [mySupportTickets, setMySupportTickets] = useState<any[]>([]);
+
+  const fetchMySupportTickets = async () => {
+    try {
+      const token = localStorage.getItem("knot_token");
+      if (!token) return;
+      const res = await fetch(`${getApiUrl()}/users/support/my`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setMySupportTickets(data);
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleOpenSupportModal = () => {
+    setSupportSuccess("");
+    setSupportError("");
+    setShowSupportModal(true);
+    fetchMySupportTickets();
+  };
+
+  const handleSubmitSupportEnquiry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supportSubject.trim() || !supportMessage.trim()) {
+      setSupportError("Please fill out both the subject and message.");
+      return;
+    }
+    setSupportSubmitting(true);
+    setSupportError("");
+    setSupportSuccess("");
+    try {
+      const token = localStorage.getItem("knot_token");
+      const res = await fetch(`${getApiUrl()}/users/support`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          userId: userProfile?.id,
+          userEmail: userProfile?.email,
+          userName: userProfile?.firstName,
+          category: supportCategory,
+          subject: supportSubject.trim(),
+          message: supportMessage.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || "Failed to submit enquiry");
+      }
+      setSupportSubject("");
+      setSupportMessage("");
+      setSupportSuccess("Your enquiry has been sent to the Admin dashboard! We will respond shortly.");
+      fetchMySupportTickets();
+    } catch (err: any) {
+      setSupportError(err.message || "Could not submit your enquiry. Please try again.");
+    } finally {
+      setSupportSubmitting(false);
+    }
+  };
+
   // In-App Notification Center States
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [notifCategoryFilter, setNotifCategoryFilter] = useState<string | null>(null);
@@ -1228,6 +1302,13 @@ export default function Dashboard() {
             >
               <User className="w-4 h-4" /> My Profile
             </button>
+            <button
+              type="button"
+              onClick={() => { handleOpenSupportModal(); setIsSidebarOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold text-gray-400 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+            >
+              <HeartHandshake className="w-4 h-4 text-[#D4AF37]" /> Support & Enquiry
+            </button>
             {userProfile?.role === 'ADMIN' && (
               <Link href="/admin" className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold text-gray-400 hover:text-[#E27D8D] hover:bg-white/5 transition-all">
                 <Shield className="w-4 h-4" /> Admin Panel
@@ -2166,6 +2247,20 @@ export default function Dashboard() {
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
                 </button>
+
+                <button
+                  type="button"
+                  onClick={handleOpenSupportModal}
+                  className="w-full p-4 rounded-2xl glass-card border border-white/10 hover:border-[#D4AF37]/50 flex items-center justify-between transition-all cursor-pointer group text-left"
+                >
+                  <div className="flex items-center gap-3.5">
+                    <HeartHandshake className="w-5 h-5 text-[#D4AF37]" />
+                    <span className="text-sm font-semibold text-white group-hover:text-[#D4AF37] transition-colors">
+                      Support & Enquiry
+                    </span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
+                </button>
               </div>
 
               {/* Sign Out Pill Button (Matches Mobile) */}
@@ -2530,6 +2625,152 @@ export default function Dashboard() {
                 <Sparkles className="w-4 h-4" /> {prefSaving ? "Saving..." : "Save Preferences & Recalibrate Matches ✨"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Support & Enquiry Modal */}
+      {showSupportModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[#121721] rounded-[28px] border border-[#D4AF37]/40 p-6 md:p-7 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+                  <HeartHandshake className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white font-serif">Support & Enquiry</h3>
+                  <p className="text-xs text-gray-400">Send a request directly to the KNOT Admin & Concierge team</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSupportModal(false)}
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {supportSuccess && (
+              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                <span>{supportSuccess}</span>
+              </div>
+            )}
+
+            {supportError && (
+              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-medium flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                <span>{supportError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmitSupportEnquiry} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1.5">
+                  Category of Enquiry
+                </label>
+                <select
+                  value={supportCategory}
+                  onChange={(e) => setSupportCategory(e.target.value)}
+                  className="w-full p-3.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
+                >
+                  <option value="General Enquiry" className="bg-[#121721]">General Enquiry</option>
+                  <option value="Account & Verification" className="bg-[#121721]">Account & Verification</option>
+                  <option value="Subscription & Billing" className="bg-[#121721]">Subscription & Billing</option>
+                  <option value="Matchmaking & AI Coach" className="bg-[#121721]">Matchmaking & AI Coach</option>
+                  <option value="Technical Issue" className="bg-[#121721]">Technical Issue</option>
+                  <option value="Safety & Report" className="bg-[#121721]">Safety & Report</option>
+                  <option value="Other" className="bg-[#121721]">Other</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1.5">
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={supportSubject}
+                  onChange={(e) => setSupportSubject(e.target.value)}
+                  placeholder="Brief summary of your enquiry..."
+                  className="w-full p-3.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-gray-500 focus:border-[#D4AF37] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-widest text-[#D4AF37] mb-1.5">
+                  Message
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={supportMessage}
+                  onChange={(e) => setSupportMessage(e.target.value)}
+                  placeholder="Describe your question or request in detail..."
+                  className="w-full p-3.5 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-gray-500 focus:border-[#D4AF37] focus:outline-none resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSupportModal(false)}
+                  className="px-5 py-2.5 rounded-full text-xs font-bold text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  disabled={supportSubmitting}
+                  className="px-6 py-3 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#B8860B] text-black font-black text-xs uppercase tracking-wider shadow-lg shadow-[#D4AF37]/20 hover:opacity-95 transition-opacity flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {supportSubmitting ? "Sending..." : "Submit Enquiry"}
+                </button>
+              </div>
+            </form>
+
+            {mySupportTickets.length > 0 && (
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#D4AF37]">
+                  Your Previous Enquiries
+                </h4>
+                <div className="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                  {mySupportTickets.map((t: any) => (
+                    <div
+                      key={t.id}
+                      className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-white">{t.subject}</span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            t.status === "RESPONDED"
+                              ? "bg-emerald-500/20 text-emerald-400"
+                              : "bg-[#D4AF37]/20 text-[#D4AF37]"
+                          }`}
+                        >
+                          {t.status || "OPEN"}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-gray-400">{t.category}</div>
+                      <p className="text-xs text-gray-300">{t.message}</p>
+                      {t.adminResponse && (
+                        <div className="mt-2 p-2.5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/30 space-y-1">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">
+                            Admin Response
+                          </div>
+                          <p className="text-xs text-white whitespace-pre-wrap">{t.adminResponse}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

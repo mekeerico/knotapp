@@ -34,6 +34,8 @@ class ApiEndpoints {
   static const String updateProfile = '/users';
   static const String verifyIdentity = '/users/verify-identity';
   static const String validateAnswer = '/users/onboarding/validate-answer';
+  static const String support = '/users/support';
+  static const String mySupport = '/users/support/my';
 
   // Matches
   static const String potentialMatches = '/matches/potential';

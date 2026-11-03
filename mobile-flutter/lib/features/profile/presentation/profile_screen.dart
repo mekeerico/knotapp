@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/network/api_endpoints.dart';
+import '../../../core/network/dio_client.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/auto_hiding_floating_bar.dart';
@@ -319,6 +321,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     onTap: () => context.push('/verification'),
                   ),
                 ],
+                const SizedBox(height: 12),
+                _buildMenuItem(
+                  context,
+                  title: 'Support & Enquiry',
+                  icon: Icons.support_agent_rounded,
+                  onTap: () => _showSupportEnquiryModal(context, user),
+                ),
                 // Bottom spacer ensuring scroll view content never gets blocked by the floating button
                 const SizedBox(height: 90),
               ],
@@ -329,6 +338,353 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     ),
   );
 }
+
+  void _showSupportEnquiryModal(BuildContext context, dynamic user) {
+    final categories = [
+      'General Enquiry',
+      'Account & Verification',
+      'Subscription & Billing',
+      'Matchmaking & AI Coach',
+      'Technical Issue',
+      'Safety & Report',
+      'Other',
+    ];
+    String selectedCategory = categories.first;
+    final subjectCtrl = TextEditingController();
+    final messageCtrl = TextEditingController();
+    bool isSubmitting = false;
+    List<dynamic> myTickets = [];
+    bool loadingTickets = true;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.obsidianBlack,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (modalCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            if (loadingTickets) {
+              loadingTickets = false;
+              ref.read(dioProvider).get(ApiEndpoints.mySupport).then((res) {
+                if (ctx.mounted && res.data is List) {
+                  setModalState(() {
+                    myTickets = res.data as List<dynamic>;
+                  });
+                }
+              }).catchError((_) {});
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 20,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.support_agent_rounded,
+                              color: AppColors.champagneGold,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Support & Enquiry',
+                              style: AppTypography.headingMedium,
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: AppColors.textSubtle),
+                          onPressed: () => Navigator.of(modalCtx).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Send an enquiry or support request directly to the KNOT Concierge & Admin team.',
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textSubtle),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'CATEGORY OF ENQUIRY',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.champagneGold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.white.withOpacity(0.12)),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedCategory,
+                          dropdownColor: const Color(0xFF16161D),
+                          isExpanded: true,
+                          icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.champagneGold),
+                          style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+                          items: categories
+                              .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                              .toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setModalState(() => selectedCategory = val);
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'SUBJECT',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.champagneGold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: subjectCtrl,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Brief summary of your enquiry...',
+                        hintStyle: const TextStyle(color: Colors.white38),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.12)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.12)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: AppColors.champagneGold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'MESSAGE',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.champagneGold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: messageCtrl,
+                      maxLines: 4,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: InputDecoration(
+                        hintText: 'Describe your question or issue in detail...',
+                        hintStyle: const TextStyle(color: Colors.white38),
+                        filled: true,
+                        fillColor: Colors.white.withOpacity(0.05),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.12)),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(color: Colors.white.withOpacity(0.12)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: AppColors.champagneGold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    GoldButton(
+                      text: 'Submit Enquiry',
+                      isLoading: isSubmitting,
+                      onPressed: () async {
+                        final subject = subjectCtrl.text.trim();
+                        final message = messageCtrl.text.trim();
+                        if (subject.isEmpty || message.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enter both a subject and message.'),
+                              backgroundColor: AppColors.errorRed,
+                            ),
+                          );
+                          return;
+                        }
+                        setModalState(() => isSubmitting = true);
+                        try {
+                          await ref.read(dioProvider).post(
+                            ApiEndpoints.support,
+                            data: {
+                              'userId': user?.id,
+                              'userEmail': user?.email,
+                              'userName': user?.firstName,
+                              'category': selectedCategory,
+                              'subject': subject,
+                              'message': message,
+                            },
+                          );
+                          if (modalCtx.mounted) {
+                            Navigator.of(modalCtx).pop();
+                          }
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Your enquiry has been sent to the Admin team!'),
+                                backgroundColor: Color(0xFF10B981),
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          setModalState(() => isSubmitting = false);
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Failed to submit enquiry. Please try again.'),
+                                backgroundColor: AppColors.errorRed,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                    if (myTickets.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      const Divider(color: Colors.white12),
+                      const SizedBox(height: 12),
+                      Text(
+                        'YOUR PREVIOUS ENQUIRIES',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.champagneGold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ...myTickets.take(5).map((t) {
+                        final status = (t['status'] ?? 'OPEN').toString();
+                        final adminResponse = t['adminResponse']?.toString();
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.04),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.white10),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      t['subject']?.toString() ?? '',
+                                      style: AppTypography.titleMedium.copyWith(fontSize: 13),
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: status == 'RESPONDED'
+                                          ? const Color(0xFF10B981).withOpacity(0.18)
+                                          : AppColors.champagneGold.withOpacity(0.18),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      status,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: status == 'RESPONDED'
+                                            ? const Color(0xFF10B981)
+                                            : AppColors.champagneGold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                t['category']?.toString() ?? '',
+                                style: AppTypography.bodySmall.copyWith(
+                                  fontSize: 11,
+                                  color: AppColors.textSubtle,
+                                ),
+                              ),
+                              if (adminResponse != null && adminResponse.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.champagneGold.withOpacity(0.08),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: AppColors.champagneGold.withOpacity(0.25)),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Admin Response:',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.champagneGold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        adminResponse,
+                                        style: AppTypography.bodySmall.copyWith(color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   Widget _buildMenuItem(
     BuildContext context, {

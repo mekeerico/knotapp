@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ShieldAlert, Trash2, Users, AlertCircle, Loader2, LogOut, Lock, Unlock, Plus, X, Menu, Calendar, Briefcase, User, MapPin, Camera, Check, ChevronDown } from "lucide-react";
+import { ShieldAlert, Trash2, Users, AlertCircle, Loader2, LogOut, Lock, Unlock, Plus, X, Menu, Calendar, Briefcase, User, MapPin, Camera, Check, ChevronDown, MessageSquare, Send } from "lucide-react";
 import { COUNTRIES, STATES_BY_COUNTRY } from "../../services/locationData";
 import { getApiUrl } from "../../services/api";
 
@@ -76,6 +76,81 @@ export default function AdminDashboard() {
   const [error, setError] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeAdminTab, setActiveAdminTab] = useState<"users" | "enquiries">("users");
+
+  // Support & Enquiries State
+  const [enquiries, setEnquiries] = useState<any[]>([]);
+  const [isLoadingEnquiries, setIsLoadingEnquiries] = useState(false);
+  const [selectedEnquiry, setSelectedEnquiry] = useState<any | null>(null);
+  const [adminReplyText, setAdminReplyText] = useState("");
+  const [isReplying, setIsReplying] = useState(false);
+
+  const fetchEnquiries = async () => {
+    setIsLoadingEnquiries(true);
+    try {
+      const API_URL = getApiUrl();
+      const token = localStorage.getItem("knot_token");
+      const res = await fetch(`${API_URL}/admin/enquiries`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setEnquiries(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch enquiries:", err);
+    } finally {
+      setIsLoadingEnquiries(false);
+    }
+  };
+
+  const handleReplyEnquiry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedEnquiry || !adminReplyText.trim()) return;
+    setIsReplying(true);
+    try {
+      const API_URL = getApiUrl();
+      const token = localStorage.getItem("knot_token");
+      const res = await fetch(`${API_URL}/admin/enquiries/${selectedEnquiry.id}/respond`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ adminResponse: adminReplyText.trim() }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setEnquiries((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+        setSelectedEnquiry(null);
+        setAdminReplyText("");
+      } else {
+        alert("Failed to send response.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error sending response.");
+    } finally {
+      setIsReplying(false);
+    }
+  };
+
+  const handleDeleteEnquiry = async (id: string) => {
+    try {
+      const API_URL = getApiUrl();
+      const token = localStorage.getItem("knot_token");
+      const res = await fetch(`${API_URL}/admin/enquiries/${id}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        setEnquiries((prev) => prev.filter((item) => item.id !== id));
+        if (selectedEnquiry?.id === id) setSelectedEnquiry(null);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
   
   // Add User State
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -177,6 +252,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchUsers();
+    fetchEnquiries();
   }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -330,9 +406,35 @@ export default function AdminDashboard() {
         </div>
         <div className="text-[10px] uppercase tracking-widest text-gray-500 font-bold mb-4">Admin Hub</div>
         <nav className="space-y-2 flex-1">
-          <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 text-[#E11D48] font-semibold text-sm" onClick={() => setIsSidebarOpen(false)}>
+          <button
+            type="button"
+            onClick={() => { setActiveAdminTab("users"); setIsSidebarOpen(false); }}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-colors cursor-pointer ${
+              activeAdminTab === "users"
+                ? "bg-white/5 text-[#E11D48]"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
             <Users className="w-4 h-4" /> Users
-          </Link>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setActiveAdminTab("enquiries"); fetchEnquiries(); setIsSidebarOpen(false); }}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-colors cursor-pointer ${
+              activeAdminTab === "enquiries"
+                ? "bg-white/5 text-[#E11D48]"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <MessageSquare className="w-4 h-4" /> Support & Enquiries
+            </span>
+            {enquiries.filter((e) => e.status === "OPEN").length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-[#E11D48] text-white text-[10px] font-black">
+                {enquiries.filter((e) => e.status === "OPEN").length}
+              </span>
+            )}
+          </button>
         </nav>
         <div className="mt-auto space-y-2">
           <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-gray-400 hover:text-white transition-colors">
@@ -360,22 +462,127 @@ export default function AdminDashboard() {
             </button>
             <div>
               <h1 className="text-2xl sm:text-3xl font-serif font-black text-white flex items-center gap-3">
-                <ShieldAlert className="w-8 h-8 text-[#E27D8D]" /> Admin Control
+                <ShieldAlert className="w-8 h-8 text-[#E27D8D]" />{" "}
+                {activeAdminTab === "enquiries" ? "Support & Enquiries" : "Admin Control"}
               </h1>
-              <p className="text-sm text-gray-400 mt-1">Manage platform users and data.</p>
+              <p className="text-sm text-gray-400 mt-1">
+                {activeAdminTab === "enquiries"
+                  ? "View user support enquiries and send responses directly to members."
+                  : "Manage platform users and data."}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-4 py-2 rounded-xl text-sm font-bold bg-[#E11D48]/10 text-[#E11D48] border border-[#E11D48]/30 hover:bg-[#E11D48]/20 transition-colors flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" /> Add User
-            </button>
-          </div>
+          {activeAdminTab === "users" && (
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="px-4 py-2 rounded-xl text-sm font-bold bg-[#E11D48]/10 text-[#E11D48] border border-[#E11D48]/30 hover:bg-[#E11D48]/20 transition-colors flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Add User
+              </button>
+            </div>
+          )}
         </header>
 
-        {isLoading ? (
+        {activeAdminTab === "enquiries" ? (
+          isLoadingEnquiries ? (
+            <div className="flex items-center justify-center py-20 text-[#E11D48]">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          ) : (
+            <div className="glass-card rounded-[24px] border border-white/5 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-white/5 text-[10px] uppercase tracking-widest text-gray-400 font-bold">
+                      <th className="p-4 border-b border-white/5">User</th>
+                      <th className="p-4 border-b border-white/5">Category</th>
+                      <th className="p-4 border-b border-white/5">Subject & Message</th>
+                      <th className="p-4 border-b border-white/5">Status</th>
+                      <th className="p-4 border-b border-white/5">Submitted</th>
+                      <th className="p-4 border-b border-white/5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {enquiries.map((ticket) => (
+                      <tr key={ticket.id} className="hover:bg-white/[0.02] transition-colors">
+                        <td className="p-4">
+                          <div className="font-bold text-white text-sm">
+                            {ticket.userName || "KNOT Member"}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {ticket.userEmail || "No email provided"}
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300 font-medium">
+                            {ticket.category}
+                          </span>
+                        </td>
+                        <td className="p-4 max-w-md">
+                          <div className="font-bold text-white text-sm">{ticket.subject}</div>
+                          <div className="text-xs text-gray-400 line-clamp-2 mt-0.5">
+                            {ticket.message}
+                          </div>
+                          {ticket.adminResponse && (
+                            <div className="mt-2 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300">
+                              <span className="font-bold">Replied:</span> {ticket.adminResponse}
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                              ticket.status === "RESPONDED"
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : "bg-amber-500/20 text-amber-400"
+                            }`}
+                          >
+                            {ticket.status || "OPEN"}
+                          </span>
+                        </td>
+                        <td className="p-4 text-xs text-gray-400">
+                          {ticket.createdAt
+                            ? new Date(ticket.createdAt).toLocaleDateString()
+                            : "—"}
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedEnquiry(ticket);
+                                setAdminReplyText(ticket.adminResponse || "");
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-[#E11D48]/15 hover:bg-[#E11D48]/30 text-[#E11D48] text-xs font-bold transition-colors cursor-pointer"
+                            >
+                              {ticket.status === "RESPONDED" ? "View / Edit Reply" : "View & Respond"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteEnquiry(ticket.id)}
+                              className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer"
+                              title="Delete Enquiry"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {enquiries.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-gray-500 text-sm">
+                          No support enquiries have been submitted yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )
+        ) : isLoading ? (
           <div className="flex items-center justify-center py-20 text-[#E11D48]">
             <Loader2 className="w-8 h-8 animate-spin" />
           </div>
@@ -509,6 +716,79 @@ export default function AdminDashboard() {
           </div>
         )}
       </main>
+
+      {/* Respond to Enquiry Modal */}
+      {selectedEnquiry && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[70] flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-[#121721] rounded-[24px] border border-white/10 shadow-2xl p-6 space-y-5">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div>
+                <h2 className="text-lg font-serif font-black text-white">Enquiry Details & Response</h2>
+                <p className="text-xs text-gray-400">
+                  From {selectedEnquiry.userName || "KNOT Member"} ({selectedEnquiry.userEmail || "No email"})
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedEnquiry(null)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 bg-white/[0.03] border border-white/10 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[#E11D48]">
+                  {selectedEnquiry.category}
+                </span>
+                <span className="text-[11px] text-gray-500">
+                  {selectedEnquiry.createdAt
+                    ? new Date(selectedEnquiry.createdAt).toLocaleString()
+                    : ""}
+                </span>
+              </div>
+              <div className="text-sm font-bold text-white">{selectedEnquiry.subject}</div>
+              <p className="text-xs text-gray-300 whitespace-pre-wrap leading-relaxed">
+                {selectedEnquiry.message}
+              </p>
+            </div>
+
+            <form onSubmit={handleReplyEnquiry} className="space-y-4">
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1.5">
+                  Admin Response (Sent to User App & Email)
+                </label>
+                <textarea
+                  rows={4}
+                  required
+                  value={adminReplyText}
+                  onChange={(e) => setAdminReplyText(e.target.value)}
+                  placeholder="Write your response to the user..."
+                  className="w-full bg-[#0A0D14] border border-white/10 rounded-xl p-3.5 text-sm text-white placeholder-gray-500 focus:border-[#E11D48] focus:outline-none resize-none"
+                />
+              </div>
+              <div className="flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedEnquiry(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isReplying}
+                  className="px-5 py-2.5 rounded-xl bg-[#E11D48] hover:bg-[#BE123C] text-white text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  {isReplying ? "Sending Response..." : "Send Response"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add User Modal */}
       {isCreateModalOpen && (

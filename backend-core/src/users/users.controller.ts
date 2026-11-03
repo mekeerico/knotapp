@@ -67,6 +67,17 @@ export class UsersController {
     return this.usersService.findOne(req.user.id);
   }
 
+  @Post('support')
+  async createSupportTicket(@Body() dto: any) {
+    return this.usersService.createSupportTicket(dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('support/my')
+  async getMySupportTickets(@Request() req: any) {
+    return this.usersService.getUserSupportTickets(req.user.id);
+  }
+
   @Get(':id')
   async getById(@Param('id') id: string) {
     return this.usersService.findOne(id);
