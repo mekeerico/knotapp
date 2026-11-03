@@ -443,11 +443,13 @@ export default function Onboarding() {
   const handleFinalizeRegistration = async () => {
     try {
       const API_URL = getApiUrl();
+      const signupToken = sessionStorage.getItem('onboard_signup_token') || undefined;
         
       const res = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          signupToken,
           firstName, lastName, dateOfBirth, email, password,
           gender, preferredGender: gender?.toLowerCase() === 'female' ? 'Male' : 'Female',
           bio: "", occupation, religion: religionSelect === "Other" ? religionCustom : religionSelect,
@@ -466,23 +468,30 @@ export default function Onboarding() {
       });
 
       const data = await res.json();
-      if (data.token) {
-        localStorage.setItem('knot_token', data.token);
+      if (!res.ok || !data.token) {
+        const msg = Array.isArray(data?.message) ? data.message.join(', ') : data?.message;
+        alert(msg || "Registration failed. Please verify your email again and retry.");
+        if (msg && /verif/i.test(msg)) {
+          sessionStorage.removeItem('onboard_otp_verified');
+          sessionStorage.removeItem('onboard_signup_token');
+          window.location.href = '/login?mode=signup';
+        }
+        return;
       }
+
+      localStorage.setItem('knot_token', data.token);
       localStorage.setItem('knot_userProfile', JSON.stringify({
         firstName, lastName, dateOfBirth, email, 
         residenceCity, residenceCountry, occupation,
         isVerified: false
       }));
+      sessionStorage.removeItem('onboard_password');
+      sessionStorage.removeItem('onboard_otp_verified');
+      sessionStorage.removeItem('onboard_signup_token');
       setStep(6);
     } catch (err) {
       console.error("Registration failed:", err);
-      localStorage.setItem('knot_userProfile', JSON.stringify({
-        firstName, lastName, dateOfBirth, email, 
-        residenceCity, residenceCountry, occupation,
-        isVerified: false
-      }));
-      setStep(6);
+      alert("Registration failed due to a network error. Please try again.");
     }
   };
 

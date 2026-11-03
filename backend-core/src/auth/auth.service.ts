@@ -88,11 +88,32 @@ export class AuthService {
     entry.verified = true;
     entry.expiresAt = Date.now() + 30 * 60 * 1000; // Extend 30m for completing onboarding
 
+    // Stateless proof of email verification (survives server restarts/redeploys during onboarding)
+    const signupToken = this.jwtService.sign(
+      { email, purpose: 'signup-email-verified' },
+      { secret: this.signupTokenSecret(), expiresIn: '24h' },
+    );
+
     return {
       success: true,
       verified: true,
+      signupToken,
       message: 'Email verified successfully.',
     };
+  }
+
+  private signupTokenSecret() {
+    return `${process.env.JWT_SECRET || 'supersecretprodtoken'}::signup-otp`;
+  }
+
+  private isSignupTokenValid(token: string | undefined, email: string): boolean {
+    if (!token) return false;
+    try {
+      const payload: any = this.jwtService.verify(token, { secret: this.signupTokenSecret() });
+      return payload?.purpose === 'signup-email-verified' && payload?.email === email;
+    } catch {
+      return false;
+    }
   }
 
   private async sendResendOtpEmail(toEmail: string, code: string) {
@@ -186,9 +207,17 @@ export class AuthService {
       throw new BadRequestException('Email is already registered.');
     }
 
-    // If otpCode is passed directly in register, validate it
-    if (dto.otpCode) {
+    // Email ownership MUST be proven before an account is created:
+    // either a signupToken from /auth/verify-otp, or a valid 6-digit otpCode.
+    let emailVerified = this.isSignupTokenValid(dto.signupToken, email);
+    if (!emailVerified && dto.otpCode) {
       await this.verifySignupOtp({ email, code: String(dto.otpCode) });
+      emailVerified = true;
+    }
+    if (!emailVerified) {
+      throw new BadRequestException(
+        'Email verification required. Please verify your email with the 6-digit code we send you. If you are using the mobile app, please update to the latest version.',
+      );
     }
     this.otpStore.delete(email);
 

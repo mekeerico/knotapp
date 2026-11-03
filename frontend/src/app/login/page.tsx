@@ -203,6 +203,9 @@ export default function Login() {
       sessionStorage.setItem("onboard_email", email.trim());
       sessionStorage.setItem("onboard_password", password);
       sessionStorage.setItem("onboard_otp_verified", "true");
+      if (data.signupToken) {
+        sessionStorage.setItem("onboard_signup_token", data.signupToken);
+      }
       setShowOtpModal(false);
       router.push("/onboarding?step=2");
     } catch (err: any) {
