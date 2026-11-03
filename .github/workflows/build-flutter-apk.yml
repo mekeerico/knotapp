@@ -144,10 +144,11 @@ jobs:
 
       - name: Build Android App Bundle (AAB) for Play Store
         run: |
-          echo "Starting AAB release compilation with parallel execution and Gradle cache..."
-          flutter build appbundle --release --no-tree-shake-icons --dart-define=API_URL=http://knotmarriage.online:8080
+          BUILD_NUM=$((10 + GITHUB_RUN_NUMBER))
+          echo "Starting AAB release compilation with build-number=$BUILD_NUM..."
+          flutter build appbundle --release --no-tree-shake-icons --build-number=$BUILD_NUM --dart-define=API_URL=http://knotmarriage.online:8080
           cp build/app/outputs/bundle/release/app-release.aab build/app/outputs/bundle/release/knot-app-release.aab
-          echo "AAB build completed successfully."
+          echo "AAB build completed successfully (versionCode=$BUILD_NUM)."
         working-directory: mobile-flutter
 
       - name: Upload Knot AAB Artifact (Play Store Bundle)
@@ -291,10 +292,11 @@ jobs:
 
       - name: Build Release APK
         run: |
-          echo "Starting APK release compilation with parallel execution and Gradle cache..."
-          flutter build apk --release --no-tree-shake-icons --dart-define=API_URL=http://knotmarriage.online:8080
+          BUILD_NUM=$((10 + GITHUB_RUN_NUMBER))
+          echo "Starting APK release compilation with build-number=$BUILD_NUM..."
+          flutter build apk --release --no-tree-shake-icons --build-number=$BUILD_NUM --dart-define=API_URL=http://knotmarriage.online:8080
           cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/knot-app.apk
-          echo "APK build completed successfully."
+          echo "APK build completed successfully (versionCode=$BUILD_NUM)."
         working-directory: mobile-flutter
 
       - name: Upload Knot APK Artifact
