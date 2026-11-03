@@ -217,12 +217,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   padding: const EdgeInsets.all(20),
                   backgroundColor: isVerified
                       ? AppColors.emeraldVerified.withOpacity(0.08)
-                      : Colors.amber.withOpacity(0.10),
+                      : null,
                   border: Border.all(
                     color: isVerified
                         ? AppColors.emeraldVerified.withOpacity(0.4)
-                        : Colors.amber.withOpacity(0.4),
-                    width: 1.2,
+                        : Colors.white.withValues(alpha: 0.10),
+                    width: 1.0,
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,16 +238,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               borderRadius: BorderRadius.circular(14),
                               color: isVerified
                                   ? AppColors.emeraldVerified.withOpacity(0.2)
-                                  : Colors.amber.withOpacity(0.2),
+                                  : Colors.white.withValues(alpha: 0.06),
                               border: Border.all(
                                 color: isVerified
                                     ? AppColors.emeraldVerified.withOpacity(0.4)
-                                    : Colors.amber.withOpacity(0.4),
+                                    : Colors.white.withValues(alpha: 0.12),
                               ),
                             ),
                             child: Icon(
                               isVerified ? Icons.verified_user : Icons.shield_outlined,
-                              color: isVerified ? AppColors.emeraldVerified : Colors.amber,
+                              color: isVerified ? AppColors.emeraldVerified : AppColors.textSubtle,
                               size: 24,
                             ),
                           ),
@@ -264,7 +264,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                             ? 'VERIFIED PROFILE'
                                             : 'UNVERIFIED PROFILE — HIDDEN FROM REGISTRY',
                                         style: AppTypography.titleMedium.copyWith(
-                                          color: isVerified ? AppColors.emeraldVerified : Colors.amber.shade300,
+                                          color: isVerified ? AppColors.emeraldVerified : AppColors.textSubtle,
                                           fontSize: 12,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 0.8,

@@ -43,7 +43,7 @@ class MainNavigationShell extends StatelessWidget {
           onTap: _onTap,
           backgroundColor: Colors.transparent,
           elevation: 0,
-          selectedItemColor: AppColors.champagneGold,
+          selectedItemColor: const Color(0xFF6B2D5C),
           unselectedItemColor: AppColors.textSubtle,
           selectedFontSize: 10,
           unselectedFontSize: 10,

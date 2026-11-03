@@ -403,7 +403,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
           padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 8.0, bottom: 90.0),
           child: GlassCard(
             padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
-            border: Border.all(color: AppColors.champagneGold.withOpacity(0.5), width: 1.2),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.10), width: 1.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -451,23 +451,23 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.10),
+                    color: Colors.white.withValues(alpha: 0.04),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.amber.withOpacity(0.35)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Padding(
                         padding: EdgeInsets.only(top: 1),
-                        child: Icon(Icons.warning_amber_rounded, size: 18, color: Colors.amber),
+                        child: Icon(Icons.warning_amber_rounded, size: 18, color: AppColors.textSubtle),
                       ),
                       const SizedBox(width: 10),
                       Flexible(
                         child: Text(
                           'Complete your biometric identity verification to make your profile public and unlock curated candidates.',
                           style: AppTypography.bodySmall.copyWith(
-                            color: const Color(0xFFFDE68A),
+                            color: AppColors.textSubtle,
                             fontWeight: FontWeight.w600,
                             fontSize: 12,
                             height: 1.4,
