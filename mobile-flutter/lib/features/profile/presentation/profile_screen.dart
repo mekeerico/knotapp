@@ -224,90 +224,96 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         : AppColors.champagneGold.withOpacity(0.4),
                     width: 1.2,
                   ),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isVerified
-                              ? AppColors.emeraldVerified.withOpacity(0.2)
-                              : AppColors.champagneGold.withOpacity(0.2),
-                        ),
-                        child: Icon(
-                          isVerified ? Icons.verified_user : Icons.shield_outlined,
-                          color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
-                          size: 26,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  isVerified ? 'VERIFIED PROFILE' : 'UNVERIFIED PROFILE',
-                                  style: AppTypography.titleMedium.copyWith(
-                                    color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (isVerified) ...[
-                                  const SizedBox(width: 6),
-                                  const VerifiedBadge(size: 18),
-                                ],
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              isVerified
-                                  ? 'Biometric 1:1 match and government document certified.'
-                                  : '⚠️ Profile Hidden: You must get verified before you can be matched to any candidate.',
-                              style: AppTypography.bodySmall.copyWith(fontSize: 12),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (!isVerified)
-                        GoldButton(
-                          text: 'VERIFY',
-                          width: 90,
-                          height: 38,
-                          onPressed: () => context.push('/verification'),
-                        ),
-                    ],
-                  ),
-                  if (!isVerified) ...[
-                    const SizedBox(height: 14),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: Colors.amber.withOpacity(0.4)),
-                      ),
-                      child: Row(
+                      Row(
                         children: [
-                          const Icon(Icons.warning_amber_rounded, size: 20, color: Colors.amber),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'Your profile is currently private and hidden. You cannot be matched to candidates until biometric identity verification is completed.',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 11,
-                              ),
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isVerified
+                                  ? AppColors.emeraldVerified.withOpacity(0.2)
+                                  : AppColors.champagneGold.withOpacity(0.2),
+                            ),
+                            child: Icon(
+                              isVerified ? Icons.verified_user : Icons.shield_outlined,
+                              color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
+                              size: 26,
                             ),
                           ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      isVerified ? 'VERIFIED PROFILE' : 'UNVERIFIED PROFILE',
+                                      style: AppTypography.titleMedium.copyWith(
+                                        color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (isVerified) ...[
+                                      const SizedBox(width: 6),
+                                      const VerifiedBadge(size: 18),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  isVerified
+                                      ? 'Biometric 1:1 match and government document certified.'
+                                      : '⚠️ Profile Hidden: You must get verified before you can be matched to any candidate.',
+                                  style: AppTypography.bodySmall.copyWith(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (!isVerified)
+                            GoldButton(
+                              text: 'VERIFY',
+                              width: 90,
+                              height: 38,
+                              onPressed: () => context.push('/verification'),
+                            ),
                         ],
                       ),
-                    ),
-                  ],
+                      if (!isVerified) ...[
+                        const SizedBox(height: 14),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: Colors.amber.withOpacity(0.4)),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.warning_amber_rounded, size: 20, color: Colors.amber),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Your profile is currently private and hidden. You cannot be matched to candidates until biometric identity verification is completed.',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 24),
 
