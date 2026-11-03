@@ -23,6 +23,7 @@ class AppColors {
   // Verified & Trust Emerald
   static const Color emeraldVerified = Color(0xFF10B981);
   static const Color emeraldSuccess = Color(0xFF10B981);
+  static const Color errorRed = Color(0xFFEF4444);
   
   // Borders & Glows
   static const Color borderSubtle = Color(0x1AFFFFFF);     // 10% white for crisp glass borders
