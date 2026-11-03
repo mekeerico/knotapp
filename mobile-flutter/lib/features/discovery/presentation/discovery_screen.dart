@@ -170,6 +170,57 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                     ? _buildEmptyRegistry(notifier, authState.user)
                     : Column(
                         children: [
+                          if (!(authState.user?.isVerified ?? false))
+                            GestureDetector(
+                              onTap: () => context.push('/verification'),
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2D1B4E),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: AppColors.champagneGold, width: 1.2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.champagneGold.withOpacity(0.15),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.shield_outlined, color: AppColors.champagneGold, size: 20),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        'Verification Required: Get verified to activate matching and connect with candidates.',
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.champagneGold,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: const Text(
+                                        'VERIFY',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -342,6 +393,82 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
     }
     if (!isMaleUser && !isFemaleUser) {
       isMaleUser = true; // Default
+    }
+
+    final isUserVerified = currentUser?.isVerified ?? false;
+
+    if (!isUserVerified) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: GlassCard(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.champagneGold.withOpacity(0.12),
+                    border: Border.all(color: AppColors.champagneGold, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.champagneGold.withOpacity(0.25),
+                        blurRadius: 18,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.verified_user_outlined, size: 38, color: AppColors.champagneGold),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Biometric Verification Required',
+                  style: AppTypography.headingLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Your profile is currently private and hidden from the KNOT Registry.\n\nIn accordance with KNOT Sovereign Matrimony standards, unverified users cannot be matched with any candidate.',
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted, height: 1.5),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.amber.withOpacity(0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.shield_outlined, size: 18, color: Colors.amber),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          'Complete your biometric verification to make your profile public and unlock curated candidates.',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                GoldButton(
+                  text: 'Verify Your Identity Now',
+                  onPressed: () => context.push('/verification'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     final targetCohort = isMaleUser ? 'eligible ladies' : 'eligible gentlemen';

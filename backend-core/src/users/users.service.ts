@@ -171,7 +171,7 @@ export class UsersService {
         seriousnessLevel: aiData.seriousnessLevel || 80,
         trustScore: 85, // Set base trust score upon verified conversational completion
         personalValues: aiData.values || [],
-        isVerified: true, // Auto verify upon conversational AI verification
+        isVerified: user.isVerified || false, // Verification strictly requires biometric KYC documents
       },
     });
 

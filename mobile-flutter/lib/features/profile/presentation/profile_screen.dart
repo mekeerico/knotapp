@@ -266,7 +266,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             Text(
                               isVerified
                                   ? 'Biometric 1:1 match and government document certified.'
-                                  : 'Complete biometric scan to unlock high-intent marriage matches.',
+                                  : '⚠️ Profile Hidden: You must get verified before you can be matched to any candidate.',
                               style: AppTypography.bodySmall.copyWith(fontSize: 12),
                             ),
                           ],
@@ -281,6 +281,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ),
                     ],
                   ),
+                  if (!isVerified) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.amber.withOpacity(0.4)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.warning_amber_rounded, size: 20, color: Colors.amber),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Your profile is currently private and hidden. You cannot be matched to candidates until biometric identity verification is completed.',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
 

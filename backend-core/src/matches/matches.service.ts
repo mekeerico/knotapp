@@ -155,6 +155,14 @@ export class MatchesService {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found.');
 
+    // STRICT BIOMETRIC IDENTITY REQUIREMENT:
+    // Unverified users can never be matched and cannot receive match candidates.
+    const isUserVerified = Boolean(user.isVerified || user.idVerified || user.selfieVerified);
+    if (!isUserVerified) {
+      this.logger.log(`User ${userId} requested daily matches but has not completed biometric verification. Returning 0 matches.`);
+      return [];
+    }
+
     // Strictly enforce opposite-sex matching only (Male <-> Female)
     const userGenderRaw = (user.gender || '').trim().toLowerCase();
     let isUserMale = userGenderRaw === 'male' || userGenderRaw === 'man' || userGenderRaw === 'm';
@@ -225,6 +233,22 @@ export class MatchesService {
         id: { not: userId },
         ...(userEmail ? { email: { not: userEmail } } : {}),
         passwordHash: { startsWith: '$2' }, // Strictly only real humans with bcrypt password hashes
+        AND: [
+          // STRICT BIOMETRIC IDENTITY REQUIREMENT: Candidate must be verified
+          {
+            OR: [
+              { isVerified: true },
+              { idVerified: true },
+              { selfieVerified: true },
+            ],
+          },
+          {
+            OR: [
+              { gender: { in: targetVariants, mode: 'insensitive' } },
+              { gender: '' },
+            ],
+          },
+        ],
         NOT: [
           { email: { contains: 'mock', mode: 'insensitive' } },
           { email: { contains: 'test', mode: 'insensitive' } },
@@ -239,10 +263,6 @@ export class MatchesService {
         profileImages: {
           some: {}, // Strictly only real humans who have uploaded at least one profile photo
         },
-        OR: [
-          { gender: { in: targetVariants, mode: 'insensitive' } },
-          { gender: '' },
-        ],
       },
       orderBy: [
         { isVerified: 'desc' },
@@ -253,9 +273,13 @@ export class MatchesService {
     });
 
     // Hard guarantee filter:
+    // 0. Biometric Verification: Candidates must be verified.
     // 1. A user can NEVER be matched to themselves (by ID, email, or identical full name).
     // 2. Strict Opposite-Sex matching only (Male <-> Female). Candidates of the same sex or ambiguous sex are discarded.
     const strictlyOppositeCandidates = allCandidates.filter((c) => {
+      // 0. Strict Biometric Verification Enforcement
+      const isCandidateVerified = Boolean(c.isVerified || c.idVerified || c.selfieVerified);
+      if (!isCandidateVerified) return false;
       // 1. Strict Self-Exclusion
       if (c.id === userId) return false;
       if (userEmail && c.email && c.email.trim().toLowerCase() === userEmail) return false;

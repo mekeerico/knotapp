@@ -1396,7 +1396,39 @@ export default function Dashboard() {
               <p className="text-sm text-gray-400">Curating your AI matches...</p>
             </div>
           )}
-          {activeTab === "matches" && !isLoadingMatches && matches.length === 0 && (
+
+          {/* Verification Required Guard for Unverified Users */}
+          {activeTab === "matches" && !isLoadingMatches && !Boolean(userProfile?.isVerified || userProfile?.idVerified || userProfile?.selfieVerified) && (
+            <div className="glass-card rounded-[32px] p-8 sm:p-12 border border-[#D4AF37]/50 text-center space-y-6 flex flex-col items-center justify-center max-w-xl mx-auto shadow-2xl animate-fade-in">
+              <div className="w-20 h-20 rounded-full bg-[#D4AF37]/15 border-2 border-[#D4AF37] flex items-center justify-center text-[#D4AF37] shadow-lg shadow-[#D4AF37]/20">
+                <ShieldCheck className="w-10 h-10" />
+              </div>
+              <div className="space-y-2">
+                <span className="text-[11px] font-black uppercase tracking-widest text-[#D4AF37] bg-[#D4AF37]/10 px-3.5 py-1 rounded-full border border-[#D4AF37]/30">
+                  Verification Required
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-serif font-black text-white pt-2">
+                  Biometric Verification Required
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-300 max-w-md leading-relaxed mx-auto">
+                  Your profile is currently private and hidden from the KNOT Registry. In accordance with KNOT Sovereign Matrimony standards, unverified users cannot be matched with any candidate.
+                </p>
+                <div className="mt-3 p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl text-[11px] text-amber-300 text-left flex items-start gap-2.5">
+                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                  <span>Complete your biometric identity verification to make your profile public and unlock curated candidates.</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDiditModal(true)}
+                className="px-8 py-4 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA7C11] text-black font-black text-xs uppercase tracking-widest shadow-xl shadow-[#D4AF37]/30 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <ShieldCheck className="w-4 h-4 text-black" /> Verify Your Identity Now
+              </button>
+            </div>
+          )}
+
+          {activeTab === "matches" && !isLoadingMatches && Boolean(userProfile?.isVerified || userProfile?.idVerified || userProfile?.selfieVerified) && matches.length === 0 && (
             <div className="glass-card rounded-[32px] p-10 sm:p-12 border border-white/10 text-center space-y-5 flex flex-col items-center justify-center max-w-lg mx-auto">
               <div className="w-18 h-18 rounded-full bg-[#E27D8D]/12 border border-[#E27D8D]/40 flex items-center justify-center text-[#E27D8D] mb-2 p-4">
                 <Compass className="w-9 h-9" />
@@ -1449,6 +1481,16 @@ export default function Dashboard() {
                         </span>
                         <span className="text-[10px] font-bold tracking-wider text-[#E27D8D] border border-[#E27D8D]/40 rounded px-1.5 py-0.5">
                           GOLD
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Verification Notice Bar inside Picture Card */}
+                    <div className="absolute top-14 left-4 right-4 z-20">
+                      <div className="px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md border border-[#D4AF37]/40 flex items-center gap-2 text-left shadow-lg">
+                        <Shield className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+                        <span className="text-[10px] text-gray-200 font-semibold truncate">
+                          Verified Matching: Only biometric verified candidates and members are matched.
                         </span>
                       </div>
                     </div>
@@ -2149,42 +2191,48 @@ export default function Dashboard() {
 
               {/* Didit KYC Verification Card (Matches Mobile) */}
               <div className={`p-6 rounded-[28px] border transition-all ${
-                userProfile?.isVerified !== false
+                Boolean(userProfile?.isVerified || userProfile?.idVerified || userProfile?.selfieVerified)
                   ? "bg-[#10B981]/10 border-[#10B981]/40"
-                  : "bg-[#D4AF37]/10 border-[#D4AF37]/40"
+                  : "bg-[#D4AF37]/15 border-[#D4AF37]/60 shadow-lg shadow-[#D4AF37]/10"
               }`}>
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                      userProfile?.isVerified !== false ? "bg-[#10B981]/20 text-[#10B981]" : "bg-[#D4AF37]/20 text-[#D4AF37]"
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-start sm:items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+                      Boolean(userProfile?.isVerified || userProfile?.idVerified || userProfile?.selfieVerified)
+                        ? "bg-[#10B981]/20 text-[#10B981]"
+                        : "bg-[#D4AF37]/20 text-[#D4AF37]"
                     }`}>
                       <ShieldCheck className="w-6 h-6" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs font-black uppercase tracking-wider ${
-                          userProfile?.isVerified !== false ? "text-[#10B981]" : "text-[#D4AF37]"
+                          Boolean(userProfile?.isVerified || userProfile?.idVerified || userProfile?.selfieVerified)
+                            ? "text-[#10B981]"
+                            : "text-[#D4AF37]"
                         }`}>
-                          {userProfile?.isVerified !== false ? "VERIFIED PROFILE" : "UNVERIFIED PROFILE"}
+                          {Boolean(userProfile?.isVerified || userProfile?.idVerified || userProfile?.selfieVerified)
+                            ? "VERIFIED PROFILE"
+                            : "UNVERIFIED PROFILE — HIDDEN FROM REGISTRY"}
                         </span>
-                        {userProfile?.isVerified !== false && (
+                        {Boolean(userProfile?.isVerified || userProfile?.idVerified || userProfile?.selfieVerified) && (
                           <span className="text-[10px] bg-[#10B981] text-black px-1.5 py-0.2 rounded font-black">✓</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-300 mt-1">
-                        {userProfile?.isVerified !== false
-                          ? "Biometric 1:1 match and government document certified."
-                          : "Complete biometric scan to unlock high-intent marriage matches."}
+                      <p className="text-xs text-gray-300 mt-1 leading-relaxed">
+                        {Boolean(userProfile?.isVerified || userProfile?.idVerified || userProfile?.selfieVerified)
+                          ? "Biometric 1:1 match and government document certified. Your profile is active and public in the registry."
+                          : "⚠️ Your profile is currently hidden from other members. You cannot be matched to any candidates until you complete biometric verification."}
                       </p>
                     </div>
                   </div>
-                  {userProfile?.isVerified === false && (
+                  {!Boolean(userProfile?.isVerified || userProfile?.idVerified || userProfile?.selfieVerified) && (
                     <button
                       type="button"
                       onClick={() => setShowDiditModal(true)}
-                      className="px-5 py-2.5 rounded-full bg-gradient-to-r from-[#F3E5AB] via-[#E27D8D] to-[#AA7C11] text-black text-xs font-black uppercase tracking-wider hover:opacity-95 transition-opacity shrink-0 cursor-pointer shadow-md"
+                      className="px-6 py-3 rounded-full bg-gradient-to-r from-[#D4AF37] via-[#F3E5AB] to-[#AA7C11] text-black text-xs font-black uppercase tracking-wider hover:scale-[1.02] active:scale-[0.98] transition-all shrink-0 cursor-pointer shadow-md"
                     >
-                      VERIFY
+                      VERIFY NOW
                     </button>
                   )}
                 </div>

@@ -74,7 +74,41 @@ class _CandidateCardState extends State<CandidateCard> {
               ),
             ),
 
-            // 3. Top Bar: Golden Trust Badge
+            // 3. Top Left: Sovereign Verified Candidate Badge
+            Positioned(
+              top: 16,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0B0E14).withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: const Color(0xFFD4AF37), width: 1.0),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.verified_user_rounded,
+                      size: 13,
+                      color: Color(0xFFD4AF37),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'VERIFIED CANDIDATE',
+                      style: TextStyle(
+                        color: Color(0xFFD4AF37),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 4. Top Bar: Golden Trust Badge
             Positioned(
               top: 16,
               right: 16,
@@ -107,6 +141,39 @@ class _CandidateCardState extends State<CandidateCard> {
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 5. Verification Notice Bar inside the Card
+            Positioned(
+              top: 50,
+              left: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.70),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.35), width: 0.8),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.shield_outlined, size: 12, color: Color(0xFFD4AF37)),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Verified Matching: Users must be biometric verified before they can be matched.',
+                        style: TextStyle(
+                          color: Color(0xFFF3E5AB),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
