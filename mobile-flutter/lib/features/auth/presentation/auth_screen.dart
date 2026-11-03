@@ -117,18 +117,16 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
 
     final notifier = ref.read(authProvider.notifier);
-    bool success;
     if (_isSignUp) {
-      success = await notifier.register(email, password);
-    } else {
-      success = await notifier.login(email, password);
-    }
+      final otpSent = await notifier.sendSignupOtp(email, password);
+      if (!otpSent || !mounted) return;
 
-    if (success && mounted) {
+      final verifiedCode = await _showOtpVerificationDialog(email, password);
+      if (verifiedCode == null || !mounted) return;
+
       // Trigger native Android Google Password Manager / iOS Keychain prompt
       TextInput.finishAutofillContext(shouldSave: _rememberMe);
 
-      // Persist or clear encrypted local credentials asynchronously in background
       final storage = ref.read(secureStorageProvider);
       if (_rememberMe) {
         storage.saveCredentials(email, password);
@@ -136,19 +134,272 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         storage.setRememberMe(false);
       }
 
-      if (_isSignUp) {
-        final user = ref.read(authProvider).user;
-        if (user?.firstName.isEmpty ?? true) {
-          context.go('/onboarding');
-        } else {
-          context.go('/discovery');
-        }
+      final user = ref.read(authProvider).user;
+      if (user?.firstName.isEmpty ?? true) {
+        context.go('/onboarding');
       } else {
-        // Sign In takes users directly to matches screen to see matched candidates
-        ref.read(discoveryProvider.notifier).loadCandidates();
         context.go('/discovery');
       }
+      return;
     }
+
+    final success = await notifier.login(email, password);
+    if (success && mounted) {
+      TextInput.finishAutofillContext(shouldSave: _rememberMe);
+
+      final storage = ref.read(secureStorageProvider);
+      if (_rememberMe) {
+        storage.saveCredentials(email, password);
+      } else {
+        storage.setRememberMe(false);
+      }
+
+      ref.read(discoveryProvider.notifier).loadCandidates();
+      context.go('/discovery');
+    }
+  }
+
+  Future<String?> _showOtpVerificationDialog(String email, String password) async {
+    final controllers = List.generate(6, (_) => TextEditingController());
+    final focusNodes = List.generate(6, (_) => FocusNode());
+    String? dialogError;
+    bool isSubmitting = false;
+    bool isResending = false;
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            final currentCode = controllers.map((c) => c.text.trim()).join();
+
+            Future<void> verifyAndRegister() async {
+              final code = controllers.map((c) => c.text.trim()).join();
+              if (code.length != 6) {
+                setDialogState(() {
+                  dialogError = 'Please enter all 6 digits sent to your email.';
+                });
+                return;
+              }
+              setDialogState(() {
+                isSubmitting = true;
+                dialogError = null;
+              });
+
+              final ok = await ref
+                  .read(authProvider.notifier)
+                  .register(email, password, otpCode: code);
+
+              if (!ctx.mounted) return;
+              if (ok) {
+                Navigator.of(ctx).pop(code);
+              } else {
+                setDialogState(() {
+                  isSubmitting = false;
+                  dialogError = ref.read(authProvider).errorMessage ??
+                      'Invalid verification code. Please try again.';
+                });
+              }
+            }
+
+            return Dialog(
+              backgroundColor: const Color(0xFF121721),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(28),
+                side: BorderSide(
+                  color: _webRose.withValues(alpha: 0.35),
+                  width: 1,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        GestureDetector(
+                          onTap: isSubmitting ? null : () => Navigator.of(ctx).pop(null),
+                          child: const Icon(Icons.close, color: _webSlateMuted, size: 20),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: _webRose.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: _webRose.withValues(alpha: 0.3)),
+                      ),
+                      child: const Icon(Icons.verified_user_outlined, color: _webRose, size: 26),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Verify Your Email',
+                      style: AppTypography.headingLarge.copyWith(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Enter the 6-digit verification code sent to\n$email',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: _webSlateMuted,
+                        fontSize: 12.5,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    if (dialogError != null) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+                          ),
+                        ),
+                        child: Text(
+                          dialogError!,
+                          textAlign: TextAlign.center,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: const Color(0xFFF87171),
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(6, (idx) {
+                        return SizedBox(
+                          width: 42,
+                          height: 52,
+                          child: TextField(
+                            controller: controllers[idx],
+                            focusNode: focusNodes[idx],
+                            enabled: !isSubmitting,
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            maxLength: 1,
+                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                            style: AppTypography.headingLarge.copyWith(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                            ),
+                            decoration: InputDecoration(
+                              counterText: '',
+                              filled: true,
+                              fillColor: _webInputFill,
+                              contentPadding: EdgeInsets.zero,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: _webRose,
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            onChanged: (val) {
+                              setDialogState(() {
+                                dialogError = null;
+                              });
+                              if (val.isNotEmpty && idx < 5) {
+                                focusNodes[idx + 1].requestFocus();
+                              } else if (val.isEmpty && idx > 0) {
+                                focusNodes[idx - 1].requestFocus();
+                              }
+                            },
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 22),
+                    GestureDetector(
+                      onTap: (isSubmitting || currentCode.length != 6) ? null : verifyAndRegister,
+                      child: Opacity(
+                        opacity: (isSubmitting || currentCode.length != 6) ? 0.5 : 1.0,
+                        child: Container(
+                          width: double.infinity,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            gradient: _webRoseGlowGradient,
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Center(
+                            child: isSubmitting
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : Text(
+                                    'Verify & Continue',
+                                    style: AppTypography.labelLarge.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextButton(
+                      onPressed: (isSubmitting || isResending)
+                          ? null
+                          : () async {
+                              setDialogState(() {
+                                isResending = true;
+                                dialogError = null;
+                              });
+                              await ref.read(authProvider.notifier).sendSignupOtp(email, password);
+                              if (!ctx.mounted) return;
+                              for (final c in controllers) {
+                                c.clear();
+                              }
+                              focusNodes[0].requestFocus();
+                              setDialogState(() {
+                                isResending = false;
+                              });
+                            },
+                      child: Text(
+                        isResending ? 'Sending new code...' : 'Resend 6-Digit Code',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: _webRose,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override

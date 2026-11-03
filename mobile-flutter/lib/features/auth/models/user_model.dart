@@ -139,7 +139,7 @@ class UserModel {
     for (final raw in profileImageUrls) {
       if (raw.isNotEmpty) {
         if (raw.startsWith('/uploads/')) {
-          const baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
+          const baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://knotmarriage.online:8080');
           return '$baseUrl$raw';
         }
         return raw;
@@ -148,7 +148,7 @@ class UserModel {
     if (selfieUrl != null && selfieUrl!.isNotEmpty) {
       final s = selfieUrl!;
       if (s.startsWith('/uploads/')) {
-        const baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
+        const baseUrl = String.fromEnvironment('API_URL', defaultValue: 'http://knotmarriage.online:8080');
         return '$baseUrl$s';
       }
       return s;

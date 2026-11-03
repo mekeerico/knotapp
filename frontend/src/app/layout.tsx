@@ -13,6 +13,7 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://knotmarriage.online"),
   title: "KNOT | Where True Relationship Leads to Vow",
   description: "KNOT is a premium, AI-powered relationship intelligence platform for verified serious singles seeking marriage and long-term commitment. No games. No fakes. Just real connections.",
   icons: {

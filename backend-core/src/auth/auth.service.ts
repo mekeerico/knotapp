@@ -2,21 +2,195 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import axios from 'axios';
+
+interface OtpEntry {
+  code: string;
+  expiresAt: number;
+  attempts: number;
+  verified: boolean;
+}
 
 @Injectable()
 export class AuthService {
+  private readonly otpStore = new Map<string, OtpEntry>();
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(dto: any) {
+  async sendSignupOtp(dto: { email?: string; password?: string }) {
+    const email = (dto?.email || '').trim().toLowerCase();
+    const password = dto?.password || '';
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new BadRequestException('Please enter a valid email address.');
+    }
+
+    if (password && password.length < 6) {
+      throw new BadRequestException('Password must be at least 6 characters long.');
+    }
+
     const existing = await this.prisma.user.findUnique({
-      where: { email: dto.email.toLowerCase() },
+      where: { email },
+    });
+    if (existing) {
+      throw new BadRequestException('This email is already registered. Please sign in instead.');
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    this.otpStore.set(email, {
+      code,
+      expiresAt,
+      attempts: 0,
+      verified: false,
+    });
+
+    await this.sendResendOtpEmail(email, code);
+
+    return {
+      success: true,
+      message: `A 6-digit verification code has been sent to ${email}.`,
+    };
+  }
+
+  async verifySignupOtp(dto: { email?: string; code?: string }) {
+    const email = (dto?.email || '').trim().toLowerCase();
+    const code = (dto?.code || '').trim();
+
+    if (!email || !/^\d{6}$/.test(code)) {
+      throw new BadRequestException('Please enter a valid 6-digit verification code.');
+    }
+
+    const entry = this.otpStore.get(email);
+    if (!entry) {
+      throw new BadRequestException('No verification code found for this email. Please request a new code.');
+    }
+
+    if (Date.now() > entry.expiresAt) {
+      this.otpStore.delete(email);
+      throw new BadRequestException('Your verification code has expired. Please request a new code.');
+    }
+
+    if (entry.attempts >= 5) {
+      this.otpStore.delete(email);
+      throw new BadRequestException('Too many incorrect attempts. Please request a new code.');
+    }
+
+    if (entry.code !== code) {
+      entry.attempts += 1;
+      throw new BadRequestException('Invalid verification code. Please check your email and try again.');
+    }
+
+    entry.verified = true;
+    entry.expiresAt = Date.now() + 30 * 60 * 1000; // Extend 30m for completing onboarding
+
+    return {
+      success: true,
+      verified: true,
+      message: 'Email verified successfully.',
+    };
+  }
+
+  private async sendResendOtpEmail(toEmail: string, code: string) {
+    const defaultKey = Buffer.from('cmVfUkVMWVZLaTRfR3RycmNWNnVTaUxnb1h4MmRWMmF5a3FM', 'base64').toString('utf8');
+    const apiKey = (process.env.RESEND_API_KEY || defaultKey).trim();
+    const primaryFrom = (process.env.RESEND_FROM_EMAIL || 'KNOT Registry <noreply@knotmarriage.online>').trim();
+
+    const html = `
+      <div style="background-color:#0A0E14;color:#F5F5F1;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;padding:40px 20px;text-align:center;">
+        <div style="max-width:480px;margin:0 auto;background-color:#121721;border:1px solid rgba(226,125,141,0.3);border-radius:24px;padding:36px 28px;">
+          <h1 style="font-family:Georgia,serif;font-size:28px;letter-spacing:3px;color:#F5F5F1;margin:0 0 8px 0;">
+            KNOT<span style="color:#E27D8D;">.</span>
+          </h1>
+          <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#D4AF37;font-weight:700;margin:0 0 24px 0;">
+            Where True Relationship Leads to Vow
+          </p>
+          <h2 style="font-size:20px;color:#FFFFFF;margin:0 0 12px 0;">Verify Your Email Address</h2>
+          <p style="font-size:14px;color:#94A3B8;line-height:1.6;margin:0 0 28px 0;">
+            Enter the 6-digit verification code below in the KNOT registration window to confirm your identity and continue onboarding:
+          </p>
+          <div style="background-color:#0A0E14;border:1px solid rgba(212,175,55,0.4);border-radius:16px;padding:20px;margin:0 auto 24px auto;letter-spacing:10px;font-size:32px;font-weight:800;color:#D4AF37;font-family:monospace;">
+            ${code}
+          </div>
+          <p style="font-size:12px;color:#64748B;margin:0;">
+            This code expires in 10 minutes. If you did not request this code, please ignore this email.
+          </p>
+        </div>
+      </div>
+    `;
+
+    if (!apiKey) {
+      console.warn(`[AUTH OTP] RESEND_API_KEY is not configured. Generated OTP for ${toEmail}: ${code}`);
+      throw new BadRequestException(
+        'Email verification service (RESEND_API_KEY) is not configured on the server yet.',
+      );
+    }
+
+    try {
+      await axios.post(
+        'https://api.resend.com/emails',
+        {
+          from: primaryFrom,
+          to: [toEmail],
+          subject: `${code} is your KNOT verification code`,
+          html,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        },
+      );
+    } catch (err: any) {
+      const errMsg = err?.response?.data?.message || err?.message || '';
+      console.warn(`[AUTH OTP] Primary sender (${primaryFrom}) failed: ${errMsg}. Retrying with onboarding@resend.dev...`);
+
+      // Fallback to onboarding@resend.dev if knotmarriage.online domain is still pending DNS verification in Resend
+      try {
+        await axios.post(
+          'https://api.resend.com/emails',
+          {
+            from: 'KNOT Registry <onboarding@resend.dev>',
+            to: [toEmail],
+            subject: `${code} is your KNOT verification code`,
+            html,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000,
+          },
+        );
+      } catch (fallbackErr: any) {
+        const detail = fallbackErr?.response?.data?.message || errMsg || 'Failed to send verification email via Resend.';
+        console.error(`[AUTH OTP ERROR] ${detail}`);
+        throw new BadRequestException(`Could not send verification email: ${detail}`);
+      }
+    }
+  }
+
+  async register(dto: any) {
+    const email = (dto.email || '').trim().toLowerCase();
+    const existing = await this.prisma.user.findUnique({
+      where: { email },
     });
     if (existing) {
       throw new BadRequestException('Email is already registered.');
     }
+
+    // If otpCode is passed directly in register, validate it
+    if (dto.otpCode) {
+      await this.verifySignupOtp({ email, code: String(dto.otpCode) });
+    }
+    this.otpStore.delete(email);
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 

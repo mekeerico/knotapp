@@ -89,18 +89,25 @@ export default function Onboarding() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
+    // Load pre-filled credentials and OTP verification status from login page's "Apply Here"
+    const storedEmail = sessionStorage.getItem('onboard_email');
+    const storedPassword = sessionStorage.getItem('onboard_password');
+    const otpVerified = sessionStorage.getItem('onboard_otp_verified');
+
+    if (!storedEmail || !storedPassword || otpVerified !== 'true') {
+      window.location.href = '/login?mode=signup';
+      return;
+    }
+
+    setEmail(storedEmail);
+    setPassword(storedPassword);
+
     // Initialize step from URL param if present
     const params = new URLSearchParams(window.location.search);
     const stepParam = params.get('step');
     if (stepParam) {
       setStep(parseInt(stepParam));
     }
-    
-    // Load pre-filled credentials from login page's "Apply Here"
-    const storedEmail = sessionStorage.getItem('onboard_email');
-    const storedPassword = sessionStorage.getItem('onboard_password');
-    if (storedEmail) setEmail(storedEmail);
-    if (storedPassword) setPassword(storedPassword);
   }, []);
   const [religion, setReligion] = useState("");
   const [religionSelect, setReligionSelect] = useState("");

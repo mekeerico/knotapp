@@ -73,7 +73,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       return MemoryImage(base64Decode(base64String));
     }
     if (path.startsWith('/uploads/')) {
-      const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
+      const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotmarriage.online:8080');
       return NetworkImage('$apiBase$path');
     }
     if (path.startsWith('http://') || path.startsWith('https://')) {

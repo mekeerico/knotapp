@@ -145,7 +145,7 @@ jobs:
       - name: Build Android App Bundle (AAB) for Play Store
         run: |
           echo "Starting AAB release compilation with parallel execution and Gradle cache..."
-          flutter build appbundle --release --no-tree-shake-icons --dart-define=API_URL=http://knotconnect.duckdns.org:8080
+          flutter build appbundle --release --no-tree-shake-icons --dart-define=API_URL=http://knotmarriage.online:8080
           cp build/app/outputs/bundle/release/app-release.aab build/app/outputs/bundle/release/knot-app-release.aab
           echo "AAB build completed successfully."
         working-directory: mobile-flutter
@@ -292,7 +292,7 @@ jobs:
       - name: Build Release APK
         run: |
           echo "Starting APK release compilation with parallel execution and Gradle cache..."
-          flutter build apk --release --no-tree-shake-icons --dart-define=API_URL=http://knotconnect.duckdns.org:8080
+          flutter build apk --release --no-tree-shake-icons --dart-define=API_URL=http://knotmarriage.online:8080
           cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/knot-app.apk
           echo "APK build completed successfully."
         working-directory: mobile-flutter

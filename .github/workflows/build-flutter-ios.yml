@@ -40,7 +40,7 @@ jobs:
       - name: Build iOS App (Release Archive / IPA)
         run: |
           echo "Starting iOS Release Archive compilation..."
-          flutter build ipa --release --no-codesign --dart-define=API_URL=http://knotconnect.duckdns.org:8080
+          flutter build ipa --release --no-codesign --dart-define=API_URL=http://knotmarriage.online:8080
           echo "iOS build completed successfully."
         working-directory: mobile-flutter
 

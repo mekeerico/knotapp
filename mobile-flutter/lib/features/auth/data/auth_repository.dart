@@ -34,11 +34,45 @@ class AuthRepository {
     }
   }
 
-  Future<UserModel> register(String email, String password) async {
+  Future<void> sendSignupOtp(String email, String password) async {
+    try {
+      await _dio.post(
+        ApiEndpoints.sendOtp,
+        data: {'email': email.trim(), 'password': password},
+      );
+    } catch (e) {
+      if (e is DioException) {
+        final message = e.response?.data?['message'] ?? e.message ?? 'Failed to send verification code';
+        throw Exception(message is List ? message.join(', ') : message.toString());
+      }
+      throw Exception('Failed to send verification code: $e');
+    }
+  }
+
+  Future<void> verifySignupOtp(String email, String code) async {
+    try {
+      await _dio.post(
+        ApiEndpoints.verifyOtp,
+        data: {'email': email.trim(), 'code': code.trim()},
+      );
+    } catch (e) {
+      if (e is DioException) {
+        final message = e.response?.data?['message'] ?? e.message ?? 'Invalid verification code';
+        throw Exception(message is List ? message.join(', ') : message.toString());
+      }
+      throw Exception('Invalid verification code: $e');
+    }
+  }
+
+  Future<UserModel> register(String email, String password, {String? otpCode}) async {
     try {
       final response = await _dio.post(
         ApiEndpoints.register,
-        data: {'email': email.trim(), 'password': password},
+        data: {
+          'email': email.trim(),
+          'password': password,
+          if (otpCode != null) 'otpCode': otpCode.trim(),
+        },
       );
 
       final token = response.data['token'] ?? response.data['accessToken'];

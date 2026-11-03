@@ -10,10 +10,10 @@ class ApiEndpoints {
       return _overrideUrl;
     }
     if (kIsWeb) {
-      return 'http://knotconnect.duckdns.org:8080';
+      return 'http://knotmarriage.online:8080';
     }
     if (kReleaseMode) {
-      return 'http://knotconnect.duckdns.org:8080';
+      return 'http://knotmarriage.online:8080';
     }
     if (Platform.isAndroid) {
       // Android emulator reaches host loopback via 10.0.2.2 in debug mode
@@ -24,6 +24,8 @@ class ApiEndpoints {
   }
 
   // Auth
+  static const String sendOtp = '/auth/send-otp';
+  static const String verifyOtp = '/auth/verify-otp';
   static const String login = '/auth/login';
   static const String register = '/auth/register';
 

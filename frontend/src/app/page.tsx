@@ -56,7 +56,7 @@ export default function Home() {
               KNOT is the world's most trusted relationship intelligence ecosystem built exclusively for verified singles seeking marriage and permanent partnership. No shallow swipes. No superficial games. Just real love.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link href="/onboarding" className="px-8 py-4 rounded-full text-base font-black rose-glow-btn text-white text-center flex items-center justify-center gap-2">
+              <Link href="/login?mode=signup" className="px-8 py-4 rounded-full text-base font-black rose-glow-btn text-white text-center flex items-center justify-center gap-2">
                 Begin AI Guided Interview <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="#trust" className="px-8 py-4 rounded-full text-base font-bold bg-white/5 border border-white/10 hover:bg-white/10 text-[#F5F5F1] text-center flex items-center justify-center gap-2 transition-all">

@@ -210,7 +210,7 @@ class MatchProfile {
     }
 
     // Resolve relative /uploads/ URLs to absolute URLs using API base domain
-    const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotconnect.duckdns.org:8080');
+    const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotmarriage.online:8080');
     photoList = photoList.map((url) {
       if (url.startsWith('/uploads/')) {
         return '$apiBase$url';

@@ -121,10 +121,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> register(String email, String password) async {
+  Future<bool> sendSignupOtp(String email, String password) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
-      final user = await _repo.register(email, password);
+      await _repo.sendSignupOtp(email, password);
+      state = state.copyWith(status: AuthStatus.unauthenticated, errorMessage: null);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.unauthenticated,
+        errorMessage: e.toString().replaceAll('Exception: ', ''),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> register(String email, String password, {String? otpCode}) async {
+    state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
+    try {
+      if (otpCode != null && otpCode.isNotEmpty) {
+        await _repo.verifySignupOtp(email, otpCode);
+      }
+      final user = await _repo.register(email, password, otpCode: otpCode);
       state = state.copyWith(
         status: AuthStatus.authenticated,
         user: user,
