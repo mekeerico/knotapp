@@ -488,7 +488,7 @@ export default function Onboarding() {
       sessionStorage.removeItem('onboard_password');
       sessionStorage.removeItem('onboard_otp_verified');
       sessionStorage.removeItem('onboard_signup_token');
-      setStep(6);
+      setStep(5);
     } catch (err) {
       console.error("Registration failed:", err);
       alert("Registration failed due to a network error. Please try again.");
@@ -638,7 +638,7 @@ export default function Onboarding() {
       {/* Header */}
       <header className="max-w-4xl mx-auto w-full flex items-center justify-between">
         <div className="flex items-center gap-4">
-          {((step === 2 && subStep > 0) || (step > 2 && step < 6)) && (
+          {((step === 2 && subStep > 0) || (step > 2 && step < 5)) && (
             <button 
               onClick={() => {
                 if (step === 2 && subStep > 0) setSubStep(subStep - 1);
@@ -1128,7 +1128,7 @@ export default function Onboarding() {
                   1
                 </div>
                 <div className="text-xs text-gray-300">
-                  <span className="font-bold text-white">Complete Web Onboarding:</span> Proceed to complete your AI matchmaking interview and create your registry account on web now.
+                  <span className="font-bold text-white">Complete Web Onboarding:</span> Complete your profile registration and create your registry account on web now.
                 </div>
               </div>
 
@@ -1149,16 +1149,16 @@ export default function Onboarding() {
                 <span className="text-[11px] font-bold text-[#E27D8D] uppercase tracking-wider">Profile Privacy Notice</span>
               </div>
               <p className="text-[11px] text-gray-300 leading-relaxed">
-                If you proceed without mobile verification, your profile will remain <strong>private and hidden</strong> from other members until you complete the verification process through the mobile app.
+                If you proceed without mobile verification, your profile will remain <strong>private and hidden</strong> from other members and you will not be matched by the system until you complete verification through the mobile app.
               </p>
             </div>
 
             <div className="pt-2 space-y-3">
               <button 
-                onClick={() => setStep(5)}
+                onClick={handleFinalizeRegistration}
                 className="w-full py-4 rounded-xl text-sm font-black rose-glow-btn text-white flex items-center justify-center gap-2"
               >
-                Continue to AI Interview <ArrowRight className="w-4 h-4" />
+                Complete Onboarding & Create Account <ArrowRight className="w-4 h-4" />
               </button>
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-gray-400">
@@ -1169,70 +1169,8 @@ export default function Onboarding() {
           </div>
         )}
 
-        {/* Step 5: Conversational AI Onboarding Interview */}
+        {/* Step 5: Cinematic AI Relationship Certificate Reveal */}
         {step === 5 && (
-          <div className="glass-card rounded-[32px] border border-white/10 flex flex-col h-[500px] overflow-hidden">
-            {/* Header */}
-            <div className="p-4 bg-[#121721]/90 border-b border-white/5 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#E27D8D]/10 flex items-center justify-center text-[#E27D8D] border border-[#E27D8D]/20">
-                <Bot className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold">KNOT AI Matchmaking Guide</h4>
-                <p className="text-[9px] uppercase tracking-wider text-[#E27D8D] font-bold">Interview Session Active</p>
-              </div>
-            </div>
-
-            {/* Chat Area */}
-            <div className="flex-1 p-6 overflow-y-auto space-y-4">
-              {messages.map((m, idx) => (
-                <div key={idx} className={`flex items-start gap-3 ${m.role === "user" ? "justify-end" : ""}`}>
-                  {m.role === "ai" && (
-                    <div className="w-8 h-8 rounded-full bg-[#E27D8D]/15 flex items-center justify-center text-[#E27D8D] text-xs font-bold flex-shrink-0">AI</div>
-                  )}
-                  <div className={`p-4 rounded-[22px] text-xs leading-relaxed max-w-[80%] ${
-                    m.role === "user" 
-                      ? "bg-[#E27D8D]/15 border border-[#E27D8D]/25 rounded-tr-none text-white"
-                      : "bg-white/5 border border-white/5 rounded-tl-none text-gray-300"
-                  }`}>
-                    {m.text}
-                  </div>
-                </div>
-              ))}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* Input Bar */}
-            <div className="p-4 bg-[#121721]/90 border-t border-white/5 flex items-center gap-2">
-              <input 
-                type="text" 
-                value={currentInput}
-                onChange={e => setCurrentInput(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleSendMessage()}
-                placeholder="Share your thoughts empathetically..."
-                className="flex-1 bg-white/5 border border-white/5 rounded-full py-3 px-6 text-xs text-white focus:outline-none focus:border-[#E27D8D]/50"
-              />
-              {interviewQuestionIndex >= interviewPrompts.length && currentInput === "" ? (
-                <button 
-                  onClick={handleFinalizeRegistration}
-                  className="px-5 py-3 rounded-full text-xs font-black rose-glow-btn text-white flex items-center gap-1.5"
-                >
-                  Generate Registry <Sparkles className="w-3.5 h-3.5" />
-                </button>
-              ) : (
-                <button 
-                  onClick={handleSendMessage}
-                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Step 6: Cinematic AI Relationship Certificate Reveal */}
-        {step === 6 && (
           <div className="space-y-8 animate-fade-in">
             <div className="glass-card rounded-[36px] p-6 sm:p-8 border border-[#E27D8D]/30 shadow-2xl relative overflow-hidden max-w-md mx-auto">
               <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#E27D8D]/10 to-transparent rounded-bl-full pointer-events-none" />

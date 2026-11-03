@@ -399,70 +399,122 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
 
     if (!isUserVerified) {
       return Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(left: 24.0, right: 24.0, top: 8.0, bottom: 90.0),
           child: GlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+            border: Border.all(color: AppColors.champagneGold.withOpacity(0.5), width: 1.2),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 76,
-                  height: 76,
+                  width: 64,
+                  height: 64,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.champagneGold.withOpacity(0.12),
+                    color: AppColors.champagneGold.withOpacity(0.15),
                     border: Border.all(color: AppColors.champagneGold, width: 2),
                     boxShadow: [
                       BoxShadow(
                         color: AppColors.champagneGold.withOpacity(0.25),
-                        blurRadius: 18,
+                        blurRadius: 16,
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.verified_user_outlined, size: 38, color: AppColors.champagneGold),
+                  child: const Icon(Icons.verified_user_outlined, size: 32, color: AppColors.champagneGold),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.champagneGold.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: AppColors.champagneGold.withOpacity(0.35)),
+                  ),
+                  child: const Text(
+                    'VERIFICATION REQUIRED',
+                    style: TextStyle(
+                      color: AppColors.champagneGold,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Text(
                   'Biometric Verification Required',
-                  style: AppTypography.headingLarge,
+                  style: AppTypography.headingLarge.copyWith(fontSize: 20),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'Your profile is currently private and hidden from the KNOT Registry.\n\nIn accordance with KNOT Sovereign Matrimony standards, unverified users cannot be matched with any candidate.',
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textMuted, height: 1.5),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withOpacity(0.12),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: Colors.amber.withOpacity(0.4)),
+                    color: Colors.amber.withOpacity(0.10),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.amber.withOpacity(0.35)),
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.shield_outlined, size: 18, color: Colors.amber),
+                      const Padding(
+                        padding: EdgeInsets.only(top: 1),
+                        child: Icon(Icons.warning_amber_rounded, size: 18, color: Colors.amber),
+                      ),
                       const SizedBox(width: 10),
                       Flexible(
                         child: Text(
-                          'Complete your biometric verification to make your profile public and unlock curated candidates.',
+                          'Complete your biometric identity verification to make your profile public and unlock curated candidates.',
                           style: AppTypography.bodySmall.copyWith(
-                            color: Colors.white,
+                            color: const Color(0xFFFDE68A),
                             fontWeight: FontWeight.w600,
-                            fontSize: 11,
+                            fontSize: 12,
+                            height: 1.4,
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                GoldButton(
-                  text: 'Verify Your Identity Now',
-                  onPressed: () => context.push('/verification'),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () => context.push('/verification'),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFD4AF37), Color(0xFFF3E5AB), Color(0xFFAA7C11)],
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFD4AF37).withOpacity(0.35),
+                          blurRadius: 18,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.verified_user_outlined, size: 18, color: Colors.black),
+                        SizedBox(width: 8),
+                        Text(
+                          'VERIFY YOUR IDENTITY NOW',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

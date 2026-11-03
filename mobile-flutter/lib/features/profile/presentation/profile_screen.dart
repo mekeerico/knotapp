@@ -217,11 +217,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   padding: const EdgeInsets.all(20),
                   backgroundColor: isVerified
                       ? AppColors.emeraldVerified.withOpacity(0.08)
-                      : AppColors.champagneGold.withOpacity(0.08),
+                      : Colors.amber.withOpacity(0.10),
                   border: Border.all(
                     color: isVerified
                         ? AppColors.emeraldVerified.withOpacity(0.4)
-                        : AppColors.champagneGold.withOpacity(0.4),
+                        : Colors.amber.withOpacity(0.4),
                     width: 1.2,
                   ),
                   child: Column(
@@ -229,35 +229,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 48,
-                            height: 48,
+                            width: 44,
+                            height: 44,
                             decoration: BoxDecoration(
-                              shape: BoxShape.circle,
+                              borderRadius: BorderRadius.circular(14),
                               color: isVerified
                                   ? AppColors.emeraldVerified.withOpacity(0.2)
-                                  : AppColors.champagneGold.withOpacity(0.2),
+                                  : Colors.amber.withOpacity(0.2),
+                              border: Border.all(
+                                color: isVerified
+                                    ? AppColors.emeraldVerified.withOpacity(0.4)
+                                    : Colors.amber.withOpacity(0.4),
+                              ),
                             ),
                             child: Icon(
                               isVerified ? Icons.verified_user : Icons.shield_outlined,
-                              color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
-                              size: 26,
+                              color: isVerified ? AppColors.emeraldVerified : Colors.amber,
+                              size: 24,
                             ),
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(width: 14),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
-                                    Text(
-                                      isVerified ? 'VERIFIED PROFILE' : 'UNVERIFIED PROFILE',
-                                      style: AppTypography.titleMedium.copyWith(
-                                        color: isVerified ? AppColors.emeraldVerified : AppColors.champagneGold,
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
+                                    Flexible(
+                                      child: Text(
+                                        isVerified
+                                            ? 'VERIFIED PROFILE'
+                                            : 'UNVERIFIED PROFILE — HIDDEN FROM REGISTRY',
+                                        style: AppTypography.titleMedium.copyWith(
+                                          color: isVerified ? AppColors.emeraldVerified : Colors.amber.shade300,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.8,
+                                        ),
                                       ),
                                     ),
                                     if (isVerified) ...[
@@ -266,49 +277,76 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     ],
                                   ],
                                 ),
-                                const SizedBox(height: 4),
+                                const SizedBox(height: 6),
                                 Text(
                                   isVerified
                                       ? 'Biometric 1:1 match and government document certified.'
-                                      : '⚠️ Profile Hidden: You must get verified before you can be matched to any candidate.',
-                                  style: AppTypography.bodySmall.copyWith(fontSize: 12),
+                                      : '⚠️ Your profile is currently hidden from other members. You cannot be matched to any candidates until you complete biometric verification.',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 12,
+                                    height: 1.4,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          if (!isVerified)
-                            GoldButton(
-                              text: 'VERIFY',
-                              width: 90,
-                              height: 38,
-                              onPressed: () => context.push('/verification'),
-                            ),
                         ],
                       ),
                       if (!isVerified) ...[
-                        const SizedBox(height: 14),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: Colors.amber.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.amber.withOpacity(0.4)),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.warning_amber_rounded, size: 20, color: Colors.amber),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Text(
-                                  'Your profile is currently private and hidden. You cannot be matched to candidates until biometric identity verification is completed.',
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 11,
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFD4AF37),
+                                  Color(0xFFF3E5AB),
+                                  Color(0xFFAA7C11),
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFD4AF37).withOpacity(0.25),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () => context.push('/verification'),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(
+                                        Icons.verified_user_rounded,
+                                        color: Colors.black,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'VERIFY NOW',
+                                        style: AppTypography.labelLarge.copyWith(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w900,
+                                          fontSize: 11,
+                                          letterSpacing: 1.4,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ],
