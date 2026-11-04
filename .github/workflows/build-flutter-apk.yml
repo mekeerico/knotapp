@@ -9,6 +9,10 @@ on:
       - 'mobile-flutter/**'
       - '.github/workflows/build-flutter-apk.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-aab:
     name: Build Play Store Bundle (AAB)
