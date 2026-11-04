@@ -72,8 +72,8 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
       ),
       AppNotification(
         id: 'notif_membership',
-        title: 'Daily Curated Registry Ready',
-        body: '3 AI-curated marriage candidates are available in your deck today. Upgrade for 15-100 matches daily.',
+        title: 'Sovereign Membership Tiers',
+        body: 'Verified marriage candidates matching your preferences will appear in your deck. Upgrade for 15-100 matches daily.',
         category: NotificationCategory.tierLimit,
         timestamp: DateTime.now().subtract(const Duration(hours: 3)),
         isRead: false,

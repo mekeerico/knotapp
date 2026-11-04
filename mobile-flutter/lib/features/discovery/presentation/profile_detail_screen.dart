@@ -180,16 +180,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const demoPhotos = [
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800',
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800',
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800',
-      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=800',
-    ];
-    final List<String> photos = [...profile.photos];
-    if (photos.length < 5) {
-      photos.addAll(demoPhotos.take(5 - photos.length));
-    }
+    final List<String> photos = profile.photos
+        .where((url) => url.trim().isNotEmpty && !url.contains('images.unsplash.com'))
+        .toList();
 
     final residenceFormatted = _formatCityCountry(
       profile.city,

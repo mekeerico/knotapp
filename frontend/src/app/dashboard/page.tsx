@@ -204,8 +204,8 @@ export default function Dashboard() {
     },
     {
       id: 'notif_membership',
-      title: 'Daily Curated Registry Ready',
-      body: '3 AI-curated marriage candidates are available in your deck today. Upgrade for 15-100 matches daily.',
+      title: 'Sovereign Membership Tiers',
+      body: 'Verified marriage candidates matching your preferences will appear in your deck. Upgrade for 15-100 matches daily.',
       category: 'tiers',
       timestamp: new Date(Date.now() - 180 * 60 * 1000).toISOString(),
       isRead: false,
@@ -1616,19 +1616,10 @@ export default function Dashboard() {
               <div className="glass-card rounded-[32px] overflow-hidden border border-[#E27D8D]/30 shadow-2xl">
                 {/* Main Candidate Hero Picture with Left/Right Navigation and Top Lines */}
                 {(() => {
-                  const extraDemoPhotos = [
-                    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800",
-                    "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=800",
-                    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800",
-                    "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=800",
-                  ];
                   const candidatePhotos = [
                     ...(activeMatch.imageUrls || []),
                     ...(activeMatch.photoUrl && !(activeMatch.imageUrls || []).includes(activeMatch.photoUrl) ? [activeMatch.photoUrl] : [])
-                  ];
-                  if (candidatePhotos.length < 5) {
-                    candidatePhotos.push(...extraDemoPhotos.slice(0, 5 - candidatePhotos.length));
-                  }
+                  ].filter((url: string) => Boolean(url) && !url.includes("images.unsplash.com"));
                   const currentPhoto = candidatePhotos[activeMatchImageIndex] || candidatePhotos[0] || activeMatch.photoUrl;
 
                   return (

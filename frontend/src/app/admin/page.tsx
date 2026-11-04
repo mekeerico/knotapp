@@ -237,15 +237,7 @@ export default function AdminDashboard() {
       }
       setUsers(remoteUsers);
     } else {
-      // Fallback data for admin dashboard
-      const fallbackUsers = [
-        localProfile || { firstName: "Admin", lastName: "User", email: "admin@knot.com", occupation: "Registry Administrator", isVerified: true, isPremium: true, residenceCity: "Lagos", residenceCountry: "Nigeria" },
-        { id: "mock-1", firstName: "Sarah", lastName: "Jane", email: "sarah@example.com", occupation: "Teacher", age: 27, isVerified: true, isPremium: true, residenceCity: "San Francisco", residenceCountry: "USA" },
-        { id: "mock-2", firstName: "Emily", lastName: "Chen", email: "emily@example.com", occupation: "Designer", age: 26, isVerified: true, isPremium: false, residenceCity: "San Francisco", residenceCountry: "USA" },
-        { id: "mock-3", firstName: "Jessica", lastName: "Taylor", email: "jessica@example.com", occupation: "Software Engineer", age: 29, isVerified: true, isPremium: true, residenceCity: "New York", residenceCountry: "USA" },
-        { id: "mock-4", firstName: "David", lastName: "Okonkwo", email: "david@example.com", occupation: "Architect", age: 31, isVerified: true, isPremium: true, residenceCity: "Lagos", residenceCountry: "Nigeria" },
-      ];
-      setUsers(fallbackUsers);
+      setUsers(localProfile ? [localProfile] : []);
     }
     setIsLoading(false);
   };
