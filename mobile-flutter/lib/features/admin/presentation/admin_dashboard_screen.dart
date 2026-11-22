@@ -228,138 +228,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     }
   }
 
-  Future<void> _triggerVerificationReminders() async {
-    try {
-      final dio = ref.read(dioProvider);
-      final res = await dio.post(
-        ApiEndpoints.adminTriggerReminders,
-        data: {'force': false},
-      );
-      final data = res.data is Map ? res.data as Map : {};
-      _showSnack(
-        'Reminders sent: ${data['inAppSent'] ?? 0} in-app, ${data['emailsSent'] ?? 0} emails.',
-      );
-    } catch (_) {
-      _showSnack('Failed to trigger verification reminders.', isError: true);
-    }
-  }
-
-  Future<void> _sendTestDeveloperAlert() async {
-    try {
-      final dio = ref.read(dioProvider);
-      final res = await dio.post(ApiEndpoints.adminTestAlert);
-      final data = res.data is Map ? res.data as Map : {};
-      _showSnack('Test alert sent to ${data['developerEmail'] ?? 'developer email'}!');
-      await _loadAllData();
-    } catch (_) {
-      _showSnack('Failed to send test developer alert.', isError: true);
-    }
-  }
-
-  Future<void> _checkPlayStoreNow() async {
-    try {
-      final dio = ref.read(dioProvider);
-      final res = await dio.post(ApiEndpoints.adminCheckPlayStore);
-      final data = res.data is Map ? res.data as Map : {};
-      final ver = data['detectedVersion'];
-      final already = data['alreadyAnnounced'] == true;
-      if (ver == null) {
-        _showSnack('Could not detect a new Play Store version right now.');
-      } else if (already) {
-        _showSnack('Play Store version v$ver was already announced.');
-      } else {
-        _showSnack('Detected & announced Play Store v$ver to all users!');
-      }
-      await _loadAllData();
-    } catch (_) {
-      _showSnack('Play Store check failed.', isError: true);
-    }
-  }
-
-  Future<void> _showAnnounceUpdateDialog() async {
-    final versionCtrl = TextEditingController();
-    final notesCtrl = TextEditingController(
-      text: 'New KNOT logo, improved reliability, and faster match discovery. Update now on Google Play!',
-    );
-
-    final result = await showDialog<Map<String, String>>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF121721),
-        title: const Text(
-          'Announce Play Store Update',
-          style: TextStyle(color: Colors.white, fontSize: 16),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: versionCtrl,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Version (e.g. 1.0.9)',
-                labelStyle: const TextStyle(color: Colors.white60),
-                filled: true,
-                fillColor: const Color(0xFF0A0E14),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: notesCtrl,
-              maxLines: 3,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                labelText: 'Release Notes',
-                labelStyle: const TextStyle(color: Colors.white60),
-                filled: true,
-                fillColor: const Color(0xFF0A0E14),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.champagneGold,
-              foregroundColor: Colors.black,
-            ),
-            onPressed: () {
-              final v = versionCtrl.text.trim();
-              if (v.isEmpty) return;
-              Navigator.pop(ctx, {'version': v, 'notes': notesCtrl.text.trim()});
-            },
-            child: const Text('Broadcast Now'),
-          ),
-        ],
-      ),
-    );
-
-    if (result == null) return;
-    try {
-      final dio = ref.read(dioProvider);
-      final res = await dio.post(
-        ApiEndpoints.adminAnnounceUpdate,
-        data: {
-          'version': result['version'],
-          'releaseNotes': result['notes'],
-        },
-      );
-      final data = res.data is Map ? res.data as Map : {};
-      _showSnack(
-        'Announced v${result['version']}: ${data['usersNotified'] ?? 0} in-app, ${data['emailsSent'] ?? 0} emails.',
-      );
-      await _loadAllData();
-    } catch (_) {
-      _showSnack('Failed to broadcast app update.', isError: true);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(authProvider).user;
@@ -562,39 +430,29 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
           ),
           const SizedBox(height: 20),
           Text(
-            'QUICK ADMIN ACTIONS',
+            'AUTONOMOUS AUTOMATION (ZERO MANUAL WORK)',
             style: AppTypography.labelSmall.copyWith(
               color: Colors.white54,
               letterSpacing: 1.4,
             ),
           ),
           const SizedBox(height: 10),
-          _actionTile(
+          _autonomousStatusTile(
             icon: Icons.mark_email_unread_outlined,
-            title: 'Send Daily Verification Reminders',
-            subtitle: 'Remind eligible unverified users via in-app & email',
-            onTap: _triggerVerificationReminders,
+            title: 'Daily Verification Reminders',
+            subtitle: 'Runs automatically every 24h per unverified user via in-app & email.',
           ),
           const SizedBox(height: 10),
-          _actionTile(
+          _autonomousStatusTile(
             icon: Icons.system_update_outlined,
-            title: 'Announce Play Store Update',
-            subtitle: 'Send custom version update notification to all users',
-            onTap: _showAnnounceUpdateDialog,
+            title: 'Play Store Release Monitor',
+            subtitle: 'Automatically detects new Google Play publications & notifies all users via in-app & email.',
           ),
           const SizedBox(height: 10),
-          _actionTile(
-            icon: Icons.shop_outlined,
-            title: 'Check Play Store Release Now',
-            subtitle: 'Detect new Google Play publication & notify automatically',
-            onTap: _checkPlayStoreNow,
-          ),
-          const SizedBox(height: 10),
-          _actionTile(
-            icon: Icons.notifications_active_outlined,
-            title: 'Send Test Developer Alert',
-            subtitle: 'Verify alert email delivery to johnmeke2013@gmail.com',
-            onTap: _sendTestDeveloperAlert,
+          _autonomousStatusTile(
+            icon: Icons.health_and_safety_outlined,
+            title: 'Developer Error & Health Watchdog',
+            subtitle: 'Monitors API, database & public endpoints every 5 min and alerts johnmeke2013@gmail.com automatically.',
           ),
         ],
       ),
@@ -634,41 +492,57 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     );
   }
 
-  Widget _actionTile({
+  Widget _autonomousStatusTile({
     required IconData icon,
     required String title,
     required String subtitle,
-    required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: GlassCard(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.champagneGold.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: AppColors.champagneGold, size: 20),
+    return GlassCard(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFF34D399).withOpacity(0.12),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: AppTypography.labelLarge.copyWith(color: Colors.white, fontSize: 13.5)),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: AppTypography.bodySmall.copyWith(color: Colors.white54, fontSize: 11.5)),
-                ],
-              ),
+            child: Icon(icon, color: const Color(0xFF34D399), size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: AppTypography.labelLarge.copyWith(
+                          color: Colors.white,
+                          fontSize: 13.5,
+                        ),
+                      ),
+                    ),
+                    _badge('AUTO • ACTIVE', const Color(0xFF34D399)),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: Colors.white54,
+                    fontSize: 11.5,
+                    height: 1.35,
+                  ),
+                ),
+              ],
             ),
-            const Icon(Icons.chevron_right_rounded, color: Colors.white38),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

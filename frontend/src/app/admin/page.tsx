@@ -76,7 +76,48 @@ export default function AdminDashboard() {
   const [error, setError] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeAdminTab, setActiveAdminTab] = useState<"users" | "enquiries">("users");
+  const [activeAdminTab, setActiveAdminTab] = useState<"users" | "enquiries" | "alerts">("users");
+
+  // System Alerts State
+  const [systemAlerts, setSystemAlerts] = useState<any[]>([]);
+  const [isLoadingAlerts, setIsLoadingAlerts] = useState(false);
+
+  const fetchSystemAlerts = async () => {
+    setIsLoadingAlerts(true);
+    try {
+      const API_URL = getApiUrl();
+      const token = localStorage.getItem("knot_token");
+      const res = await fetch(`${API_URL}/notifications/admin/system-alerts`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setSystemAlerts(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch system alerts:", err);
+    } finally {
+      setIsLoadingAlerts(false);
+    }
+  };
+
+  const handleResolveAlert = async (id: string) => {
+    try {
+      const API_URL = getApiUrl();
+      const token = localStorage.getItem("knot_token");
+      const res = await fetch(`${API_URL}/notifications/admin/system-alerts/${id}/resolve`, {
+        method: "PATCH",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        setSystemAlerts((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, resolved: true, resolvedAt: new Date().toISOString() } : a)),
+        );
+      }
+    } catch (err) {
+      console.error("Failed to resolve alert:", err);
+    }
+  };
 
   // Support & Enquiries State
   const [enquiries, setEnquiries] = useState<any[]>([]);
@@ -245,6 +286,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchUsers();
     fetchEnquiries();
+    fetchSystemAlerts();
   }, []);
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -427,6 +469,27 @@ export default function AdminDashboard() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => {
+              setActiveAdminTab("alerts");
+              setIsSidebarOpen(false);
+              fetchSystemAlerts();
+            }}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-colors ${
+              activeAdminTab === "alerts"
+                ? "bg-[#E27D8D]/10 text-[#E27D8D] border border-[#E27D8D]/20"
+                : "text-gray-400 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <span className="flex items-center gap-3">
+              <AlertCircle className="w-4 h-4" /> Alerts &amp; Automation
+            </span>
+            {systemAlerts.filter((a) => !a.resolved).length > 0 && (
+              <span className="px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px] font-black">
+                {systemAlerts.filter((a) => !a.resolved).length}
+              </span>
+            )}
+          </button>
         </nav>
         <div className="mt-auto space-y-2">
           <Link href="/dashboard" className="flex items-center gap-3 px-4 py-3 text-xs font-semibold text-gray-400 hover:text-white transition-colors">
@@ -455,12 +518,18 @@ export default function AdminDashboard() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-serif font-black text-white flex items-center gap-3">
                 <ShieldAlert className="w-8 h-8 text-[#E27D8D]" />{" "}
-                {activeAdminTab === "enquiries" ? "Support & Enquiries" : "Admin Control"}
+                {activeAdminTab === "enquiries"
+                  ? "Support & Enquiries"
+                  : activeAdminTab === "alerts"
+                    ? "System Alerts & Automation"
+                    : "Admin Control"}
               </h1>
               <p className="text-sm text-gray-400 mt-1">
                 {activeAdminTab === "enquiries"
                   ? "View user support enquiries and send responses directly to members."
-                  : "Manage platform users and data."}
+                  : activeAdminTab === "alerts"
+                    ? "Autonomous background jobs and live server error alerts (also emailed to johnmeke2013@gmail.com)."
+                    : "Manage platform users and data."}
               </p>
             </div>
           </div>
@@ -476,7 +545,95 @@ export default function AdminDashboard() {
           )}
         </header>
 
-        {activeAdminTab === "enquiries" ? (
+        {activeAdminTab === "alerts" ? (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="glass-card rounded-2xl p-5 border border-emerald-500/20 bg-emerald-500/[0.03]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Daily Verification Reminders</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black">AUTO • ACTIVE</span>
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  Automatically sends in-app &amp; email reminders once every 24 hours to unverified users so they complete verification and go public.
+                </p>
+              </div>
+              <div className="glass-card rounded-2xl p-5 border border-emerald-500/20 bg-emerald-500/[0.03]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Play Store Release Monitor</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black">AUTO • ACTIVE</span>
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  Automatically detects new Google Play publications for com.cleanconnect.knot and sends in-app &amp; email update notifications to all users.
+                </p>
+              </div>
+              <div className="glass-card rounded-2xl p-5 border border-emerald-500/20 bg-emerald-500/[0.03]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">Developer Health Watchdog</span>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-black">AUTO • ACTIVE</span>
+                </div>
+                <p className="text-xs text-gray-400 leading-relaxed">
+                  Monitors API 5xx errors, database, AI service &amp; public endpoints every 5 minutes and alerts johnmeke2013@gmail.com automatically.
+                </p>
+              </div>
+            </div>
+
+            {isLoadingAlerts ? (
+              <div className="flex items-center justify-center py-20 text-[#E11D48]">
+                <Loader2 className="w-8 h-8 animate-spin" />
+              </div>
+            ) : systemAlerts.length === 0 ? (
+              <div className="glass-card rounded-[24px] p-12 text-center border border-white/5 text-gray-400">
+                All systems operational — no alerts recorded.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {systemAlerts.map((alert) => (
+                  <div key={alert.id} className="glass-card rounded-2xl p-5 border border-white/10">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                          alert.severity === "CRITICAL" || alert.severity === "ERROR"
+                            ? "bg-red-500/20 text-red-300 border border-red-500/30"
+                            : alert.severity === "WARNING"
+                              ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                              : "bg-sky-500/20 text-sky-300 border border-sky-500/30"
+                        }`}>
+                          {alert.severity}
+                        </span>
+                        <span className="text-xs text-gray-400">{alert.source}</span>
+                        {alert.resolved && (
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
+                            RESOLVED
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {alert.createdAt ? new Date(alert.createdAt).toLocaleString() : ""}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-bold text-white">{alert.title}</h3>
+                    <p className="text-xs text-gray-300 mt-1">{alert.message}</p>
+                    {alert.details && (
+                      <pre className="mt-3 p-3 rounded-xl bg-[#0A0E14] border border-white/5 text-[11px] text-gray-400 overflow-x-auto whitespace-pre-wrap">
+                        {alert.details}
+                      </pre>
+                    )}
+                    {!alert.resolved && (
+                      <div className="mt-3 flex justify-end">
+                        <button
+                          onClick={() => handleResolveAlert(alert.id)}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 text-xs font-bold border border-emerald-500/30 transition-colors"
+                        >
+                          Mark Resolved
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : activeAdminTab === "enquiries" ? (
           isLoadingEnquiries ? (
             <div className="flex items-center justify-center py-20 text-[#E11D48]">
               <Loader2 className="w-8 h-8 animate-spin" />
