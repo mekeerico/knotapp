@@ -19,6 +19,7 @@ import '../../features/profile/presentation/manage_photos_screen.dart';
 import '../../features/profile/presentation/partner_preferences_screen.dart';
 import '../../features/monetization/presentation/paywall_screen.dart';
 import '../../features/verification/presentation/didit_verification_screen.dart';
+import '../../features/admin/presentation/admin_dashboard_screen.dart';
 import '../../features/home/presentation/main_navigation_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -46,6 +47,8 @@ class RouterNotifier extends ChangeNotifier {
     final isPreviewWelcome = state.uri.queryParameters['preview'] == 'true';
     final isOnboardingRoute = state.matchedLocation == '/onboarding';
     final isVerificationRoute = state.matchedLocation == '/verification';
+    final isAdminRoute = state.matchedLocation == '/admin';
+    final isAdminUser = authState.user?.role.toUpperCase() == 'ADMIN';
 
     // 1. While auth status is loading/checking on startup
     if (authState.status == AuthStatus.loading || authState.status == AuthStatus.initial) {
@@ -70,7 +73,11 @@ class RouterNotifier extends ChangeNotifier {
       return authState.hasSeenWelcome ? '/auth' : '/welcome';
     }
 
-    if (isAuth && authState.needsOnboarding && !isOnboardingRoute && !isVerificationRoute) {
+    if (isAuth && isAdminRoute && !isAdminUser) {
+      return '/discovery';
+    }
+
+    if (isAuth && authState.needsOnboarding && !isOnboardingRoute && !isVerificationRoute && !isAdminRoute) {
       return '/onboarding';
     }
 
@@ -133,6 +140,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/verification',
         builder: (context, state) => const DiditVerificationScreen(),
+      ),
+      GoRoute(
+        path: '/admin',
+        builder: (context, state) => const AdminDashboardScreen(),
       ),
       GoRoute(
         path: '/edit-profile',

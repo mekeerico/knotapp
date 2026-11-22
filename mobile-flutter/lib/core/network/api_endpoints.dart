@@ -48,6 +48,15 @@ class ApiEndpoints {
   // Notifications
   static const String notifications = '/notifications';
 
+  // Admin
+  static const String adminUsers = '/admin/users';
+  static const String adminEnquiries = '/admin/enquiries';
+  static const String adminSystemAlerts = '/notifications/admin/system-alerts';
+  static const String adminTestAlert = '/notifications/admin/test-developer-alert';
+  static const String adminTriggerReminders = '/notifications/admin/trigger-verification-reminders';
+  static const String adminCheckPlayStore = '/notifications/admin/check-play-store';
+  static const String adminAnnounceUpdate = '/notifications/admin/announce-app-update';
+
   // AI Coach & Compatibility
   static const String aiCoach = '/ai/coach';
   static const String aiCompatibility = '/ai/compatibility';
