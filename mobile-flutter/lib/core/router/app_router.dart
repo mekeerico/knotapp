@@ -82,6 +82,7 @@ class RouterNotifier extends ChangeNotifier {
     }
 
     if (isAuth && (isAuthRoute || isWelcomeRoute)) {
+      if (isAdminUser) return '/admin';
       return authState.needsOnboarding ? '/onboarding' : '/discovery';
     }
 

@@ -154,8 +154,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         storage.setRememberMe(false);
       }
 
-      ref.read(discoveryProvider.notifier).loadCandidates();
-      context.go('/discovery');
+      final isAdmin = ref.read(authProvider).user?.role.toUpperCase() == 'ADMIN';
+      if (isAdmin) {
+        context.go('/admin');
+      } else {
+        ref.read(discoveryProvider.notifier).loadCandidates();
+        context.go('/discovery');
+      }
     }
   }
 

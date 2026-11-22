@@ -408,8 +408,15 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
         backgroundColor: AppColors.obsidianBlack,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.champagneGold, size: 18),
-          onPressed: () => context.pop(),
+          icon: const Icon(Icons.home_outlined, color: AppColors.champagneGold, size: 20),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/discovery');
+            }
+          },
+          tooltip: 'Switch to App View',
         ),
         title: Text(
           'ADMIN COMMAND CENTER',
@@ -424,6 +431,16 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             icon: const Icon(Icons.refresh_rounded, color: AppColors.champagneGold),
             onPressed: _loadAllData,
             tooltip: 'Refresh',
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 20),
+            onPressed: () async {
+              await ref.read(authProvider.notifier).logout();
+              if (context.mounted) {
+                context.go('/auth?mode=login');
+              }
+            },
+            tooltip: 'Sign Out',
           ),
         ],
         bottom: TabBar(
