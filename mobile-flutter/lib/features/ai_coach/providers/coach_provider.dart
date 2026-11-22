@@ -77,7 +77,8 @@ class CoachNotifier extends StateNotifier<CoachState> {
         },
       );
 
-      final reply = response.data['response'] ??
+      final reply = (response.data is Map ? response.data['response'] : null)
+              ?.toString() ??
           'Focus on clear, emotionally safe boundaries and transparent mutual vision.';
 
       final aiMsg = CoachMessage(

@@ -225,7 +225,13 @@ class VerificationNotifier extends StateNotifier<VerificationState> {
     } catch (e) {
       String message = 'Verification could not be completed';
       if (e is DioException) {
-        message = e.response?.data?['message'] ?? e.message ?? message;
+        final data = e.response?.data;
+        if (data is Map && data['message'] != null) {
+          final msg = data['message'];
+          message = msg is List ? msg.join(', ') : msg.toString();
+        } else {
+          message = e.message ?? message;
+        }
       } else {
         message = e.toString().replaceAll('Exception: ', '');
       }

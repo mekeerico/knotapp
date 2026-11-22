@@ -46,7 +46,7 @@ class KnotImage extends StatelessWidget {
     }
     final trimmed = raw.trim();
     if (trimmed.startsWith('/uploads/')) {
-      const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotmarriage.online:8080');
+      const apiBase = String.fromEnvironment('API_URL', defaultValue: 'https://knotmarriage.online/api-backend');
       return '$apiBase$trimmed';
     }
     return trimmed;
@@ -71,7 +71,7 @@ class KnotImage extends StatelessWidget {
       }
     }
     if (url.startsWith('/uploads/')) {
-      const apiBase = String.fromEnvironment('API_URL', defaultValue: 'http://knotmarriage.online:8080');
+      const apiBase = String.fromEnvironment('API_URL', defaultValue: 'https://knotmarriage.online/api-backend');
       return CachedNetworkImageProvider('$apiBase$url');
     }
     if (url.startsWith('http://') || url.startsWith('https://')) {

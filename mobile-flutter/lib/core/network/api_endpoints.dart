@@ -10,10 +10,10 @@ class ApiEndpoints {
       return _overrideUrl;
     }
     if (kIsWeb) {
-      return 'http://knotmarriage.online:8080';
+      return 'https://knotmarriage.online/api-backend';
     }
     if (kReleaseMode) {
-      return 'http://knotmarriage.online:8080';
+      return 'https://knotmarriage.online/api-backend';
     }
     if (Platform.isAndroid) {
       // Android emulator reaches host loopback via 10.0.2.2 in debug mode

@@ -9,6 +9,34 @@ class AuthRepository {
 
   AuthRepository(this._dio, this._storage);
 
+  Map<String, dynamic> _asMap(dynamic data, String context) {
+    if (data is Map<String, dynamic>) {
+      return data;
+    }
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    throw Exception('$context: Unexpected server response. Please try again.');
+  }
+
+  String _extractDioError(DioException e, String fallback) {
+    final data = e.response?.data;
+    if (data is Map) {
+      final msg = data['message'] ?? data['error'];
+      if (msg is List && msg.isNotEmpty) {
+        return msg.join(', ');
+      }
+      if (msg != null && msg.toString().trim().isNotEmpty) {
+        return msg.toString();
+      }
+    }
+    final statusCode = e.response?.statusCode;
+    if (statusCode != null) {
+      return '$fallback (HTTP $statusCode)';
+    }
+    return e.message ?? fallback;
+  }
+
   Future<UserModel> login(String email, String password) async {
     try {
       final response = await _dio.post(
@@ -16,8 +44,9 @@ class AuthRepository {
         data: {'email': email.trim(), 'password': password},
       );
 
-      final token = response.data['token'] ?? response.data['accessToken'];
-      final userData = response.data['user'] ?? response.data;
+      final body = _asMap(response.data, 'Login failed');
+      final token = body['token'] ?? body['accessToken'];
+      final userData = _asMap(body['user'] ?? body, 'Login failed');
       final user = UserModel.fromJson(userData);
 
       await Future.wait([
@@ -27,10 +56,9 @@ class AuthRepository {
       return user;
     } catch (e) {
       if (e is DioException) {
-        final message = e.response?.data?['message'] ?? e.message ?? 'Login failed';
-        throw Exception(message);
+        throw Exception(_extractDioError(e, 'Login failed'));
       }
-      throw Exception('Login failed: $e');
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -42,10 +70,9 @@ class AuthRepository {
       );
     } catch (e) {
       if (e is DioException) {
-        final message = e.response?.data?['message'] ?? e.message ?? 'Failed to send verification code';
-        throw Exception(message is List ? message.join(', ') : message.toString());
+        throw Exception(_extractDioError(e, 'Failed to send verification code'));
       }
-      throw Exception('Failed to send verification code: $e');
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -57,10 +84,9 @@ class AuthRepository {
       );
     } catch (e) {
       if (e is DioException) {
-        final message = e.response?.data?['message'] ?? e.message ?? 'Invalid verification code';
-        throw Exception(message is List ? message.join(', ') : message.toString());
+        throw Exception(_extractDioError(e, 'Invalid verification code'));
       }
-      throw Exception('Invalid verification code: $e');
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -75,8 +101,9 @@ class AuthRepository {
         },
       );
 
-      final token = response.data['token'] ?? response.data['accessToken'];
-      final userData = response.data['user'] ?? response.data;
+      final body = _asMap(response.data, 'Registration failed');
+      final token = body['token'] ?? body['accessToken'];
+      final userData = _asMap(body['user'] ?? body, 'Registration failed');
       final user = UserModel.fromJson(userData);
 
       await Future.wait([
@@ -86,23 +113,21 @@ class AuthRepository {
       return user;
     } catch (e) {
       if (e is DioException) {
-        final message = e.response?.data?['message'] ?? e.message ?? 'Registration failed';
-        throw Exception(message);
+        throw Exception(_extractDioError(e, 'Registration failed'));
       }
-      throw Exception('Registration failed: $e');
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
   Future<UserModel> getProfile() async {
     try {
       final response = await _dio.get(ApiEndpoints.profile);
-      return UserModel.fromJson(response.data);
+      return UserModel.fromJson(_asMap(response.data, 'Failed to load profile'));
     } catch (e) {
       if (e is DioException) {
-        final message = e.response?.data?['message'] ?? e.message ?? 'Failed to load profile';
-        throw Exception(message);
+        throw Exception(_extractDioError(e, 'Failed to load profile'));
       }
-      throw Exception('Failed to load profile: $e');
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
@@ -112,13 +137,12 @@ class AuthRepository {
         '${ApiEndpoints.updateProfile}/$userId',
         data: data,
       );
-      return UserModel.fromJson(response.data);
+      return UserModel.fromJson(_asMap(response.data, 'Update failed'));
     } catch (e) {
       if (e is DioException) {
-        final message = e.response?.data?['message'] ?? e.message ?? 'Update failed';
-        throw Exception(message);
+        throw Exception(_extractDioError(e, 'Update failed'));
       }
-      throw Exception('Update failed: $e');
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
     }
   }
 
