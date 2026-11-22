@@ -236,7 +236,7 @@ export default function Login() {
       <div className="w-full max-w-md z-10 relative">
         <Link href="/" className="inline-flex items-center gap-3 mb-10 group">
           <img 
-            src="/knot-icon.png?v=4" 
+            src="/knot-icon.png?v=5" 
             alt="KNOT Logo" 
             className="w-10 h-10 rounded-2xl shadow-xl border border-white/10 group-hover:scale-105 transition-transform" 
           />

@@ -17,7 +17,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 md:h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <img 
-              src="/knot-icon.png?v=4" 
+              src="/knot-icon.png?v=5" 
               alt="KNOT Logo" 
               className="w-8 h-8 md:w-9 md:h-9 rounded-xl shadow-lg border border-white/10 group-hover:scale-105 transition-transform" 
             />
@@ -316,7 +316,7 @@ export default function Home() {
       <footer className="bg-black/60 border-t border-white/5 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-gray-500">
           <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
-            <img src="/knot-icon.png?v=4" alt="KNOT Logo" className="w-6 h-6 rounded-lg" />
+            <img src="/knot-icon.png?v=5" alt="KNOT Logo" className="w-6 h-6 rounded-lg" />
             <span className="text-lg font-serif font-black text-white">KNOT.</span>
             <span className="text-xs">© 2026 KNOT AI Relationship Systems.</span>
           </div>

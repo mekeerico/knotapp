@@ -1311,7 +1311,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 group" onClick={() => setIsSidebarOpen(false)}>
               <img 
-                src="/knot-icon.png?v=4" 
+                src="/knot-icon.png?v=5" 
                 alt="KNOT Logo" 
                 className="w-8 h-8 rounded-xl shadow border border-white/10 group-hover:scale-105 transition-transform" 
               />
