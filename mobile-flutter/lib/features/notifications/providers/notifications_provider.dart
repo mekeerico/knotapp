@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/network/api_endpoints.dart';
 import '../models/app_notification.dart';
 
 class NotificationsState {
@@ -30,7 +31,57 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   static const _storageKey = 'knot_stored_notifications';
 
   NotificationsNotifier(this._ref) : super(const NotificationsState()) {
-    _loadFromStorage();
+    _loadFromStorage().then((_) => refreshFromServer());
+  }
+
+  Future<void> refreshFromServer() async {
+    try {
+      final storage = _ref.read(secureStorageProvider);
+      final token = await storage.getToken();
+      if (token == null || token.isEmpty) return;
+
+      final dio = _ref.read(dioProvider);
+      final response = await dio.get(ApiEndpoints.notifications);
+      if (response.data is! List) return;
+
+      final serverItems = (response.data as List)
+          .whereType<Map>()
+          .map((raw) {
+            final map = Map<String, dynamic>.from(raw);
+            return AppNotification(
+              id: map['id']?.toString() ?? '',
+              title: map['title']?.toString() ?? 'Notification',
+              body: map['body']?.toString() ?? '',
+              category: NotificationCategory.values.firstWhere(
+                (c) => c.name == map['category']?.toString(),
+                orElse: () => NotificationCategory.system,
+              ),
+              timestamp: map['createdAt'] != null
+                  ? DateTime.tryParse(map['createdAt'].toString()) ?? DateTime.now()
+                  : DateTime.now(),
+              isRead: map['isRead'] == true,
+              actionRoute: map['actionRoute']?.toString(),
+              actionLabel: map['actionLabel']?.toString(),
+            );
+          })
+          .where((n) => n.id.isNotEmpty)
+          .toList();
+
+      if (serverItems.isEmpty) return;
+
+      final byId = <String, AppNotification>{};
+      for (final local in state.notifications) {
+        byId[local.id] = local;
+      }
+      for (final remote in serverItems) {
+        byId[remote.id] = remote;
+      }
+      final merged = byId.values.toList()
+        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+      state = state.copyWith(notifications: merged);
+      _saveToStorage(merged);
+    } catch (_) {}
   }
 
   Future<void> _loadFromStorage() async {
@@ -117,6 +168,18 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     _saveToStorage(updated);
   }
 
+  Future<void> _syncMarkAsRead(String id) async {
+    try {
+      await _ref.read(dioProvider).patch('${ApiEndpoints.notifications}/$id/read');
+    } catch (_) {}
+  }
+
+  Future<void> _syncMarkAllAsRead() async {
+    try {
+      await _ref.read(dioProvider).patch('${ApiEndpoints.notifications}/read-all');
+    } catch (_) {}
+  }
+
   void markAsRead(String id) {
     final updated = state.notifications.map((n) {
       if (n.id == id) return n.copyWith(isRead: true);
@@ -124,12 +187,16 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
     }).toList();
     state = state.copyWith(notifications: updated);
     _saveToStorage(updated);
+    if (!id.startsWith('notif_')) {
+      _syncMarkAsRead(id);
+    }
   }
 
   void markAllAsRead() {
     final updated = state.notifications.map((n) => n.copyWith(isRead: true)).toList();
     state = state.copyWith(notifications: updated);
     _saveToStorage(updated);
+    _syncMarkAllAsRead();
   }
 
   void clearAll() {

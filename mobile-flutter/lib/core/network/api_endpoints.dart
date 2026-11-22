@@ -45,6 +45,9 @@ class ApiEndpoints {
   // Chat & Messages
   static const String messages = '/messages';
 
+  // Notifications
+  static const String notifications = '/notifications';
+
   // AI Coach & Compatibility
   static const String aiCoach = '/ai/coach';
   static const String aiCompatibility = '/ai/compatibility';

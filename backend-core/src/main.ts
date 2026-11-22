@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { PrismaService } from './prisma/prisma.service';
+import { DeveloperAlertService } from './notifications/developer-alert.service';
 import * as express from 'express';
 import { join } from 'path';
 import * as fs from 'fs';
@@ -16,6 +17,35 @@ async function bootstrap() {
 
   const prisma = app.get(PrismaService);
   const httpAdapter = app.getHttpAdapter().getInstance();
+  const devAlertService = app.get(DeveloperAlertService);
+
+  process.on('unhandledRejection', (reason: any) => {
+    console.error('[UNHANDLED REJECTION]', reason);
+    devAlertService
+      .sendAlert({
+        key: `process:unhandledRejection:${String(reason?.message || reason).slice(0, 80)}`,
+        severity: 'CRITICAL',
+        source: 'backend-core/process',
+        title: 'Unhandled Promise Rejection in Backend',
+        message: 'An unhandled promise rejection occurred in backend-core.',
+        details: reason?.stack || String(reason),
+      })
+      .catch(() => {});
+  });
+
+  process.on('uncaughtException', (err: Error) => {
+    console.error('[UNCAUGHT EXCEPTION]', err);
+    devAlertService
+      .sendAlert({
+        key: `process:uncaughtException:${String(err?.message || err).slice(0, 80)}`,
+        severity: 'CRITICAL',
+        source: 'backend-core/process',
+        title: 'Uncaught Exception in Backend',
+        message: 'An uncaught exception occurred in backend-core.',
+        details: err?.stack || String(err),
+      })
+      .catch(() => {});
+  });
 
   // Automatic database purge on server deployment to eliminate all seeded/mock demo profiles
   try {

@@ -99,10 +99,14 @@ model User {
   messagesReceived     Message[] @relation("ReceivedMessages")
 
   // Support & Enquiries
-  supportTickets       SupportTicket[]
+  supportTickets             SupportTicket[]
 
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  // In-App Notifications & Reminders
+  notifications              Notification[]
+  lastVerificationReminderAt DateTime?
+
+  createdAt                  DateTime        @default(now())
+  updatedAt                  DateTime        @updatedAt
 }
 
 model SupportTicket {
@@ -174,4 +178,46 @@ enum MatchStatus {
   PENDING
   CONNECTED
   DISMISSED
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  body        String
+  category    String   @default("system") // verification, match, message, tierLimit, system
+  actionRoute String?
+  actionLabel String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model SystemAlert {
+  id           String    @id @default(uuid())
+  severity     String    @default("ERROR") // INFO, WARNING, ERROR, CRITICAL
+  source       String    @default("backend-core")
+  title        String
+  message      String
+  details      String?
+  channelsSent String[]  @default([])
+  resolved     Boolean   @default(false)
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([createdAt])
+}
+
+model AppRelease {
+  id            String   @id @default(uuid())
+  version       String   @unique
+  platform      String   @default("ANDROID") // ANDROID, IOS, ALL
+  storeUrl      String
+  releaseNotes  String   @default("")
+  usersNotified Int      @default(0)
+  emailsSent    Int      @default(0)
+  notifiedAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
 }

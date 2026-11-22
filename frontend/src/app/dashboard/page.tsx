@@ -216,14 +216,71 @@ export default function Dashboard() {
 
   const unreadNotifsCount = notifications.filter(n => !n.isRead).length;
 
+  useEffect(() => {
+    const fetchServerNotifications = async () => {
+      try {
+        const token = localStorage.getItem('knot_token');
+        if (!token) return;
+        const API_URL = getApiUrl() || 'http://localhost:8080';
+        const res = await fetch(`${API_URL}/notifications`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const serverNotifs = await res.json();
+        if (!Array.isArray(serverNotifs) || serverNotifs.length === 0) return;
+
+        const mapped = serverNotifs.map((n: any) => ({
+          id: n.id,
+          title: n.title,
+          body: n.body,
+          category: n.category === 'match' ? 'matches' : n.category === 'tierLimit' ? 'tiers' : (n.category || 'verification'),
+          timestamp: n.createdAt || new Date().toISOString(),
+          isRead: Boolean(n.isRead),
+          actionModal: n.actionRoute === '/verification' ? 'didit' : n.actionRoute === '/paywall' ? 'subscription' : undefined,
+          actionTab: n.actionRoute === '/discovery' ? 'matches' : undefined,
+          externalUrl: typeof n.actionRoute === 'string' && (n.actionRoute.startsWith('http://') || n.actionRoute.startsWith('https://')) ? n.actionRoute : undefined,
+          actionLabel: n.actionLabel || (n.actionRoute === '/verification' ? 'Verify Now' : 'View'),
+          fromServer: true,
+        }));
+
+        setNotifications(prev => {
+          const existingIds = new Set(mapped.map((m: any) => m.id));
+          const localOnly = prev.filter(p => !existingIds.has(p.id));
+          return [...mapped, ...localOnly];
+        });
+      } catch (_) {}
+    };
+    fetchServerNotifications();
+  }, []);
+
   const handleMarkAllNotifsAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    const token = localStorage.getItem('knot_token');
+    if (token) {
+      const API_URL = getApiUrl() || 'http://localhost:8080';
+      fetch(`${API_URL}/notifications/read-all`, {
+        method: 'PATCH',
+        headers: { Authorization: `Bearer ${token}` },
+      }).catch(() => {});
+    }
   };
 
   const handleNotificationClick = (notif: any) => {
     setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+    if (notif.fromServer) {
+      const token = localStorage.getItem('knot_token');
+      if (token) {
+        const API_URL = getApiUrl() || 'http://localhost:8080';
+        fetch(`${API_URL}/notifications/${notif.id}/read`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}` },
+        }).catch(() => {});
+      }
+    }
     setShowNotificationsModal(false);
-    if (notif.actionTab) {
+    if (notif.externalUrl) {
+      window.open(notif.externalUrl, '_blank', 'noopener,noreferrer');
+    } else if (notif.actionTab) {
       setActiveTab(notif.actionTab);
     } else if (notif.actionModal === 'subscription') {
       setShowSubscriptionModal(true);

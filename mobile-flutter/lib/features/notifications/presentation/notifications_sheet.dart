@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../models/app_notification.dart';
@@ -252,11 +253,19 @@ class _NotificationsSheetState extends ConsumerState<NotificationsSheet> {
     final iconColor = _getCategoryColor(item.category);
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         notifier.markAsRead(item.id);
-        if (item.actionRoute != null) {
+        final route = item.actionRoute;
+        if (route != null && route.isNotEmpty) {
           Navigator.pop(context);
-          context.push(item.actionRoute!);
+          if (route.startsWith('http://') || route.startsWith('https://')) {
+            final uri = Uri.tryParse(route);
+            if (uri != null) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
+          } else {
+            context.push(route);
+          }
         }
       },
       child: Container(

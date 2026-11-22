@@ -28,7 +28,10 @@ class NotificationBellButton extends ConsumerWidget {
             color: iconColor,
             size: size,
           ),
-          onPressed: () => NotificationsSheet.show(context),
+          onPressed: () {
+            ref.read(notificationsProvider.notifier).refreshFromServer();
+            NotificationsSheet.show(context);
+          },
           tooltip: 'Notifications',
         ),
         if (unread > 0)

@@ -70,6 +70,13 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-KNOT Registry <noreply@knotmarriage.online>}
+      - DEVELOPER_ALERT_EMAIL=${DEVELOPER_ALERT_EMAIL:-johnmeke2013@gmail.com}
+      - DEV_ALERT_WEBHOOK_URL=${DEV_ALERT_WEBHOOK_URL:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - PUBLIC_API_HEALTH_URL=${PUBLIC_API_HEALTH_URL:-https://knotmarriage.online/api-backend/auth/login}
+      - PLAY_STORE_PACKAGE_ID=${PLAY_STORE_PACKAGE_ID:-com.cleanconnect.knot}
+      - PLAY_STORE_URL=${PLAY_STORE_URL:-https://play.google.com/store/apps/details?id=com.cleanconnect.knot}
     volumes:
       - uploads_data_prod:/app/uploads
     depends_on:
