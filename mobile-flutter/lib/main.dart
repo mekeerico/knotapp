@@ -24,22 +24,42 @@ void main() async {
   );
 
   // Preferred device orientations for optimal camera scanning & card swipe physics
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  try {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+  } catch (_) {}
 
-  // Fast pre-flight check of local secure storage so router opens directly to the right screen with zero flash
-  final storage = SecureStorageService();
-  final hasSeenWelcome = await storage.hasSeenWelcome();
-  final token = await storage.getToken();
-  final hasToken = token != null && token.isNotEmpty;
+  // Safe pre-flight check of local secure storage (never block or crash runApp)
+  bool hasSeenWelcome = false;
+  bool hasToken = false;
+  try {
+    final storage = SecureStorageService();
+    hasSeenWelcome = await storage.hasSeenWelcome().timeout(
+      const Duration(seconds: 3),
+      onTimeout: () => false,
+    );
+    final token = await storage.getToken().timeout(
+      const Duration(seconds: 3),
+      onTimeout: () => null,
+    );
+    hasToken = token != null && token.isNotEmpty;
+  } catch (_) {
+    hasSeenWelcome = false;
+    hasToken = false;
+  }
 
-  // Initialize RevenueCat In-App Purchases
-  await RevenueCatService.init();
+  // Load full world country -> state/province/region dataset safely
+  try {
+    await KnotLocationData.load().timeout(
+      const Duration(seconds: 3),
+      onTimeout: () {},
+    );
+  } catch (_) {}
 
-  // Load full world country -> state/province/region dataset
-  await KnotLocationData.load();
+  // Initialize RevenueCat in background so billing SDK never delays first frame
+  RevenueCatService.init();
 
   runApp(
     ProviderScope(

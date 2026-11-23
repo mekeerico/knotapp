@@ -14,76 +14,108 @@ class SecureStorageService {
 
   SecureStorageService()
       : _storage = const FlutterSecureStorage(
-          aOptions: AndroidOptions(encryptedSharedPreferences: true),
+          aOptions: AndroidOptions(
+            encryptedSharedPreferences: true,
+            resetOnError: true,
+          ),
           iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
         );
 
   FlutterSecureStorage get storage => _storage;
 
+  Future<String?> _safeRead(String key) async {
+    try {
+      return await _storage.read(key: key);
+    } catch (_) {
+      // Recover automatically from Android Keystore / Auto Backup AEADBadTagException
+      try {
+        await _storage.deleteAll();
+      } catch (_) {}
+      return null;
+    }
+  }
+
+  Future<void> _safeWrite(String key, String value) async {
+    try {
+      await _storage.write(key: key, value: value);
+    } catch (_) {
+      try {
+        await _storage.deleteAll();
+        await _storage.write(key: key, value: value);
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _safeDelete(String key) async {
+    try {
+      await _storage.delete(key: key);
+    } catch (_) {}
+  }
+
   Future<void> saveToken(String token) async {
     _cachedToken = token;
-    await _storage.write(key: tokenKey, value: token);
+    await _safeWrite(tokenKey, token);
   }
 
   Future<String?> getToken() async {
     if (_cachedToken != null) return _cachedToken;
-    _cachedToken = await _storage.read(key: tokenKey);
+    _cachedToken = await _safeRead(tokenKey);
     return _cachedToken;
   }
 
   Future<void> saveUserId(String userId) async {
     _cachedUserId = userId;
-    await _storage.write(key: userIdKey, value: userId);
+    await _safeWrite(userIdKey, userId);
   }
 
   Future<String?> getUserId() async {
     if (_cachedUserId != null) return _cachedUserId;
-    _cachedUserId = await _storage.read(key: userIdKey);
+    _cachedUserId = await _safeRead(userIdKey);
     return _cachedUserId;
   }
 
   Future<void> markWelcomeSeen() async {
-    await _storage.write(key: hasSeenWelcomeKey, value: 'true');
+    await _safeWrite(hasSeenWelcomeKey, 'true');
   }
 
   Future<bool> hasSeenWelcome() async {
-    final val = await _storage.read(key: hasSeenWelcomeKey);
+    final val = await _safeRead(hasSeenWelcomeKey);
     return val == 'true';
   }
 
   Future<void> saveCredentials(String email, String password) async {
     await Future.wait([
-      _storage.write(key: savedEmailKey, value: email),
-      _storage.write(key: savedPasswordKey, value: password),
-      _storage.write(key: rememberMeKey, value: 'true'),
+      _safeWrite(savedEmailKey, email),
+      _safeWrite(savedPasswordKey, password),
+      _safeWrite(rememberMeKey, 'true'),
     ]);
   }
 
   Future<String?> getSavedEmail() async {
-    return await _storage.read(key: savedEmailKey);
+    return await _safeRead(savedEmailKey);
   }
 
   Future<String?> getSavedPassword() async {
-    return await _storage.read(key: savedPasswordKey);
+    return await _safeRead(savedPasswordKey);
   }
 
   Future<void> setRememberMe(bool remember) async {
-    await _storage.write(key: rememberMeKey, value: remember ? 'true' : 'false');
+    await _safeWrite(rememberMeKey, remember ? 'true' : 'false');
     if (!remember) {
       await clearSavedCredentials();
     }
   }
 
   Future<bool> getRememberMe() async {
-    final val = await _storage.read(key: rememberMeKey);
+    final val = await _safeRead(rememberMeKey);
     // Default to true so credentials are remembered by default
     return val == null || val == 'true';
   }
 
   Future<void> clearSavedCredentials() async {
     await Future.wait([
-      _storage.delete(key: savedEmailKey),
-      _storage.delete(key: savedPasswordKey),
+      _safeDelete(savedEmailKey),
+      _safeDelete(savedPasswordKey),
     ]);
   }
 
@@ -91,8 +123,8 @@ class SecureStorageService {
     _cachedToken = null;
     _cachedUserId = null;
     await Future.wait([
-      _storage.delete(key: tokenKey),
-      _storage.delete(key: userIdKey),
+      _safeDelete(tokenKey),
+      _safeDelete(userIdKey),
     ]);
   }
 
