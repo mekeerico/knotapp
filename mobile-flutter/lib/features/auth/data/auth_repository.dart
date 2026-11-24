@@ -158,4 +158,48 @@ class AuthRepository {
     await _storage.markWelcomeSeen();
     await _storage.clearAll();
   }
+
+  Future<String> requestPasswordReset(String email) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.forgotPassword,
+        data: {'email': email.trim()},
+      );
+      if (response.data is Map && response.data['message'] != null) {
+        return response.data['message'].toString();
+      }
+      return 'A 6-digit password reset code has been sent to your email.';
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception(_extractDioError(e, 'Failed to send password reset code'));
+      }
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
+  Future<String> resetPassword({
+    required String email,
+    required String code,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.resetPassword,
+        data: {
+          'email': email.trim(),
+          'code': code.trim(),
+          'newPassword': newPassword,
+        },
+      );
+      if (response.data is Map && response.data['message'] != null) {
+        return response.data['message'].toString();
+      }
+      return 'Your password has been reset successfully. You can now sign in.';
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception(_extractDioError(e, 'Failed to reset password'));
+      }
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
 }

@@ -407,6 +407,315 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     );
   }
 
+  Future<void> _showForgotPasswordDialog() async {
+    final emailCtrl = TextEditingController(text: _emailController.text.trim());
+    final codeCtrl = TextEditingController();
+    final newPassCtrl = TextEditingController();
+    int step = 1; // 1 = request code, 2 = verify code & set new password
+    bool isSubmitting = false;
+    bool obscureNewPass = true;
+    String? dialogError;
+    String? dialogInfo;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (ctx, setDialogState) {
+            Future<void> handleSendCode() async {
+              final email = emailCtrl.text.trim();
+              final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+              if (!emailRegex.hasMatch(email)) {
+                setDialogState(() {
+                  dialogError = 'Please enter a valid email address.';
+                });
+                return;
+              }
+              setDialogState(() {
+                isSubmitting = true;
+                dialogError = null;
+                dialogInfo = null;
+              });
+              try {
+                final msg = await ref
+                    .read(authRepositoryProvider)
+                    .requestPasswordReset(email);
+                if (!ctx.mounted) return;
+                setDialogState(() {
+                  isSubmitting = false;
+                  step = 2;
+                  dialogInfo = msg;
+                });
+              } catch (e) {
+                if (!ctx.mounted) return;
+                setDialogState(() {
+                  isSubmitting = false;
+                  dialogError = e.toString().replaceAll('Exception: ', '');
+                });
+              }
+            }
+
+            Future<void> handleResetPassword() async {
+              final email = emailCtrl.text.trim();
+              final code = codeCtrl.text.trim();
+              final newPass = newPassCtrl.text.trim();
+              if (code.length != 6) {
+                setDialogState(() {
+                  dialogError = 'Please enter the 6-digit reset code sent to your email.';
+                });
+                return;
+              }
+              if (newPass.length < 6) {
+                setDialogState(() {
+                  dialogError = 'New password must be at least 6 characters long.';
+                });
+                return;
+              }
+              setDialogState(() {
+                isSubmitting = true;
+                dialogError = null;
+              });
+              try {
+                final msg = await ref.read(authRepositoryProvider).resetPassword(
+                      email: email,
+                      code: code,
+                      newPassword: newPass,
+                    );
+                if (!ctx.mounted) return;
+                _emailController.text = email;
+                _passwordController.text = newPass;
+                Navigator.of(ctx).pop();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(msg),
+                      backgroundColor: const Color(0xFF065F46),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (!ctx.mounted) return;
+                setDialogState(() {
+                  isSubmitting = false;
+                  dialogError = e.toString().replaceAll('Exception: ', '');
+                });
+              }
+            }
+
+            return Dialog(
+              backgroundColor: const Color(0xFF121721),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(color: _webGold.withValues(alpha: 0.35)),
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(22),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          step == 1 ? 'Forgot Password' : 'Reset Password',
+                          style: AppTypography.headingLarge.copyWith(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: isSubmitting ? null : () => Navigator.of(ctx).pop(),
+                          child: const Icon(Icons.close, color: _webSlateMuted, size: 20),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      step == 1
+                          ? 'Enter your account email and we will send you a 6-digit password reset code.'
+                          : 'Enter the 6-digit code sent to ${emailCtrl.text.trim()} and choose a new password.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: _webSlateMuted,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (dialogInfo != null) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF10B981).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.35)),
+                        ),
+                        child: Text(
+                          dialogInfo!,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: const Color(0xFF34D399),
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (dialogError != null) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.35)),
+                        ),
+                        child: Text(
+                          dialogError!,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: const Color(0xFFF87171),
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    if (step == 1) ...[
+                      TextField(
+                        controller: emailCtrl,
+                        enabled: !isSubmitting,
+                        keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(color: Colors.white, fontSize: 13.5),
+                        decoration: InputDecoration(
+                          hintText: 'name@email.com',
+                          hintStyle: const TextStyle(color: Color(0xFF64748B)),
+                          filled: true,
+                          fillColor: _webInputFill,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _webGold,
+                            foregroundColor: _webObsidian,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(23)),
+                          ),
+                          onPressed: isSubmitting ? null : handleSendCode,
+                          child: isSubmitting
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: _webObsidian),
+                                )
+                              : const Text(
+                                  'Send Reset Code',
+                                  style: TextStyle(fontWeight: FontWeight.w800),
+                                ),
+                        ),
+                      ),
+                    ] else ...[
+                      TextField(
+                        controller: codeCtrl,
+                        enabled: !isSubmitting,
+                        keyboardType: TextInputType.number,
+                        maxLength: 6,
+                        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          letterSpacing: 6,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: InputDecoration(
+                          counterText: '',
+                          hintText: '6-digit code',
+                          hintStyle: const TextStyle(color: Color(0xFF64748B), letterSpacing: 0),
+                          filled: true,
+                          fillColor: _webInputFill,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: newPassCtrl,
+                        enabled: !isSubmitting,
+                        obscureText: obscureNewPass,
+                        style: const TextStyle(color: Colors.white, fontSize: 13.5),
+                        decoration: InputDecoration(
+                          hintText: 'New password (min 6 characters)',
+                          hintStyle: const TextStyle(color: Color(0xFF64748B)),
+                          filled: true,
+                          fillColor: _webInputFill,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscureNewPass ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              color: _webSlateMuted,
+                              size: 18,
+                            ),
+                            onPressed: () => setDialogState(() => obscureNewPass = !obscureNewPass),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 46,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _webGold,
+                            foregroundColor: _webObsidian,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(23)),
+                          ),
+                          onPressed: isSubmitting ? null : handleResetPassword,
+                          child: isSubmitting
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: _webObsidian),
+                                )
+                              : const Text(
+                                  'Reset Password',
+                                  style: TextStyle(fontWeight: FontWeight.w800),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Center(
+                        child: TextButton(
+                          onPressed: isSubmitting ? null : handleSendCode,
+                          child: const Text(
+                            'Resend Reset Code',
+                            style: TextStyle(color: _webRose, fontSize: 12, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -775,59 +1084,73 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             ),
                             const SizedBox(height: 16),
 
-                            // Remember Me Checkbox
-                            GestureDetector(
-                              behavior: HitTestBehavior.opaque,
-                              onTap: () async {
-                                final nextVal = !_rememberMe;
-                                setState(() => _rememberMe = nextVal);
-                                await ref.read(secureStorageProvider).setRememberMe(nextVal);
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 2),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 20,
-                                      height: 20,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(6),
-                                        color: _rememberMe ? _webGold : _webInputFill,
-                                        border: Border.all(
-                                          color: _rememberMe
-                                              ? _webGold
-                                              : Colors.white.withValues(alpha: 0.20),
-                                          width: 1.5,
+                            // Remember Me & Forgot Password Row
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () async {
+                                    final nextVal = !_rememberMe;
+                                    setState(() => _rememberMe = nextVal);
+                                    await ref.read(secureStorageProvider).setRememberMe(nextVal);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 2),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(6),
+                                            color: _rememberMe ? _webGold : _webInputFill,
+                                            border: Border.all(
+                                              color: _rememberMe
+                                                  ? _webGold
+                                                  : Colors.white.withValues(alpha: 0.20),
+                                              width: 1.5,
+                                            ),
+                                          ),
+                                          child: _rememberMe
+                                              ? const Icon(
+                                                  Icons.check,
+                                                  size: 14,
+                                                  color: _webObsidian,
+                                                )
+                                              : null,
                                         ),
-                                      ),
-                                      child: _rememberMe
-                                          ? const Icon(
-                                              Icons.check,
-                                              size: 14,
-                                              color: _webObsidian,
-                                            )
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          'Remember my Email & Password on this device',
-                                          maxLines: 1,
-                                          softWrap: false,
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Remember',
                                           style: AppTypography.bodySmall.copyWith(
                                             color: _rememberMe ? Colors.white : _webSlateMuted,
-                                            fontSize: 12,
+                                            fontSize: 12.5,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                if (!_isSignUp)
+                                  GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: _showForgotPasswordDialog,
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2),
+                                      child: Text(
+                                        'Forgot Password?',
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: _webGold,
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w700,
+                                        ),
                                       ),
                                     ),
-                                  ],
-                                ),
-                              ),
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 22),
 

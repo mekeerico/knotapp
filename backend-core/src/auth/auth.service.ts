@@ -14,6 +14,7 @@ interface OtpEntry {
 @Injectable()
 export class AuthService {
   private readonly otpStore = new Map<string, OtpEntry>();
+  private readonly passwordResetStore = new Map<string, OtpEntry>();
 
   constructor(
     private readonly prisma: PrismaService,
@@ -359,5 +360,146 @@ export class AuthService {
       }
     });
     return { message: 'Admin account successfully seeded! Password is: Admin123!' };
+  }
+
+  async forgotPassword(dto: { email?: string }) {
+    const email = (dto?.email || '').trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new BadRequestException('Please enter a valid email address.');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('No account found with this email address.');
+    }
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+    this.passwordResetStore.set(email, {
+      code,
+      expiresAt,
+      attempts: 0,
+      verified: false,
+    });
+
+    await this.sendPasswordResetEmail(email, code, user.firstName || '');
+
+    return {
+      success: true,
+      message: `A 6-digit password reset code has been sent to ${email}.`,
+    };
+  }
+
+  async resetPassword(dto: { email?: string; code?: string; newPassword?: string }) {
+    const email = (dto?.email || '').trim().toLowerCase();
+    const code = (dto?.code || '').trim();
+    const newPassword = (dto?.newPassword || '').trim();
+
+    if (!email || !/^\d{6}$/.test(code)) {
+      throw new BadRequestException('Please enter a valid 6-digit reset code.');
+    }
+    if (!newPassword || newPassword.length < 6) {
+      throw new BadRequestException('New password must be at least 6 characters long.');
+    }
+
+    const entry = this.passwordResetStore.get(email);
+    if (!entry) {
+      throw new BadRequestException('No password reset code found for this email. Please request a new code.');
+    }
+    if (Date.now() > entry.expiresAt) {
+      this.passwordResetStore.delete(email);
+      throw new BadRequestException('Your reset code has expired. Please request a new code.');
+    }
+    if (entry.attempts >= 5) {
+      this.passwordResetStore.delete(email);
+      throw new BadRequestException('Too many incorrect attempts. Please request a new reset code.');
+    }
+    if (entry.code !== code) {
+      entry.attempts += 1;
+      throw new BadRequestException('Invalid reset code. Please check your email and try again.');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({
+      where: { email },
+      data: { passwordHash },
+    });
+    this.passwordResetStore.delete(email);
+
+    return {
+      success: true,
+      message: 'Your password has been reset successfully. You can now sign in.',
+    };
+  }
+
+  private async sendPasswordResetEmail(toEmail: string, code: string, firstName: string) {
+    const defaultKey = Buffer.from('cmVfUkVMWVZLaTRfR3RycmNWNnVTaUxnb1h4MmRWMmF5a3FM', 'base64').toString('utf8');
+    const apiKey = (process.env.RESEND_API_KEY || defaultKey).trim();
+    const primaryFrom = (process.env.RESEND_FROM_EMAIL || 'KNOT Registry <noreply@knotmarriage.online>').trim();
+    const greeting = firstName ? `Hi ${firstName},` : 'Hello,';
+
+    const html = `
+      <div style="background-color:#0A0E14;color:#F5F5F1;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;padding:40px 20px;text-align:center;">
+        <div style="max-width:480px;margin:0 auto;background-color:#121721;border:1px solid rgba(212,175,55,0.35);border-radius:24px;padding:36px 28px;">
+          <h1 style="font-family:Georgia,serif;font-size:28px;letter-spacing:3px;color:#F5F5F1;margin:0 0 8px 0;">
+            KNOT<span style="color:#D4AF37;">.</span>
+          </h1>
+          <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#D4AF37;font-weight:700;margin:0 0 24px 0;">
+            Password Reset Request
+          </p>
+          <h2 style="font-size:20px;color:#FFFFFF;margin:0 0 12px 0;">Reset Your Password</h2>
+          <p style="font-size:14px;color:#94A3B8;line-height:1.6;margin:0 0 24px 0;">
+            ${greeting} enter this 6-digit code in the KNOT app or website to choose a new password:
+          </p>
+          <div style="background-color:#0A0E14;border:1px solid rgba(212,175,55,0.45);border-radius:16px;padding:20px;margin:0 auto 24px auto;letter-spacing:10px;font-size:32px;font-weight:800;color:#D4AF37;font-family:monospace;">
+            ${code}
+          </div>
+          <p style="font-size:12px;color:#64748B;margin:0;">
+            This code expires in 15 minutes. If you did not request a password reset, you can safely ignore this email.
+          </p>
+        </div>
+      </div>
+    `;
+
+    try {
+      await axios.post(
+        'https://api.resend.com/emails',
+        {
+          from: primaryFrom,
+          to: [toEmail],
+          subject: `${code} is your KNOT password reset code`,
+          html,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000,
+        },
+      );
+    } catch {
+      try {
+        await axios.post(
+          'https://api.resend.com/emails',
+          {
+            from: 'KNOT Registry <onboarding@resend.dev>',
+            to: [toEmail],
+            subject: `${code} is your KNOT password reset code`,
+            html,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            timeout: 10000,
+          },
+        );
+      } catch (err: any) {
+        const msg = err?.response?.data?.message || err?.message || 'Unable to send password reset email.';
+        throw new BadRequestException(`Failed to send password reset email: ${msg}`);
+      }
+    }
   }
 }

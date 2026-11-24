@@ -24,6 +24,96 @@ export default function Login() {
   const [resendCooldown, setResendCooldown] = useState(0);
   const otpInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
+  // Forgot Password Modal State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotStep, setForgotStep] = useState<1 | 2>(1);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotCode, setForgotCode] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState("");
+  const [isForgotLoading, setIsForgotLoading] = useState(false);
+
+  const openForgotModal = () => {
+    setForgotEmail(email.trim());
+    setForgotCode("");
+    setForgotNewPassword("");
+    setForgotError("");
+    setForgotSuccess("");
+    setForgotStep(1);
+    setShowForgotModal(true);
+  };
+
+  const handleRequestPasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) {
+      setForgotError("Please enter your email address.");
+      return;
+    }
+    setIsForgotLoading(true);
+    setForgotError("");
+    setForgotSuccess("");
+    try {
+      const API_URL = getApiUrl();
+      const res = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setForgotError(data.message || "Failed to send reset code.");
+      } else {
+        setForgotSuccess(data.message || "A 6-digit password reset code has been sent to your email.");
+        setForgotStep(2);
+      }
+    } catch {
+      setForgotError("Network error while sending reset code.");
+    } finally {
+      setIsForgotLoading(false);
+    }
+  };
+
+  const handleConfirmPasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (forgotCode.trim().length !== 6) {
+      setForgotError("Please enter the 6-digit reset code from your email.");
+      return;
+    }
+    if (forgotNewPassword.trim().length < 6) {
+      setForgotError("New password must be at least 6 characters long.");
+      return;
+    }
+    setIsForgotLoading(true);
+    setForgotError("");
+    try {
+      const API_URL = getApiUrl();
+      const res = await fetch(`${API_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: forgotEmail.trim(),
+          code: forgotCode.trim(),
+          newPassword: forgotNewPassword.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setForgotError(data.message || "Failed to reset password.");
+      } else {
+        setEmail(forgotEmail.trim());
+        setPassword(forgotNewPassword.trim());
+        setShowForgotModal(false);
+        setError("");
+        alert(data.message || "Your password has been reset successfully. You can now sign in.");
+      }
+    } catch {
+      setForgotError("Network error while resetting password.");
+    } finally {
+      setIsForgotLoading(false);
+    }
+  };
+
   // Pre-load saved credentials on mount if Remember Me was enabled, and check ?mode=signup
   useEffect(() => {
     try {
@@ -297,21 +387,32 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Remember Me Checkbox */}
-            <div 
-              onClick={() => setRememberMe(!rememberMe)}
-              className="flex items-center gap-2.5 cursor-pointer select-none py-1 group overflow-hidden"
-            >
-              <div className={`w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center border transition-all ${
-                rememberMe 
-                  ? "bg-[#E27D8D] border-[#E27D8D] text-white" 
-                  : "bg-[#121721] border-white/20 text-transparent group-hover:border-white/40"
-              }`}>
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
+            {/* Remember & Forgot Password Row */}
+            <div className="flex items-center justify-between gap-2 py-1">
+              <div
+                onClick={() => setRememberMe(!rememberMe)}
+                className="flex items-center gap-2 cursor-pointer select-none group"
+              >
+                <div className={`w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center border transition-all ${
+                  rememberMe
+                    ? "bg-[#E27D8D] border-[#E27D8D] text-white"
+                    : "bg-[#121721] border-white/20 text-transparent group-hover:border-white/40"
+                }`}>
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </div>
+                <span className="text-xs text-slate-200 font-medium">
+                  Remember
+                </span>
               </div>
-              <span className="text-xs text-slate-200 font-medium whitespace-nowrap overflow-hidden text-ellipsis">
-                Remember my Email &amp; Password on this device
-              </span>
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={openForgotModal}
+                  className="text-xs font-bold text-[#D4AF37] hover:text-white transition-colors"
+                >
+                  Forgot Password?
+                </button>
+              )}
             </div>
 
             <button 
@@ -430,6 +531,89 @@ export default function Login() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-md glass-card rounded-3xl p-7 border border-[#D4AF37]/30 relative">
+            <button
+              type="button"
+              onClick={() => setShowForgotModal(false)}
+              className="absolute top-5 right-5 text-gray-400 hover:text-white text-sm font-bold"
+            >
+              ✕
+            </button>
+            <h3 className="text-xl font-serif font-bold text-white mb-1">
+              {forgotStep === 1 ? "Forgot Password" : "Reset Password"}
+            </h3>
+            <p className="text-xs text-gray-400 mb-5">
+              {forgotStep === 1
+                ? "Enter your account email and we will send you a 6-digit password reset code."
+                : `Enter the 6-digit code sent to ${forgotEmail} and choose a new password.`}
+            </p>
+
+            {forgotSuccess && (
+              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs">
+                {forgotSuccess}
+              </div>
+            )}
+            {forgotError && (
+              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+                {forgotError}
+              </div>
+            )}
+
+            {forgotStep === 1 ? (
+              <form onSubmit={handleRequestPasswordReset} className="space-y-4">
+                <input
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="name@email.com"
+                  required
+                  className="w-full bg-[#0A0E14] border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:border-[#D4AF37] outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={isForgotLoading}
+                  className="w-full py-3.5 rounded-full text-sm font-black bg-[#D4AF37] text-[#0A0E14] hover:opacity-90 disabled:opacity-50"
+                >
+                  {isForgotLoading ? "Sending Code..." : "Send Reset Code"}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleConfirmPasswordReset} className="space-y-4">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={forgotCode}
+                  onChange={(e) => setForgotCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="6-digit reset code"
+                  required
+                  className="w-full bg-[#0A0E14] border border-white/10 rounded-xl py-3 px-4 text-sm text-white tracking-widest font-bold focus:border-[#D4AF37] outline-none"
+                />
+                <input
+                  type="password"
+                  value={forgotNewPassword}
+                  onChange={(e) => setForgotNewPassword(e.target.value)}
+                  placeholder="New password (min 6 characters)"
+                  required
+                  minLength={6}
+                  className="w-full bg-[#0A0E14] border border-white/10 rounded-xl py-3 px-4 text-sm text-white focus:border-[#D4AF37] outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={isForgotLoading}
+                  className="w-full py-3.5 rounded-full text-sm font-black bg-[#D4AF37] text-[#0A0E14] hover:opacity-90 disabled:opacity-50"
+                >
+                  {isForgotLoading ? "Resetting..." : "Reset Password"}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}
