@@ -118,8 +118,7 @@ export class AuthService {
   }
 
   private async sendResendOtpEmail(toEmail: string, code: string) {
-    const defaultKey = Buffer.from('cmVfUkVMWVZLaTRfR3RycmNWNnVTaUxnb1h4MmRWMmF5a3FM', 'base64').toString('utf8');
-    const apiKey = (process.env.RESEND_API_KEY || defaultKey).trim();
+    const apiKey = (process.env.RESEND_API_KEY || '').trim();
     const primaryFrom = (process.env.RESEND_FROM_EMAIL || 'KNOT Registry <noreply@knotmarriage.online>').trim();
 
     const html = `
@@ -433,8 +432,10 @@ export class AuthService {
   }
 
   private async sendPasswordResetEmail(toEmail: string, code: string, firstName: string) {
-    const defaultKey = Buffer.from('cmVfUkVMWVZLaTRfR3RycmNWNnVTaUxnb1h4MmRWMmF5a3FM', 'base64').toString('utf8');
-    const apiKey = (process.env.RESEND_API_KEY || defaultKey).trim();
+    const apiKey = (process.env.RESEND_API_KEY || '').trim();
+    if (!apiKey) {
+      throw new BadRequestException('Email service (RESEND_API_KEY) is not configured on the server.');
+    }
     const primaryFrom = (process.env.RESEND_FROM_EMAIL || 'KNOT Registry <noreply@knotmarriage.online>').trim();
     const greeting = firstName ? `Hi ${firstName},` : 'Hello,';
 

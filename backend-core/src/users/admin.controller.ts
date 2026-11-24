@@ -95,8 +95,7 @@ export class AdminController {
 
     // Also email the admin response to the user via Resend if they have an email
     if (updated.userEmail) {
-      const defaultKey = Buffer.from('cmVfUkVMWVZLaTRfR3RycmNWNnVTaUxnb1h4MmRWMmF5a3FM', 'base64').toString('utf8');
-      const apiKey = (process.env.RESEND_API_KEY || defaultKey).trim();
+      const apiKey = (process.env.RESEND_API_KEY || '').trim();
       const fromEmail = (process.env.RESEND_FROM_EMAIL || 'KNOT Support <support@knotmarriage.online>').trim();
 
       const html = `

@@ -6,11 +6,7 @@ export class EmailService {
   private readonly logger = new Logger(EmailService.name);
 
   private getApiKey(): string {
-    const defaultKey = Buffer.from(
-      'cmVfUkVMWVZLaTRfR3RycmNWNnVTaUxnb1h4MmRWMmF5a3FM',
-      'base64',
-    ).toString('utf8');
-    return (process.env.RESEND_API_KEY || defaultKey).trim();
+    return (process.env.RESEND_API_KEY || '').trim();
   }
 
   private getFromEmail(): string {
