@@ -58,6 +58,13 @@ jobs:
             cat << 'EOF' > .env
             ${{ secrets.ENV_FILE }}
             EOF
+
+            # Apply dedicated RESEND_API_KEY secret if set (avoids having to re-paste all of ENV_FILE)
+            if [ -n "${{ secrets.RESEND_API_KEY }}" ]; then
+              grep -v '^RESEND_API_KEY=' .env > .env.tmp || true
+              mv .env.tmp .env
+              printf 'RESEND_API_KEY=%s\n' '${{ secrets.RESEND_API_KEY }}' >> .env
+            fi
             
             # Restart Docker containers
             docker compose -f docker-compose.prod.yml down || true
