@@ -66,4 +66,5 @@ class ApiEndpoints {
   // Payments & Subscriptions
   static const String initializePayment = '/payments/initialize';
   static const String verifyPayment = '/payments/verify';
+  static const String revenueCatSync = '/payments/revenuecat/sync';
 }

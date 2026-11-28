@@ -85,7 +85,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         user: user,
         hasSeenWelcome: true,
       );
-      RevenueCatService.logIn(user.id);
+      _reconcileSubscription(user.id);
     } catch (_) {
       state = state.copyWith(
         status: AuthStatus.unauthenticated,
@@ -177,6 +177,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
       hasSeenWelcome: true,
     );
     RevenueCatService.logIn(user.id);
+  }
+
+  /// Server-verified subscription refresh. Returns the refreshed user, or throws
+  /// if the server could not verify (callers must then NOT show "subscribed").
+  Future<UserModel> syncSubscription() async {
+    await _repo.syncSubscription();
+    final user = await _repo.getProfile();
+    if (mounted) state = state.copyWith(user: user);
+    return user;
+  }
+
+  /// Background reconciliation on launch: revokes premium that isn't backed by an
+  /// active store subscription and picks up renewals/upgrades.
+  Future<void> _reconcileSubscription(String userId) async {
+    try {
+      await RevenueCatService.logIn(userId);
+      await syncSubscription();
+    } catch (_) {
+      // Non-fatal; server webhook keeps state in sync as well.
+    }
   }
 
   Future<void> logout() async {

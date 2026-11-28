@@ -25,7 +25,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
   bool _isLoading = true;
   bool _isRestoring = false;
   Offerings? _offerings;
-  String? _activeStoreTier;
+
+  static const _tierNames = ['Premium', 'Elite', 'Executive'];
 
   @override
   void initState() {
@@ -33,163 +34,168 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     _loadOfferings();
   }
 
+  void _toast(String message, {bool success = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: success ? AppColors.champagneGold : null,
+        content: Text(
+          message,
+          style: success
+              ? const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)
+              : null,
+        ),
+      ),
+    );
+  }
+
   Future<void> _loadOfferings() async {
     setState(() => _isLoading = true);
-    final offerings = await RevenueCatService.getOfferings();
-    final customerInfo = await RevenueCatService.getCustomerInfo();
-    String? detectedTier;
-    if (customerInfo != null && RevenueCatService.hasActiveSubscription(customerInfo)) {
-      detectedTier = RevenueCatService.getActiveTier(customerInfo);
+    final user = ref.read(authProvider).user;
+    if (user != null) {
+      await RevenueCatService.ensureLoggedIn(user.id);
     }
+    final offerings = await RevenueCatService.getOfferings();
+    // Reconcile with the server so the "current plan" badge only reflects
+    // a subscription the backend has verified with Google Play.
+    try {
+      await ref.read(authProvider.notifier).syncSubscription();
+    } catch (_) {}
     if (mounted) {
       setState(() {
         _offerings = offerings;
-        _activeStoreTier = detectedTier;
         _isLoading = false;
       });
     }
   }
 
-  /// Returns -1 for Free/Essential, 0 for Premium, 1 for Elite, 2 for Executive
+  /// Returns -1 for Free/Essential, 0 for Premium, 1 for Elite, 2 for Executive.
+  /// Based solely on the server-verified profile.
   int _getCurrentTierRank(String? profileTier, bool isPremium) {
-    final effectiveTier = (_activeStoreTier ?? profileTier ?? '').trim().toLowerCase();
+    if (!isPremium) return -1;
+    final effectiveTier = (profileTier ?? '').trim().toLowerCase();
     if (effectiveTier.contains('executive')) return 2;
     if (effectiveTier.contains('elite')) return 1;
-    if (effectiveTier.contains('premium') || isPremium) return 0;
+    if (effectiveTier.contains('premium')) return 0;
     return -1;
   }
 
+  /// Strict package lookup. Never falls back to a different tier's product.
   Package? _getPackageForTier(int tier) {
     final packages = _offerings?.current?.availablePackages ?? [];
-    if (packages.isEmpty) return null;
-
-    if (tier == 0) {
-      return packages.firstWhere(
-        (p) =>
-            p.storeProduct.identifier.toLowerCase().contains('knot_premium') ||
-            p.identifier.toLowerCase().contains('premium'),
-        orElse: () => packages[0],
-      );
-    } else if (tier == 1) {
-      return packages.firstWhere(
-        (p) =>
-            p.storeProduct.identifier.toLowerCase().contains('knot__elite') ||
-            p.storeProduct.identifier.toLowerCase().contains('elite') ||
-            p.identifier.toLowerCase().contains('elite'),
-        orElse: () => packages.length > 1 ? packages[1] : packages[0],
-      );
-    } else {
-      return packages.firstWhere(
-        (p) =>
-            p.storeProduct.identifier.toLowerCase().contains('knot_executive') ||
-            p.identifier.toLowerCase().contains('executive'),
-        orElse: () => packages.length > 2 ? packages[2] : packages.last,
-      );
+    final keyword = _tierNames[tier].toLowerCase();
+    for (final p in packages) {
+      final productId = p.storeProduct.identifier.toLowerCase();
+      final packageId = p.identifier.toLowerCase();
+      if (productId.contains(keyword) || packageId.contains(keyword)) return p;
     }
+    return null;
   }
 
   Future<void> _handlePurchaseForTier(int tierIndex) async {
     setState(() => _selectedTier = tierIndex);
 
+    final user = ref.read(authProvider).user;
+    if (user == null) {
+      _toast('Please sign in again to subscribe.');
+      return;
+    }
+
     final package = _getPackageForTier(tierIndex);
     if (package == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Connecting to Google Play Store... Please ensure you are signed into Google Play.',
-          ),
-        ),
+      _toast(
+        'This plan is not available from Google Play right now. Make sure you are signed into the Play Store and try again.',
       );
+      _loadOfferings();
       return;
     }
 
     setState(() => _processingTier = tierIndex);
 
     try {
-      final customerInfo = await RevenueCatService.purchasePackage(package);
-      if (customerInfo != null && RevenueCatService.hasActiveSubscription(customerInfo)) {
-        final tierName = tierIndex == 0
-            ? 'Premium'
-            : tierIndex == 1
-                ? 'Elite'
-                : 'Executive';
+      // Purchase must be attached to THIS Knot account, never an anonymous/other one.
+      final bound = await RevenueCatService.ensureLoggedIn(user.id);
+      if (!bound) {
+        _toast('Could not connect your account to Google Play billing. Please try again.');
+        return;
+      }
 
-        setState(() => _activeStoreTier = tierName);
+      // Opens the Google Play payment sheet. Throws if cancelled/failed.
+      final result = await RevenueCatService.purchasePackage(package);
 
-        // Update local auth state & sync with backend
-        await ref.read(authProvider.notifier).updateProfile({
-          'isPremium': true,
-          'subscriptionTier': tierName,
-        });
+      // The transaction returned must be for the product the user actually chose.
+      final expected = RevenueCatService.baseProductId(package.storeProduct.identifier);
+      final purchased = RevenueCatService.baseProductId(result.storeTransaction.productIdentifier);
+      if (purchased != expected) {
+        _toast('Purchase could not be confirmed. If you were charged, tap Restore.');
+        return;
+      }
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.champagneGold,
-              content: Text(
-                '🌟 $tierName Registry Activated! Welcome to VIP Alignment.',
-                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-              ),
-            ),
-          );
-        }
+      // Only the backend (after verifying with RevenueCat/Google) can grant premium.
+      final updated = await ref.read(authProvider.notifier).syncSubscription();
+      final rank = _getCurrentTierRank(updated.subscriptionTier, updated.isPremium);
+      if (rank >= tierIndex) {
+        _toast(
+          '🌟 ${updated.subscriptionTier} Registry Activated! Welcome to VIP Alignment.',
+          success: true,
+        );
+      } else {
+        _toast(
+          'Payment received. Your plan will activate as soon as Google Play confirms it.',
+        );
       }
     } on PlatformException catch (e) {
       final errorCode = PurchasesErrorHelper.getErrorCode(e);
-      if (errorCode != PurchasesErrorCode.purchaseCancelledError) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.message ?? 'Purchase failed. Please try again.')),
+      switch (errorCode) {
+        case PurchasesErrorCode.purchaseCancelledError:
+          break; // user closed the payment sheet
+        case PurchasesErrorCode.paymentPendingError:
+          _toast(
+            'Your payment is pending with Google Play. Your plan will activate once it is completed.',
           );
-        }
+          break;
+        case PurchasesErrorCode.productAlreadyPurchasedError:
+        case PurchasesErrorCode.receiptAlreadyInUseError:
+          _toast(
+            'This Google Play account already has an active Knot subscription. Tap Restore if it belongs to this account.',
+          );
+          break;
+        case PurchasesErrorCode.productNotAvailableForPurchaseError:
+          _toast('This plan is not available for purchase in your region yet.');
+          break;
+        default:
+          _toast(e.message ?? 'Purchase failed. Please try again.');
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error completing purchase: $e')),
-        );
-      }
+      _toast(
+        'We could not verify your subscription right now. If you were charged, it will activate automatically shortly, or tap Restore.',
+      );
     } finally {
       if (mounted) setState(() => _processingTier = null);
     }
   }
 
   Future<void> _handleRestore() async {
+    final user = ref.read(authProvider).user;
+    if (user == null) return;
     setState(() => _isRestoring = true);
     try {
-      final customerInfo = await RevenueCatService.restorePurchases();
-      if (customerInfo != null && RevenueCatService.hasActiveSubscription(customerInfo)) {
-        final activeTier = RevenueCatService.getActiveTier(customerInfo) ?? 'Premium';
-        setState(() => _activeStoreTier = activeTier);
-        await ref.read(authProvider.notifier).updateProfile({
-          'isPremium': true,
-          'subscriptionTier': activeTier,
-        });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: AppColors.champagneGold,
-              content: Text(
-                'Purchases restored! Active Tier: $activeTier',
-                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-              ),
-            ),
-          );
-        }
+      final bound = await RevenueCatService.ensureLoggedIn(user.id);
+      if (!bound) {
+        _toast('Could not connect your account to Google Play billing. Please try again.');
+        return;
+      }
+      await RevenueCatService.restorePurchases();
+      final updated = await ref.read(authProvider.notifier).syncSubscription();
+      if (updated.isPremium) {
+        _toast('Purchases restored! Active Tier: ${updated.subscriptionTier}', success: true);
       } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No active subscriptions found for this account.')),
-          );
-        }
+        _toast('No active subscriptions found for this account.');
       }
+    } on PlatformException catch (e) {
+      _toast(e.message ?? 'Restore failed. Please try again.');
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Restore error: $e')),
-        );
-      }
+      _toast('Could not verify your subscription right now. Please try again.');
     } finally {
       if (mounted) setState(() => _isRestoring = false);
     }

@@ -150,6 +150,20 @@ class AuthRepository {
     return await _storage.hasSeenWelcome();
   }
 
+  /// Asks the backend to re-verify the subscription directly with RevenueCat.
+  /// The backend is the only party allowed to grant/revoke premium.
+  Future<Map<String, dynamic>> syncSubscription() async {
+    try {
+      final response = await _dio.post(ApiEndpoints.revenueCatSync);
+      return _asMap(response.data, 'Subscription verification failed');
+    } catch (e) {
+      if (e is DioException) {
+        throw Exception(_extractDioError(e, 'Subscription verification failed'));
+      }
+      throw Exception(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
   Future<void> markWelcomeSeen() async {
     await _storage.markWelcomeSeen();
   }

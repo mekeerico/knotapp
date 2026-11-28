@@ -1,5 +1,6 @@
-import { Controller, Post, Body, Headers, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, Headers, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('payments')
 export class PaymentsController {
@@ -41,7 +42,22 @@ export class PaymentsController {
 
   @Post('revenuecat-webhook')
   @HttpCode(HttpStatus.OK)
-  async handleRevenueCatWebhook(@Body() body: any) {
-    return this.paymentsService.handleRevenueCatWebhook(body);
+  async handleRevenueCatWebhook(
+    @Body() body: any,
+    @Headers('authorization') authorization?: string,
+  ) {
+    return this.paymentsService.handleRevenueCatWebhook(body, authorization);
+  }
+
+  /**
+   * Called by the mobile app after a Google Play purchase / restore (and on launch).
+   * The server re-verifies entitlements directly with RevenueCat; the client can no
+   * longer grant itself premium.
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('revenuecat/sync')
+  @HttpCode(HttpStatus.OK)
+  async syncRevenueCat(@Request() req: any) {
+    return this.paymentsService.syncRevenueCatSubscription(req.user.id);
   }
 }

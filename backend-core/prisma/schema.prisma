@@ -70,6 +70,8 @@ model User {
   subscriptionAmount  Float?
   subscriptionPeriod  String?
   subscriptionDate    DateTime?
+  subscriptionSource  String?   // 'google_play' (RevenueCat-verified) | 'paystack' (web checkout)
+  subscriptionExpiresAt DateTime?
 
   // Advanced Trust & Safety Metrics
   isVerified           Boolean   @default(false)

@@ -13,11 +13,15 @@ class RevenueCatService {
   static const String entitlementExecutive = 'Executive';
 
   static bool _initialized = false;
+  static Future<void>? _initFuture;
 
   /// Initializes RevenueCat with the configured Google Play / Apple API Keys
-  static Future<void> init() async {
-    if (_initialized) return;
+  static Future<void> init() {
+    if (_initialized) return Future.value();
+    return _initFuture ??= _doInit();
+  }
 
+  static Future<void> _doInit() async {
     try {
       await Purchases.setLogLevel(kDebugMode ? LogLevel.debug : LogLevel.info);
 
@@ -35,12 +39,15 @@ class RevenueCatService {
       }
     } catch (e) {
       debugPrint('[RevenueCat] Configuration initialization error: $e');
+    } finally {
+      if (!_initialized) _initFuture = null; // allow a retry later
     }
   }
 
   /// Binds the RevenueCat customer session to the specific authenticated member UUID
   static Future<void> logIn(String userId) async {
     if (!_initialized) await init();
+    if (!_initialized) return;
     try {
       await Purchases.logIn(userId);
       debugPrint('[RevenueCat] Logged in as user: $userId');
@@ -49,10 +56,28 @@ class RevenueCatService {
     }
   }
 
+  /// Guarantees the billing session belongs to [userId] before any purchase/restore.
+  /// Returns false if the session could not be bound (purchase must NOT proceed,
+  /// otherwise it would be attached to an anonymous or a different Knot account).
+  static Future<bool> ensureLoggedIn(String userId) async {
+    if (!_initialized) await init();
+    if (!_initialized) return false;
+    try {
+      if (await Purchases.appUserID != userId) {
+        await Purchases.logIn(userId);
+      }
+      return await Purchases.appUserID == userId;
+    } catch (e) {
+      debugPrint('[RevenueCat] ensureLoggedIn failed for $userId: $e');
+      return false;
+    }
+  }
+
   /// Clears RevenueCat session on user logout
   static Future<void> logOut() async {
     if (!_initialized) return;
     try {
+      if (await Purchases.isAnonymous) return;
       await Purchases.logOut();
       debugPrint('[RevenueCat] Logged out user');
     } catch (e) {
@@ -63,6 +88,7 @@ class RevenueCatService {
   /// Fetches published offerings and packages from RevenueCat
   static Future<Offerings?> getOfferings() async {
     if (!_initialized) await init();
+    if (!_initialized) return null;
     try {
       return await Purchases.getOfferings();
     } catch (e) {
@@ -71,53 +97,36 @@ class RevenueCatService {
     }
   }
 
-  /// Fetches current customer info and active entitlements from RevenueCat
-  static Future<CustomerInfo?> getCustomerInfo() async {
+  /// Initiates the native Google Play / App Store purchase sheet for [package].
+  /// Throws a [PlatformException] when cancelled or failed.
+  static Future<PurchaseResult> purchasePackage(Package package) async {
     if (!_initialized) await init();
-    try {
-      return await Purchases.getCustomerInfo();
-    } catch (e) {
-      debugPrint('[RevenueCat] Error fetching customer info: $e');
-      return null;
+    if (!_initialized) {
+      throw Exception('Store billing is not available on this device.');
     }
-  }
-
-  /// Initiates native In-App Purchase for the chosen package
-  static Future<CustomerInfo?> purchasePackage(Package package) async {
-    if (!_initialized) await init();
-    try {
-      final purchaseResult = await Purchases.purchasePackage(package);
-      return purchaseResult.customerInfo;
-    } catch (e) {
-      debugPrint('[RevenueCat] Purchase failed or cancelled: $e');
-      rethrow;
-    }
+    return Purchases.purchasePackage(package);
   }
 
   /// Restores existing subscription across user devices / reinstalls
   static Future<CustomerInfo?> restorePurchases() async {
     if (!_initialized) await init();
-    try {
-      final customerInfo = await Purchases.restorePurchases();
-      return customerInfo;
-    } catch (e) {
-      debugPrint('[RevenueCat] Restore failed: $e');
-      rethrow;
+    if (!_initialized) return null;
+    return Purchases.restorePurchases();
+  }
+
+  /// Google Play product ids come as "productId:basePlanId"; compare on productId.
+  static String baseProductId(String id) => id.split(':').first.trim().toLowerCase();
+
+  /// Returns the tier only if an ACTIVE entitlement is backed by exactly [productId].
+  static String? activeTierForProduct(CustomerInfo info, String productId) {
+    final target = baseProductId(productId);
+    for (final ent in info.entitlements.active.values) {
+      if (baseProductId(ent.productIdentifier) != target) continue;
+      final id = ent.identifier.toLowerCase();
+      if (id.contains('executive')) return 'Executive';
+      if (id.contains('elite')) return 'Elite';
+      if (id.contains('premium')) return 'Premium';
     }
-  }
-
-  /// Verifies if any of the VIP entitlements are currently active
-  static bool hasActiveSubscription(CustomerInfo info) {
-    return info.entitlements.all[entitlementPremium]?.isActive == true ||
-        info.entitlements.all[entitlementElite]?.isActive == true ||
-        info.entitlements.all[entitlementExecutive]?.isActive == true;
-  }
-
-  /// Returns the highest active tier identifier, or null if unentitled
-  static String? getActiveTier(CustomerInfo info) {
-    if (info.entitlements.all[entitlementExecutive]?.isActive == true) return 'Executive';
-    if (info.entitlements.all[entitlementElite]?.isActive == true) return 'Elite';
-    if (info.entitlements.all[entitlementPremium]?.isActive == true) return 'Premium';
     return null;
   }
 }

@@ -56,8 +56,10 @@ export class UsersService {
       'residenceCountry', 'residenceState', 'residenceCity', 'originCountry', 'originState', 'originCity',
       'preferredResidenceCountry', 'preferredResidenceState', 'preferredResidenceCity', 'preferredOriginCountry', 'preferredOriginState', 'preferredOriginCity',
       'personalityArchetype', 'attachmentStyle', 'readinessScore', 'seriousnessLevel', 'trustScore',
-      'isVerified', 'isPremium', 'idVerified', 'selfieVerified', 'selfieUrl', 'moderationFlags',
-      'pushToken', 'subscriptionTier', 'subscriptionAmount', 'subscriptionPeriod', 'subscriptionDate'
+      'isVerified', 'idVerified', 'selfieVerified', 'selfieUrl', 'moderationFlags',
+      'pushToken',
+      // NOTE: 'isPremium' and 'subscription*' fields are intentionally NOT client-writable.
+      // They are only set server-side after a verified payment (RevenueCat / Paystack).
     ];
 
     const data: any = {};
@@ -69,7 +71,7 @@ export class UsersService {
         }
         if (key === 'readinessScore' || key === 'seriousnessLevel' || key === 'trustScore' || key === 'moderationFlags') {
           data[key] = Number(dto[key]) || 0;
-        } else if (key === 'isVerified' || key === 'isPremium' || key === 'idVerified' || key === 'selfieVerified') {
+        } else if (key === 'isVerified' || key === 'idVerified' || key === 'selfieVerified') {
           data[key] = Boolean(dto[key]);
         } else {
           data[key] = dto[key];

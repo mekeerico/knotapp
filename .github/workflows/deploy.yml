@@ -65,6 +65,19 @@ jobs:
               mv .env.tmp .env
               printf 'RESEND_API_KEY=%s\n' '${{ secrets.RESEND_API_KEY }}' >> .env
             fi
+
+            # Apply dedicated RevenueCat secrets if set (avoids overwriting ENV_FILE)
+            if [ -n "${{ secrets.REVENUECAT_SECRET_API_KEY }}" ]; then
+              grep -v '^REVENUECAT_SECRET_API_KEY=' .env > .env.tmp || true
+              mv .env.tmp .env
+              printf 'REVENUECAT_SECRET_API_KEY=%s\n' '${{ secrets.REVENUECAT_SECRET_API_KEY }}' >> .env
+            fi
+
+            if [ -n "${{ secrets.REVENUECAT_WEBHOOK_AUTH }}" ]; then
+              grep -v '^REVENUECAT_WEBHOOK_AUTH=' .env > .env.tmp || true
+              mv .env.tmp .env
+              printf 'REVENUECAT_WEBHOOK_AUTH=%s\n' '${{ secrets.REVENUECAT_WEBHOOK_AUTH }}' >> .env
+            fi
             
             # Restart Docker containers
             docker compose -f docker-compose.prod.yml down || true
